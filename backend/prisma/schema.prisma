@@ -12,3 +12,48 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Secretaria {
+  id         Int        @id @default(autoincrement())
+  nome       String
+  veiculos   Veiculo[]
+  motoristas Motorista[]
+}
+
+model Motorista {
+  id           Int        @id @default(autoincrement())
+  cpf          String     @unique
+  nome         String
+  cnh          String
+  secretariaId Int
+  secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
+  locacoes     Locacao[]
+}
+
+model Veiculo {
+  id           Int        @id @default(autoincrement())
+  placa        String     @unique
+  tipo         String     // "ônibus", "carro", "van"
+  secretariaId Int
+  secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
+  locacoes     Locacao[]
+}
+
+model Locacao {
+  id           Int        @id @default(autoincrement())
+  veiculoId    Int
+  motoristaId  Int
+  dataInicio   DateTime
+  dataFim      DateTime?
+  destino      String
+  km           Float?
+  veiculo      Veiculo    @relation(fields: [veiculoId], references: [id])
+  motorista    Motorista  @relation(fields: [motoristaId], references: [id])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  cpf       String   @unique
+  senha     String
+  isAdmin   Boolean  @default(false)
+}
