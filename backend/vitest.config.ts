@@ -8,5 +8,9 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
     },
     globals: true,
+    ui: true,
+  },
+  server: {
+    port: 51205, // Configura a porta do servidor UI aqui
   },
 });

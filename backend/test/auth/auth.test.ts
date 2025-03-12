@@ -14,7 +14,6 @@ describe("Autenticação", () => {
     authenticateUser = new AuthenticateUser(userRepository);
     createUser = new CreateUser(userRepository);
 
-    // Criar um usuário de teste
     await createUser.execute({
       cpf: "12345678901",
       senha: "test123",
@@ -23,7 +22,6 @@ describe("Autenticação", () => {
   });
 
   afterAll(async () => {
-    // Limpar o banco após os testes
     await prisma.user.deleteMany({ where: { cpf: "12345678901" } });
     await prisma.$disconnect();
   });

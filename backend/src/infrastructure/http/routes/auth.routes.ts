@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, RequestHandler } from "express";
 import { AuthenticateUser } from "../../../application/useCases/AuthenticateUser";
 import { CreateUser } from "../../../application/useCases/CreateUser";
 import { UserRepository } from "../../repositories/UserRepository";
@@ -9,30 +9,30 @@ const userRepository = new UserRepository();
 const authenticateUser = new AuthenticateUser(userRepository);
 const createUser = new CreateUser(userRepository);
 
-// Login
-authRoutes.post("/login", async (req: Request, res: Response) => {
+// Handler para login
+const loginHandler: RequestHandler = async (req, res) => {
   try {
     const { cpf, senha } = req.body;
     const token = await authenticateUser.execute({ cpf, senha });
-    return res.json({ token });
+    res.json({ token });
   } catch (error) {
-    return res.status(401).json({ error: (error as Error).message });
+    res.status(401).json({ error: (error as Error).message });
   }
-});
+};
 
-// Criar usuário (restrito a admin)
-authRoutes.post(
-  "/users",
-  ensureAdmin,
-  async (req: Request, res: Response) => {
-    try {
-      const { cpf, senha, isAdmin } = req.body;
-      const user = await createUser.execute({ cpf, senha, isAdmin });
-      return res.status(201).json(user);
-    } catch (error) {
-      return res.status(400).json({ error: (error as Error).message });
-    }
+// Handler para criar usuário
+const createUserHandler: RequestHandler = async (req, res) => {
+  try {
+    const { cpf, senha, isAdmin } = req.body;
+    const user = await createUser.execute({ cpf, senha, isAdmin });
+    res.status(201).json(user);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
   }
-);
+};
+
+// Rotas
+authRoutes.post("/login", loginHandler);
+authRoutes.post("/users", [ensureAdmin, createUserHandler]);
 
 export default authRoutes;
