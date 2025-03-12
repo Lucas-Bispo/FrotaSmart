@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import { verify } from "jsonwebtoken";
 
 interface IPayload {
@@ -7,20 +7,27 @@ interface IPayload {
   isAdmin: boolean;
 }
 
-export function ensureAdmin(req: Request, res: Response, next: NextFunction) {
+export const ensureAdmin: RequestHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-    return res.status(401).json({ error: "Token não fornecido" });
+    res.status(401).json({ error: "Token não fornecido" });
+    return;
   }
 
   const [, token] = authHeader.split(" ");
   try {
     const { isAdmin } = verify(token, "secret_key") as IPayload;
     if (!isAdmin) {
-      return res.status(403).json({ error: "Acesso negado: apenas administradores" });
+      res.status(403).json({ error: "Acesso negado: apenas administradores" });
+      return;
     }
     next();
   } catch {
-    return res.status(401).json({ error: "Token inválido" });
+    res.status(401).json({ error: "Token inválido" });
+    return;
   }
-}
+};
