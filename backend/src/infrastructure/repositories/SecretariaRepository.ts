@@ -1,31 +1,41 @@
 import { Secretaria } from "../../domain/entities/Secretaria";
 import { ISecretariaRepository } from "../../domain/interfaces/ISecretariaRepository";
+import prisma from "../../prisma";
+
 
 export class SecretariaRepository implements ISecretariaRepository {
-  private secretarias: Secretaria[] = [];
-
   async create(secretaria: Secretaria): Promise<Secretaria> {
-    this.secretarias.push(secretaria);
-    return secretaria;
+    const created = await prisma.secretaria.create({
+      data: {
+        nome: secretaria.nome,
+      },
+    });
+    return new Secretaria(created.nome, created.id);
   }
 
   async findById(id: number): Promise<Secretaria | null> {
-    const secretaria = this.secretarias.find((s) => s.id === id);
-    return secretaria || null;
+    const found = await prisma.secretaria.findUnique({
+      where: { id },
+    });
+    return found ? new Secretaria(found.nome, found.id) : null;
   }
 
   async findAll(): Promise<Secretaria[]> {
-    return this.secretarias;
+    const secretarias = await prisma.secretaria.findMany();
+    return secretarias.map((s) => new Secretaria(s.nome, s.id));
   }
 
-  async update(id: number, secretaria: Partial<Secretaria>): Promise<Secretaria | null> {
-    const index = this.secretarias.findIndex((s) => s.id === id);
-    if (index === -1) return null;
-    this.secretarias[index] = { ...this.secretarias[index], ...secretaria };
-    return this.secretarias[index];
+  async update(id: number, data: Partial<Secretaria>): Promise<Secretaria | null> {
+    const updated = await prisma.secretaria.update({
+      where: { id },
+      data: { nome: data.nome },
+    });
+    return updated ? new Secretaria(updated.nome, updated.id) : null;
   }
 
   async delete(id: number): Promise<void> {
-    this.secretarias = this.secretarias.filter((s) => s.id !== id);
+    await prisma.secretaria.delete({
+      where: { id },
+    });
   }
 }

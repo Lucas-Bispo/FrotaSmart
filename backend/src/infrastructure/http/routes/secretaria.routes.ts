@@ -19,10 +19,8 @@ const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => P
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 
-// Middleware de autenticação global
 secretariaRoutes.use(ensureAuthenticated);
 
-// Rotas
 secretariaRoutes.post(
   "/",
   ensureAdmin,

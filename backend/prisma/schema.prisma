@@ -14,32 +14,32 @@ datasource db {
 }
 
 model User {
-  id      Int     @id @default(autoincrement())
-  cpf     String  @unique
-  senha   String
-  isAdmin Boolean @default(false)
+  id       Int     @id @default(autoincrement())
+  cpf      String  @unique
+  senha    String
+  isAdmin  Boolean @default(false)
 }
 
 model Secretaria {
-  id        Int         @id @default(autoincrement())
-  nome      String      @unique
+  id    Int    @id @default(autoincrement())
+  nome  String
   motoristas Motorista[]
-  veiculos  Veiculo[]
+  veiculos   Veiculo[]
 }
 
 model Motorista {
   id           Int        @id @default(autoincrement())
   cpf          String     @unique
   nome         String
-  cnh          String     @unique
-  secretariaId Int
+  cnh          String
   secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
+  secretariaId Int
 }
 
 model Veiculo {
   id           Int        @id @default(autoincrement())
   placa        String     @unique
-  tipo         String     // "ônibus", "carro", "van"
-  secretariaId Int
+  tipo         String
   secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
+  secretariaId Int
 }
