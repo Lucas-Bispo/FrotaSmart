@@ -1,7 +1,7 @@
 import express from "express";
-import authRoutes from "./infrastructure/http/routes/auth.routes";
-import motoristaRoutes from "./infrastructure/http/routes/motorista.routes";
-import veiculoRoutes from "./infrastructure/http/routes/veiculo.routes";
+import authRoutes from "./infrastructure/http/routes/auth.routes"; // Assumindo que também usa export default
+import motoristaRoutes from "./infrastructure/http/routes/motorista.routes"; // Assumindo que também usa export default
+import veiculoRoutes from "./infrastructure/http/routes/veiculo.routes"; // Importação corrigida
 
 const app = express();
 const PORT = process.env.PORT || 3000;

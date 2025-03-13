@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response, NextFunction, RequestHandler } from "express";
 import { CreateVeiculo } from "../../../application/useCases/CreateVeiculo";
 import { ListVeiculos } from "../../../application/useCases/ListVeiculos";
 import { UpdateVeiculo } from "../../../application/useCases/UpdateVeiculo";
@@ -14,14 +14,14 @@ const listVeiculos = new ListVeiculos(veiculoRepository);
 const updateVeiculo = new UpdateVeiculo(veiculoRepository);
 const deleteVeiculo = new DeleteVeiculo(veiculoRepository);
 
-// Função auxiliar para lidar com handlers assíncronos
+// Função auxiliar para encapsular handlers assíncronos
 const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
   (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 
-// Aplica o middleware de autenticação para todas as rotas
-veiculoRoutes.use(ensureAuthenticated);
+// Aplica o middleware de autenticação globalmente com tipagem explícita
+veiculoRoutes.use(ensureAuthenticated as RequestHandler);
 
 // Rotas
 veiculoRoutes.post(

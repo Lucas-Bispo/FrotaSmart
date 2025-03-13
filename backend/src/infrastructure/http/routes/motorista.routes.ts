@@ -14,16 +14,13 @@ const listMotoristas = new ListMotoristas(motoristaRepository);
 const updateMotorista = new UpdateMotorista(motoristaRepository);
 const deleteMotorista = new DeleteMotorista(motoristaRepository);
 
-// Função auxiliar para lidar com handlers assíncronos
 const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
   (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 
-// Aplica o middleware de autenticação para todas as rotas
 motoristaRoutes.use(ensureAuthenticated);
 
-// Rotas
 motoristaRoutes.post(
   "/",
   ensureAdmin,
@@ -63,4 +60,4 @@ motoristaRoutes.delete(
   })
 );
 
-export default motoristaRoutes;
+export default motoristaRoutes; // Exportação padrão

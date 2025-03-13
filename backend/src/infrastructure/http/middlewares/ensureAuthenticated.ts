@@ -7,10 +7,11 @@ interface IPayload {
   isAdmin: boolean;
 }
 
-export function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
+export function ensureAuthenticated(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-    return res.status(401).json({ error: "Token não fornecido" });
+    res.status(401).json({ error: "Token não fornecido" });
+    return;
   }
 
   const [, token] = authHeader.split(" ");
@@ -19,6 +20,7 @@ export function ensureAuthenticated(req: Request, res: Response, next: NextFunct
     req.user = decoded;
     next();
   } catch {
-    return res.status(401).json({ error: "Token inválido" });
+    res.status(401).json({ error: "Token inválido" });
+    return;
   }
 }
