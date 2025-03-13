@@ -14,13 +14,16 @@ const listVeiculos = new ListVeiculos(veiculoRepository);
 const updateVeiculo = new UpdateVeiculo(veiculoRepository);
 const deleteVeiculo = new DeleteVeiculo(veiculoRepository);
 
+// Função auxiliar para lidar com handlers assíncronos
 const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
   (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 
+// Aplica o middleware de autenticação para todas as rotas
 veiculoRoutes.use(ensureAuthenticated);
 
+// Rotas
 veiculoRoutes.post(
   "/",
   ensureAdmin,
