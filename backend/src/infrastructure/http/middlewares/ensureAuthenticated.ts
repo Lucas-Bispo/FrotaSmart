@@ -16,7 +16,7 @@ export function ensureAuthenticated(req: Request, res: Response, next: NextFunct
   const [, token] = authHeader.split(" ");
   try {
     const decoded = verify(token, "secret_key") as IPayload;
-    req.user = decoded; // Adiciona o usuário ao request para uso posterior
+    req.user = decoded;
     next();
   } catch {
     return res.status(401).json({ error: "Token inválido" });

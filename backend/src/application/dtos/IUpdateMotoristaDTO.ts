@@ -1,5 +1,5 @@
-export interface IUpdateVeiculoDTO {
-    placa?: string;
-    tipo?: string;
+export interface IUpdateMotoristaDTO {
+    nome?: string;
+    cnh?: string;
     secretariaId?: number;
-  }
+}

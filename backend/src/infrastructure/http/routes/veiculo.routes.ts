@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { CreateVeiculo } from "../../../application/useCases/CreateVeiculo";
 import { ListVeiculos } from "../../../application/useCases/ListVeiculos";
 import { UpdateVeiculo } from "../../../application/useCases/UpdateVeiculo";
@@ -14,46 +14,50 @@ const listVeiculos = new ListVeiculos(veiculoRepository);
 const updateVeiculo = new UpdateVeiculo(veiculoRepository);
 const deleteVeiculo = new DeleteVeiculo(veiculoRepository);
 
+const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+
 veiculoRoutes.use(ensureAuthenticated);
 
-veiculoRoutes.post("/", ensureAdmin, async (req, res) => {
-  try {
+veiculoRoutes.post(
+  "/",
+  ensureAdmin,
+  asyncHandler(async (req: Request, res: Response) => {
     const { placa, tipo, secretariaId } = req.body;
     const veiculo = await createVeiculo.execute({ placa, tipo, secretariaId });
     return res.status(201).json(veiculo);
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
-});
+  })
+);
 
-veiculoRoutes.get("/", async (req, res) => {
-  try {
+veiculoRoutes.get(
+  "/",
+  asyncHandler(async (req: Request, res: Response) => {
     const veiculos = await listVeiculos.execute();
     return res.json(veiculos);
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
-});
+  })
+);
 
-veiculoRoutes.put("/:id", ensureAdmin, async (req, res) => {
-  try {
+veiculoRoutes.put(
+  "/:id",
+  ensureAdmin,
+  asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const { placa, tipo, secretariaId } = req.body;
     const veiculo = await updateVeiculo.execute(Number(id), { placa, tipo, secretariaId });
     return res.json(veiculo);
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
-});
+  })
+);
 
-veiculoRoutes.delete("/:id", ensureAdmin, async (req, res) => {
-  try {
+veiculoRoutes.delete(
+  "/:id",
+  ensureAdmin,
+  asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     await deleteVeiculo.execute(Number(id));
     return res.status(204).send();
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
-});
+  })
+);
 
 export default veiculoRoutes;
