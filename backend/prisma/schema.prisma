@@ -43,3 +43,15 @@ model Veiculo {
   secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
   secretariaId Int
 }
+
+model Locacao {
+  id          Int      @id @default(autoincrement())
+  veiculoId   Int
+  motoristaId Int
+  dataInicio  DateTime
+  dataFim     DateTime?
+  destino     String
+  km          Float?
+  veiculo     Veiculo  @relation(fields: [veiculoId], references: [id])
+  motorista   Motorista @relation(fields: [motoristaId], references: [id])
+}

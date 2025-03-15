@@ -1,6 +1,11 @@
-import { User } from "../entities/User";
+export interface IUser {
+  id: number;
+  cpf: string;
+  senha: string;
+  isAdmin: boolean;
+}
 
 export interface IUserRepository {
-  findByCpf(cpf: string): Promise<User | null>;
-  create(user: User): Promise<User>;
+  create(user: { cpf: string; senha: string; isAdmin: boolean }): Promise<IUser>;
+  findByCpf(cpf: string): Promise<IUser | null>;
 }

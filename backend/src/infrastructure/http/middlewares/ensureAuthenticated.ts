@@ -1,26 +1,25 @@
 import { Request, Response, NextFunction } from "express";
-import { verify } from "jsonwebtoken";
+import { AuthService } from "../../../domain/services/AuthService";
 
-interface IPayload {
-  id: number;
-  cpf: string;
-  isAdmin: boolean;
-}
-
-export function ensureAuthenticated(req: Request, res: Response, next: NextFunction): void {
+export function ensureAuthenticated(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-    res.status(401).json({ error: "Token não fornecido" });
-    return;
+    return res.status(401).json({ error: "Token não fornecido" });
   }
 
-  const [, token] = authHeader.split(" ");
+  const [, token] = authHeader.split("Bearer ");
   try {
-    const decoded = verify(token, "secret_key") as IPayload;
-    req.user = decoded;
+    const authService = new AuthService();
+    const decoded = authService.verifyToken(token);
+    req.user = { id: decoded.id, isAdmin: decoded.isAdmin };
     next();
-  } catch {
-    res.status(401).json({ error: "Token inválido" });
-    return;
+  } catch (err) {
+    return res.status(401).json({ error: "Token inválido" });
+  }
+}
+
+declare module "express" {
+  interface Request {
+    user?: { id: number; isAdmin: boolean };
   }
 }

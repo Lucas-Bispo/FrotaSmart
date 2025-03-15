@@ -1,38 +1,42 @@
-import { Router, RequestHandler } from "express";
-import { AuthenticateUser } from "../../../application/useCases/AuthenticateUser";
+import { Router, Request, Response, NextFunction } from "express";
 import { CreateUser } from "../../../application/useCases/CreateUser";
+import { LoginUser } from "../../../application/useCases/LoginUser";
 import { UserRepository } from "../../repositories/UserRepository";
+import { AuthService } from "../../../domain/services/AuthService";
+import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
 import { ensureAdmin } from "../middlewares/ensureAdmin";
 
 const authRoutes = Router();
 const userRepository = new UserRepository();
-const authenticateUser = new AuthenticateUser(userRepository);
-const createUser = new CreateUser(userRepository);
+const authService = new AuthService();
+const createUser = new CreateUser(userRepository, authService);
+const loginUser = new LoginUser(userRepository, authService);
 
-// Handler para login
-const loginHandler: RequestHandler = async (req, res) => {
-  try {
-    const { cpf, senha } = req.body;
-    const token = await authenticateUser.execute({ cpf, senha });
-    res.json({ token });
-  } catch (error) {
-    res.status(401).json({ error: (error as Error).message });
-  }
-};
+const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
 
-// Handler para criar usuário
-const createUserHandler: RequestHandler = async (req, res) => {
-  try {
+// Criar usuário (apenas admin)
+authRoutes.post(
+  "/users",
+  ensureAuthenticated,
+  ensureAdmin,
+  asyncHandler(async (req: Request, res: Response) => {
     const { cpf, senha, isAdmin } = req.body;
-    const user = await createUser.execute({ cpf, senha, isAdmin });
-    res.status(201).json(user);
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
-  }
-};
+    const result = await createUser.execute({ cpf, senha, isAdmin });
+    return res.status(201).json(result);
+  })
+);
 
-// Rotas
-authRoutes.post("/login", loginHandler);
-authRoutes.post("/users", [ensureAdmin, createUserHandler]);
+// Login
+authRoutes.post(
+  "/login",
+  asyncHandler(async (req: Request, res: Response) => {
+    const { cpf, senha } = req.body;
+    const result = await loginUser.execute({ cpf, senha });
+    return res.json(result);
+  })
+);
 
 export default authRoutes;

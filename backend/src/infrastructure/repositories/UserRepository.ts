@@ -1,19 +1,20 @@
 import prisma from "../../prisma";
-import { IUserRepository } from "../../domain/interfaces/IUserRepository";
-import { User } from "../../domain/entities/User";
+import { IUser, IUserRepository } from "../../domain/interfaces/IUserRepository";
 
 export class UserRepository implements IUserRepository {
-  async findByCpf(cpf: string): Promise<User | null> {
-    return prisma.user.findUnique({ where: { cpf } });
-  }
-
-  async create(user: User): Promise<User> {
-    return prisma.user.create({
+  async create(user: { cpf: string; senha: string; isAdmin: boolean }): Promise<IUser> {
+    const created = await prisma.user.create({
       data: {
         cpf: user.cpf,
         senha: user.senha,
         isAdmin: user.isAdmin,
       },
     });
+    return { id: created.id, cpf: created.cpf, senha: created.senha, isAdmin: created.isAdmin };
+  }
+
+  async findByCpf(cpf: string): Promise<IUser | null> {
+    const found = await prisma.user.findUnique({ where: { cpf } });
+    return found ? { id: found.id, cpf: found.cpf, senha: found.senha, isAdmin: found.isAdmin } : null;
   }
 }
