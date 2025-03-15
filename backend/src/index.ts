@@ -4,6 +4,7 @@ import secretariaRoutes from "./infrastructure/http/routes/secretaria.routes";
 import motoristaRoutes from "./infrastructure/http/routes/motorista.routes";
 import veiculoRoutes from "./infrastructure/http/routes/veiculo.routes";
 import locacaoRoutes from "./infrastructure/http/routes/locacao.routes";
+import manutencaoRoutes from "./infrastructure/http/routes/manutencao.routes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,7 @@ app.use("/secretarias", secretariaRoutes);
 app.use("/motoristas", motoristaRoutes);
 app.use("/veiculos", veiculoRoutes);
 app.use("/locacoes", locacaoRoutes);
+app.use("/manutencoes", manutencaoRoutes);
 
 app.get("/", (req, res) => {
   res.send("FrotaSmart Backend está rodando!");
