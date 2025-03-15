@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 generator client {
   provider = "prisma-client-js"
 }
@@ -33,7 +31,7 @@ model Motorista {
   cnh          String
   secretaria   Secretaria  @relation(fields: [secretariaId], references: [id])
   secretariaId Int
-  locacoes     Locacao[]   @relation("MotoristaLocacao") // Campo oposto
+  locacoes     Locacao[]   @relation("MotoristaLocacao")
 }
 
 model Veiculo {
@@ -42,7 +40,8 @@ model Veiculo {
   tipo         String
   secretaria   Secretaria  @relation(fields: [secretariaId], references: [id])
   secretariaId Int
-  locacoes     Locacao[]   @relation("VeiculoLocacao")   // Campo oposto
+  locacoes     Locacao[]   @relation("VeiculoLocacao")
+  manutencoes  Manutencao[] @relation("VeiculoManutencao") // Campo oposto adicionado
 }
 
 model Locacao {
@@ -55,4 +54,14 @@ model Locacao {
   km          Float?
   veiculo     Veiculo   @relation("VeiculoLocacao", fields: [veiculoId], references: [id])
   motorista   Motorista @relation("MotoristaLocacao", fields: [motoristaId], references: [id])
+}
+
+model Manutencao {
+  id          Int      @id @default(autoincrement())
+  veiculoId   Int
+  data        DateTime
+  tipo        String   // Ex.: "Troca de óleo", "Reparo de freio"
+  descricao   String?
+  custo       Float?
+  veiculo     Veiculo  @relation("VeiculoManutencao", fields: [veiculoId], references: [id]) // Nome da relação ajustado
 }
