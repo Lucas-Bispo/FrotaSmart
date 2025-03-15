@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response, NextFunction, RequestHandler } from "express";
 import { CreateUser } from "../../../application/useCases/CreateUser";
 import { LoginUser } from "../../../application/useCases/LoginUser";
 import { UserRepository } from "../../repositories/UserRepository";
@@ -12,10 +12,13 @@ const authService = new AuthService();
 const createUser = new CreateUser(userRepository, authService);
 const loginUser = new LoginUser(userRepository, authService);
 
-const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
-  (req: Request, res: Response, next: NextFunction) => {
+const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
+): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
+};
 
 // Criar usuário (apenas admin)
 authRoutes.post(
@@ -25,7 +28,7 @@ authRoutes.post(
   asyncHandler(async (req: Request, res: Response) => {
     const { cpf, senha, isAdmin } = req.body;
     const result = await createUser.execute({ cpf, senha, isAdmin });
-    return res.status(201).json(result);
+    res.status(201).json(result);
   })
 );
 
@@ -35,7 +38,7 @@ authRoutes.post(
   asyncHandler(async (req: Request, res: Response) => {
     const { cpf, senha } = req.body;
     const result = await loginUser.execute({ cpf, senha });
-    return res.json(result);
+    res.json(result);
   })
 );
 

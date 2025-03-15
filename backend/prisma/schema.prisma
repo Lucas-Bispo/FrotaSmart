@@ -3,7 +3,6 @@
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -21,37 +20,39 @@ model User {
 }
 
 model Secretaria {
-  id    Int    @id @default(autoincrement())
-  nome  String
+  id         Int         @id @default(autoincrement())
+  nome       String
   motoristas Motorista[]
   veiculos   Veiculo[]
 }
 
 model Motorista {
-  id           Int        @id @default(autoincrement())
-  cpf          String     @unique
+  id           Int         @id @default(autoincrement())
+  cpf          String      @unique
   nome         String
   cnh          String
-  secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
+  secretaria   Secretaria  @relation(fields: [secretariaId], references: [id])
   secretariaId Int
+  locacoes     Locacao[]   @relation("MotoristaLocacao") // Campo oposto
 }
 
 model Veiculo {
-  id           Int        @id @default(autoincrement())
-  placa        String     @unique
+  id           Int         @id @default(autoincrement())
+  placa        String      @unique
   tipo         String
-  secretaria   Secretaria @relation(fields: [secretariaId], references: [id])
+  secretaria   Secretaria  @relation(fields: [secretariaId], references: [id])
   secretariaId Int
+  locacoes     Locacao[]   @relation("VeiculoLocacao")   // Campo oposto
 }
 
 model Locacao {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   veiculoId   Int
   motoristaId Int
   dataInicio  DateTime
   dataFim     DateTime?
   destino     String
   km          Float?
-  veiculo     Veiculo  @relation(fields: [veiculoId], references: [id])
-  motorista   Motorista @relation(fields: [motoristaId], references: [id])
+  veiculo     Veiculo   @relation("VeiculoLocacao", fields: [veiculoId], references: [id])
+  motorista   Motorista @relation("MotoristaLocacao", fields: [motoristaId], references: [id])
 }
