@@ -32,6 +32,7 @@ model Motorista {
   secretaria   Secretaria  @relation(fields: [secretariaId], references: [id])
   secretariaId Int
   locacoes     Locacao[]   @relation("MotoristaLocacao")
+  multas       Multa[]     @relation("MotoristaMulta") // Campo oposto adicionado
 }
 
 model Veiculo {
@@ -41,7 +42,8 @@ model Veiculo {
   secretaria   Secretaria  @relation(fields: [secretariaId], references: [id])
   secretariaId Int
   locacoes     Locacao[]   @relation("VeiculoLocacao")
-  manutencoes  Manutencao[] @relation("VeiculoManutencao") // Campo oposto adicionado
+  manutencoes  Manutencao[] @relation("VeiculoManutencao")
+  multas       Multa[]     @relation("VeiculoMulta") // Campo oposto adicionado
 }
 
 model Locacao {
@@ -64,4 +66,15 @@ model Manutencao {
   descricao   String?
   custo       Float?
   veiculo     Veiculo  @relation("VeiculoManutencao", fields: [veiculoId], references: [id]) // Nome da relação ajustado
+}
+model Multa {
+  id          Int       @id @default(autoincrement())
+  veiculoId   Int
+  motoristaId Int?
+  data        DateTime
+  tipo        String    // Ex.: "Excesso de velocidade", "Estacionamento irregular"
+  valor       Float
+  descricao   String?
+  veiculo     Veiculo   @relation("VeiculoMulta", fields: [veiculoId], references: [id])
+  motorista   Motorista? @relation("MotoristaMulta", fields: [motoristaId], references: [id])
 }
