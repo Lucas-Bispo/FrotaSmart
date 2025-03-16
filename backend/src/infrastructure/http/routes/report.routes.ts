@@ -332,7 +332,7 @@ reportRoutes.get(
   asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate, export: exportParam } = req.query;
 
-    const filters: { startDate?: Date; endDate?: Date; export?: "csv" } = {};
+    const filters: { startDate?: Date; endDate?: Date; exportFormat?: "csv" | "pdf" } = {};
 
     if (startDate && typeof startDate === "string") {
       filters.startDate = new Date(startDate);
@@ -349,21 +349,25 @@ reportRoutes.get(
       }
     }
     if (exportParam && typeof exportParam === "string") {
-      if (exportParam !== "csv") {
-        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv'." });
+      if (!["csv", "pdf"].includes(exportParam)) {
+        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv' ou 'pdf'." });
         return;
       }
-      filters.export = "csv";
+      filters.exportFormat = exportParam as "csv" | "pdf";
     }
 
     const report = await generateSummaryReport.execute(filters);
 
-    if (filters.export === "csv") {
+    if (filters.exportFormat === "csv") {
       res.setHeader("Content-Type", "text/csv");
       res.setHeader("Content-Disposition", "attachment; filename=summary_report.csv");
-      res.send(report); // Envia a string CSV
+      res.send(report);
+    } else if (filters.exportFormat === "pdf") {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=summary_report.pdf");
+      res.send(report);
     } else {
-      res.json(report); // Envia JSON como padrão
+      res.json(report);
     }
   })
 );
