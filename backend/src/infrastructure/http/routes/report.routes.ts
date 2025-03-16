@@ -3,6 +3,7 @@ import { GenerateVehicleCostReport } from "../../../application/useCases/Generat
 import { GenerateDriverLocationHistory } from "../../../application/useCases/GenerateDriverLocationHistory";
 import { GenerateVehicleKmReport } from "../../../application/useCases/GenerateVehicleKmReport";
 import { GenerateDriverFinesReport } from "../../../application/useCases/GenerateDriverFinesReport";
+import { GenerateSummaryReport } from "../../../application/useCases/GenerateSummaryReport"; // Novo import
 import { VeiculoRepository } from "../../repositories/VeiculoRepository";
 import { ManutencaoRepository } from "../../repositories/ManutencaoRepository";
 import { MultaRepository } from "../../repositories/MultaRepository";
@@ -22,6 +23,7 @@ const generateVehicleCostReport = new GenerateVehicleCostReport(veiculoRepositor
 const generateDriverLocationHistory = new GenerateDriverLocationHistory(motoristaRepository, locacaoRepository);
 const generateVehicleKmReport = new GenerateVehicleKmReport(veiculoRepository, locacaoRepository);
 const generateDriverFinesReport = new GenerateDriverFinesReport(motoristaRepository, multaRepository);
+const generateSummaryReport = new GenerateSummaryReport(veiculoRepository, locacaoRepository, manutencaoRepository, multaRepository); // Nova instância
 
 const asyncHandler = (
   fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
@@ -265,6 +267,34 @@ reportRoutes.get(
     }
 
     const report = await generateDriverFinesReport.execute(filters);
+    res.json(report);
+  })
+);
+
+reportRoutes.get(
+  "/summary",
+  ensureAdmin,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { startDate, endDate } = req.query;
+
+    const filters: { startDate?: Date; endDate?: Date } = {};
+
+    if (startDate && typeof startDate === "string") {
+      filters.startDate = new Date(startDate);
+      if (isNaN(filters.startDate.getTime())) {
+        res.status(400).json({ error: "Data de início inválida" });
+        return;
+      }
+    }
+    if (endDate && typeof endDate === "string") {
+      filters.endDate = new Date(endDate);
+      if (isNaN(filters.endDate.getTime())) {
+        res.status(400).json({ error: "Data de fim inválida" });
+        return;
+      }
+    }
+
+    const report = await generateSummaryReport.execute(filters);
     res.json(report);
   })
 );
