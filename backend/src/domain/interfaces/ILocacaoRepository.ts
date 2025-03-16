@@ -6,4 +6,5 @@ export interface ILocacaoRepository {
   list(): Promise<Locacao[]>;
   update(id: number, locacao: Partial<Locacao>): Promise<Locacao>;
   delete(id: number): Promise<void>;
+  findByVeiculoId(veiculoId: number): Promise<Locacao[]>; // Novo método
 }
