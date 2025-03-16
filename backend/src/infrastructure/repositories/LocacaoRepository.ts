@@ -1,35 +1,68 @@
+import { PrismaClient } from "@prisma/client";
 import { ILocacaoRepository } from "../../domain/interfaces/ILocacaoRepository";
 import { Locacao } from "../../domain/entities/Locacao";
 
+const prisma = new PrismaClient();
+
+function mapPrismaLocacaoToEntity(prismaLocacao: any): Locacao {
+  const locacao = new Locacao(
+    prismaLocacao.veiculoId,
+    prismaLocacao.motoristaId,
+    prismaLocacao.dataInicio,
+    prismaLocacao.destino,
+    prismaLocacao.dataFim ?? undefined,
+    prismaLocacao.km ?? undefined
+  );
+  locacao.id = prismaLocacao.id; // Atribuir o id após a criação
+  return locacao;
+}
+
 export class LocacaoRepository implements ILocacaoRepository {
-  // Implementação com seu ORM ou banco de dados
   async create(locacao: Locacao): Promise<Locacao> {
-    // Exemplo: return prisma.locacao.create({ data: locacao });
-    throw new Error("Método não implementado");
+    const created = await prisma.locacao.create({
+      data: {
+        veiculoId: locacao.veiculoId,
+        motoristaId: locacao.motoristaId,
+        dataInicio: locacao.dataInicio,
+        dataFim: locacao.dataFim ?? null,
+        destino: locacao.destino,
+        km: locacao.km ?? null,
+      },
+    });
+    return mapPrismaLocacaoToEntity(created);
   }
 
   async findById(id: number): Promise<Locacao | null> {
-    // Exemplo: return prisma.locacao.findUnique({ where: { id } });
-    throw new Error("Método não implementado");
+    const found = await prisma.locacao.findUnique({ where: { id } });
+    return found ? mapPrismaLocacaoToEntity(found) : null;
   }
 
   async list(): Promise<Locacao[]> {
-    // Exemplo: return prisma.locacao.findMany();
-    throw new Error("Método não implementado");
+    const locacoes = await prisma.locacao.findMany();
+    return locacoes.map(mapPrismaLocacaoToEntity);
   }
 
   async update(id: number, locacao: Partial<Locacao>): Promise<Locacao> {
-    // Exemplo: return prisma.locacao.update({ where: { id }, data: locacao });
-    throw new Error("Método não implementado");
+    const updated = await prisma.locacao.update({
+      where: { id },
+      data: {
+        veiculoId: locacao.veiculoId,
+        motoristaId: locacao.motoristaId,
+        dataInicio: locacao.dataInicio,
+        dataFim: locacao.dataFim ?? null,
+        destino: locacao.destino,
+        km: locacao.km ?? null,
+      },
+    });
+    return mapPrismaLocacaoToEntity(updated);
   }
 
   async delete(id: number): Promise<void> {
-    // Exemplo: await prisma.locacao.delete({ where: { id } });
-    throw new Error("Método não implementado");
+    await prisma.locacao.delete({ where: { id } });
   }
 
   async findByVeiculoId(veiculoId: number): Promise<Locacao[]> {
-    // Exemplo: return prisma.locacao.findMany({ where: { veiculoId } });
-    throw new Error("Método não implementado");
+    const locacoes = await prisma.locacao.findMany({ where: { veiculoId } });
+    return locacoes.map(mapPrismaLocacaoToEntity);
   }
 }
