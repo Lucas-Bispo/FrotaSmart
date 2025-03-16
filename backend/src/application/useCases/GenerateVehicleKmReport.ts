@@ -1,22 +1,13 @@
 import { IVeiculoRepository } from "../../domain/interfaces/IVeiculoRepository";
 import { ILocacaoRepository } from "../../domain/interfaces/ILocacaoRepository";
 import { Veiculo } from "../../domain/entities/Veiculo";
-import { Locacao } from "../../domain/entities/Locacao";
+import PDFDocument from "pdfkit";
 
 interface VehicleKmReport {
   veiculoId: number;
   placa: string;
-  tipo: string;
-  locacoes: {
-    id: number;
-    motoristaId: number;
-    dataInicio: Date;
-    dataFim?: Date;
-    destino: string;
-    km?: number;
-  }[];
-  totalKm: number;
   totalLocacoes: number;
+  totalKm: number;
 }
 
 interface FilterOptions {
@@ -24,8 +15,9 @@ interface FilterOptions {
   endDate?: Date;
   page?: number;
   limit?: number;
-  sort?: "totalKm" | "totalLocacoes" | "placa"; // Campos para ordenação
-  order?: "asc" | "desc"; // Direção da ordenação
+  sort?: "totalKm" | "totalLocacoes" | "placa";
+  order?: "asc" | "desc";
+  exportFormat?: "csv" | "pdf"; // Adicionado "csv" e "pdf"
 }
 
 interface PaginatedVehicleKmReport {
@@ -42,7 +34,15 @@ export class GenerateVehicleKmReport {
     private locacaoRepository: ILocacaoRepository
   ) {}
 
-  async execute({ startDate, endDate, page = 1, limit = 10, sort, order = "asc" }: FilterOptions = {}): Promise<PaginatedVehicleKmReport> {
+  async execute({
+    startDate,
+    endDate,
+    page = 1,
+    limit = 10,
+    sort,
+    order = "asc",
+    exportFormat,
+  }: FilterOptions = {}): Promise<PaginatedVehicleKmReport | string | Buffer> {
     const veiculos = await this.veiculoRepository.list();
     const locacoes = await this.locacaoRepository.list();
 
@@ -60,25 +60,15 @@ export class GenerateVehicleKmReport {
       return {
         veiculoId: veiculo.id!,
         placa: veiculo.placa,
-        tipo: veiculo.tipo,
-        locacoes: veiculoLocacoes.map((l: Locacao) => ({
-          id: l.id!,
-          motoristaId: l.motoristaId,
-          dataInicio: l.dataInicio,
-          dataFim: l.dataFim,
-          destino: l.destino,
-          km: l.km,
-        })),
-        totalKm,
         totalLocacoes: veiculoLocacoes.length,
+        totalKm,
       };
     });
 
-    // Aplicar ordenação
     if (sort) {
       report.sort((a, b) => {
-        const valueA = sort === "placa" ? a.placa : a[sort];
-        const valueB = sort === "placa" ? b.placa : b[sort];
+        const valueA = a[sort];
+        const valueB = b[sort];
         if (order === "asc") {
           return valueA > valueB ? 1 : -1;
         } else {
@@ -92,6 +82,62 @@ export class GenerateVehicleKmReport {
     const endIndex = startIndex + limit;
     const paginatedData = report.slice(startIndex, endIndex);
     const totalPages = Math.ceil(total / limit);
+
+    if (exportFormat === "csv") {
+      const headers = ["Veículo ID", "Placa", "Total Locações", "Total KM"];
+      const rows = report.map((item) =>
+        [item.veiculoId, item.placa, item.totalLocacoes, item.totalKm].join(",")
+      );
+      const csv = [headers.join(","), ...rows].join("\n");
+      return csv;
+    }
+
+    if (exportFormat === "pdf") {
+      const doc = new PDFDocument({ size: "A4", margin: 50 });
+      const buffers: Buffer[] = [];
+
+      doc.on("data", (chunk: Buffer) => buffers.push(chunk));
+      doc.on("end", () => {});
+
+      // Cabeçalho
+      doc.fontSize(20).text("Relatório de Quilometragem por Veículo", 50, 50, { align: "center" });
+      doc.fontSize(12).text(`Gerado em: ${new Date().toLocaleDateString()}`, 50, 80, { align: "center" });
+      doc.moveDown(2);
+
+      // Tabela
+      let yPosition = 120;
+      const tableWidth = 500;
+      const colWidths = [50, 150, 100, 100]; // ID, Placa, Locações, KM
+      const rowHeight = 20;
+
+      doc.fontSize(10).font("Helvetica-Bold");
+      doc.text("ID", 50, yPosition);
+      doc.text("Placa", 100, yPosition);
+      doc.text("Locações", 250, yPosition);
+      doc.text("Total KM", 350, yPosition);
+      doc.moveTo(50, yPosition + rowHeight).lineTo(50 + tableWidth, yPosition + rowHeight).stroke();
+      yPosition += rowHeight + 5;
+
+      doc.font("Helvetica");
+      report.forEach((item) => {
+        doc.text(item.veiculoId.toString(), 50, yPosition);
+        doc.text(item.placa, 100, yPosition);
+        doc.text(item.totalLocacoes.toString(), 250, yPosition);
+        doc.text(item.totalKm.toString(), 350, yPosition);
+        yPosition += rowHeight;
+
+        if (yPosition > 700) {
+          doc.addPage();
+          yPosition = 50;
+        }
+      });
+
+      doc.end();
+
+      return new Promise((resolve) => {
+        doc.on("end", () => resolve(Buffer.concat(buffers)));
+      });
+    }
 
     return {
       data: paginatedData,

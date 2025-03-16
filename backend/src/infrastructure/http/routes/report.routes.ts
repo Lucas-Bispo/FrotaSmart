@@ -54,7 +54,7 @@ reportRoutes.get(
       limit?: number; 
       sort?: "totalGeral" | "totalManutencao" | "totalMultas" | "placa"; 
       order?: "asc" | "desc"; 
-      exportFormat?: "csv";
+      exportFormat?: "csv" | "pdf"; // Adicionado "pdf"
     } = {};
 
     if (page && typeof page === "string") {
@@ -86,11 +86,11 @@ reportRoutes.get(
       filters.order = order as "asc" | "desc";
     }
     if (exportFormat && typeof exportFormat === "string") {
-      if (exportFormat !== "csv") {
-        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv'." });
+      if (!["csv", "pdf"].includes(exportFormat)) {
+        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv' ou 'pdf'." });
         return;
       }
-      filters.exportFormat = "csv";
+      filters.exportFormat = exportFormat as "csv" | "pdf";
     }
 
     const report = await generateVehicleCostReport.execute(filters);
@@ -98,6 +98,10 @@ reportRoutes.get(
     if (filters.exportFormat === "csv") {
       res.setHeader("Content-Type", "text/csv");
       res.setHeader("Content-Disposition", "attachment; filename=vehicle_costs_report.csv");
+      res.send(report);
+    } else if (filters.exportFormat === "pdf") {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=vehicle_costs_report.pdf");
       res.send(report);
     } else {
       res.json(report);
@@ -188,7 +192,7 @@ reportRoutes.get(
   "/vehicle-km",
   ensureAdmin,
   asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate, page, limit, sort, order } = req.query;
+    const { startDate, endDate, page, limit, sort, order, exportFormat } = req.query;
 
     const filters: { 
       startDate?: Date; 
@@ -197,7 +201,7 @@ reportRoutes.get(
       limit?: number; 
       sort?: "totalKm" | "totalLocacoes" | "placa"; 
       order?: "asc" | "desc"; 
-      exportFormat?: "csv";
+      exportFormat?: "csv" | "pdf"; // Adicionado "csv" e "pdf"
     } = {};
 
     if (startDate && typeof startDate === "string") {
@@ -242,9 +246,27 @@ reportRoutes.get(
       }
       filters.order = order as "asc" | "desc";
     }
+    if (exportFormat && typeof exportFormat === "string") {
+      if (!["csv", "pdf"].includes(exportFormat)) {
+        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv' ou 'pdf'." });
+        return;
+      }
+      filters.exportFormat = exportFormat as "csv" | "pdf";
+    }
 
     const report = await generateVehicleKmReport.execute(filters);
-    res.json(report);
+
+    if (filters.exportFormat === "csv") {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=vehicle_km_report.csv");
+      res.send(report);
+    } else if (filters.exportFormat === "pdf") {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=vehicle_km_report.pdf");
+      res.send(report);
+    } else {
+      res.json(report);
+    }
   })
 );
 
