@@ -212,7 +212,7 @@ reportRoutes.get(
   "/driver-fines",
   ensureAdmin,
   asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate, page, limit, sort, order } = req.query;
+    const { startDate, endDate, page, limit, sort, order, exportFormat } = req.query;
 
     const filters: { 
       startDate?: Date; 
@@ -221,6 +221,7 @@ reportRoutes.get(
       limit?: number; 
       sort?: "totalMultas" | "totalValor" | "nome"; 
       order?: "asc" | "desc"; 
+      exportFormat?: "csv"; // Ad .icionado
     } = {};
 
     if (startDate && typeof startDate === "string") {
@@ -265,9 +266,23 @@ reportRoutes.get(
       }
       filters.order = order as "asc" | "desc";
     }
+    if (exportFormat && typeof exportFormat === "string") {
+      if (exportFormat !== "csv") {
+        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv'." });
+        return;
+      }
+      filters.exportFormat = "csv";
+    }
 
     const report = await generateDriverFinesReport.execute(filters);
-    res.json(report);
+
+    if (filters.exportFormat === "csv") {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=driver_fines_report.csv");
+      res.send(report);
+    } else {
+      res.json(report);
+    }
   })
 );
 

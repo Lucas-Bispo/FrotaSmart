@@ -9,7 +9,7 @@ interface DriverFinesReport {
     id: number;
     data: Date;
     valor: number;
-    descricao: string;
+    descricao: string | null; // Ajustado para aceitar null
   }[];
   totalMultas: number;
   totalValor: number;
@@ -22,7 +22,7 @@ interface FilterOptions {
   limit?: number;
   sort?: "totalMultas" | "totalValor" | "nome";
   order?: "asc" | "desc";
-  exportFormat?: "csv"; // Adicionado para exportação
+  exportFormat?: "csv";
 }
 
 interface PaginatedDriverFinesReport {
@@ -69,7 +69,7 @@ export class GenerateDriverFinesReport {
           id: m.id!,
           data: m.data,
           valor: m.valor,
-          descricao: m.descricao,
+          descricao: m.descricao, // Agora compatível com string | null
         })),
         totalMultas: motoristaMultas.length,
         totalValor,
