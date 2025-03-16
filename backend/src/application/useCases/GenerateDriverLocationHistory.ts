@@ -22,6 +22,16 @@ interface DriverLocationHistory {
 interface FilterOptions {
   startDate?: Date;
   endDate?: Date;
+  page?: number;  // Número da página (começa em 1)
+  limit?: number; // Quantidade de motoristas por página
+}
+
+interface PaginatedDriverLocationHistory {
+  data: DriverLocationHistory[];
+  total: number;       // Total de motoristas
+  page: number;        // Página atual
+  limit: number;       // Itens por página
+  totalPages: number;  // Total de páginas
 }
 
 export class GenerateDriverLocationHistory {
@@ -30,7 +40,7 @@ export class GenerateDriverLocationHistory {
     private locacaoRepository: ILocacaoRepository
   ) {}
 
-  async execute({ startDate, endDate }: FilterOptions = {}): Promise<DriverLocationHistory[]> {
+  async execute({ startDate, endDate, page = 1, limit = 10 }: FilterOptions = {}): Promise<PaginatedDriverLocationHistory> {
     const motoristas = await this.motoristaRepository.list();
     const locacoes = await this.locacaoRepository.list();
 
@@ -62,6 +72,18 @@ export class GenerateDriverLocationHistory {
       };
     });
 
-    return report;
+    const total = motoristas.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = report.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: paginatedData,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 }
