@@ -1,23 +1,21 @@
-import { Router } from "express";
-import { MotoristaRepository } from "../../infra/repositories/MotoristaRepository";
-import { CreateMotoristaService } from "../../application/services/CreateMotoristaService";
-import { UpdateMotoristaService } from "../../application/services/UpdateMotoristaService";
-import { DeleteMotoristaService } from "../../application/services/DeleteMotoristaService";
-import { ListMotoristaService } from "../../application/services/ListMotoristaService";
-import { GetMotoristaService } from "../../application/services/GetMotoristaService";
+import { Router, Request, Response, NextFunction } from "express";
+import { MotoristaRepository } from "../../repositories/MotoristaRepository";
+import { CreateMotorista } from "../../../application/useCases/CreateMotorista";
+import { ListMotoristas } from "../../../application/useCases/ListMotoristas";
+import { UpdateMotorista } from "../../../application/useCases/UpdateMotorista";
+import { DeleteMotorista } from "../../../application/useCases/DeleteMotorista";
 import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
 import { ensureAdmin } from "../middlewares/ensureAdmin";
 import { validateRequest } from "../middlewares/validateRequest";
-import { object, string } from "yup";
+import { object, string, number } from "yup";
 import asyncHandler from "express-async-handler";
 
 const motoristaRoutes = Router();
 const motoristaRepository = new MotoristaRepository();
-const createMotoristaService = new CreateMotoristaService(motoristaRepository);
-const updateMotoristaService = new UpdateMotoristaService(motoristaRepository);
-const deleteMotoristaService = new DeleteMotoristaService(motoristaRepository);
-const listMotoristaService = new ListMotoristaService(motoristaRepository);
-const getMotoristaService = new GetMotoristaService(motoristaRepository);
+const createMotorista = new CreateMotorista(motoristaRepository);
+const listMotoristas = new ListMotoristas(motoristaRepository);
+const updateMotorista = new UpdateMotorista(motoristaRepository);
+const deleteMotorista = new DeleteMotorista(motoristaRepository);
 
 // Schema de validação para criação de motorista
 const createMotoristaSchema = object({
@@ -27,53 +25,38 @@ const createMotoristaSchema = object({
     .matches(/^\d{11}$/, "CPF deve ter exatamente 11 dígitos numéricos")
     .test("unique-cpf", "CPF já está em uso", async (value) => {
       const motorista = await motoristaRepository.findByCpf(value);
-      return !motorista; // Retorna true se CPF não existir
+      return !motorista;
     }),
+  cnh: string().required("CNH é obrigatória"),
+  secretariaId: number().required("Secretaria ID é obrigatório").integer("Secretaria ID deve ser um número inteiro"),
 });
 
 // Schema de validação para atualização de motorista
 const updateMotoristaSchema = object({
   nome: string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
-  cpf: string()
-    .matches(/^\d{11}$/, "CPF deve ter exatamente 11 dígitos numéricos")
-    .test("unique-cpf", "CPF já está em uso por outro motorista", async (value, context) => {
-      if (!value) return true; // Se CPF não for fornecido, pula a validação
-      const motorista = await motoristaRepository.findByCpf(value);
-      return !motorista || motorista.id === Number(context.parent.id); // Permite o mesmo CPF se for o mesmo motorista
-    })
-    .optional(),
+  cnh: string().optional(),
+  secretariaId: number().integer("Secretaria ID deve ser um número inteiro").optional(),
 });
+
+motoristaRoutes.use(ensureAuthenticated);
 
 // Listar motoristas
 motoristaRoutes.get(
   "/",
-  ensureAuthenticated,
   asyncHandler(async (req: Request, res: Response) => {
-    const motoristas = await listMotoristaService.execute();
+    const motoristas = await listMotoristas.execute();
     res.json(motoristas);
-  })
-);
-
-// Obter motorista por ID
-motoristaRoutes.get(
-  "/:id",
-  ensureAuthenticated,
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const motorista = await getMotoristaService.execute(Number(id));
-    res.json(motorista);
   })
 );
 
 // Criar motorista
 motoristaRoutes.post(
   "/",
-  ensureAuthenticated,
   ensureAdmin,
   validateRequest(createMotoristaSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { nome, cpf } = req.body;
-    const motorista = await createMotoristaService.execute({ nome, cpf });
+  asyncHandler(async (req: Request<{}, {}, { nome: string; cpf: string; cnh: string; secretariaId: number }>, res: Response) => {
+    const { nome, cpf, cnh, secretariaId } = req.body;
+    const motorista = await createMotorista.execute({ nome, cpf, cnh, secretariaId });
     res.status(201).json(motorista);
   })
 );
@@ -81,17 +64,12 @@ motoristaRoutes.post(
 // Atualizar motorista
 motoristaRoutes.put(
   "/:id",
-  ensureAuthenticated,
   ensureAdmin,
   validateRequest(updateMotoristaSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { nome, cpf } = req.body;
-    const motorista = await updateMotoristaService.execute({
-      id: Number(id),
-      nome,
-      cpf,
-    });
+  asyncHandler(async (req: Request<{ id: string }, {}, { nome?: string; cnh?: string; secretariaId?: number }>, res: Response) => {
+    const id = parseInt(req.params.id, 10);
+    const { nome, cnh, secretariaId } = req.body;
+    const motorista = await updateMotorista.execute(id, { nome, cnh, secretariaId });
     res.json(motorista);
   })
 );
@@ -99,13 +77,12 @@ motoristaRoutes.put(
 // Deletar motorista
 motoristaRoutes.delete(
   "/:id",
-  ensureAuthenticated,
   ensureAdmin,
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    await deleteMotoristaService.execute(Number(id));
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
+    const id = parseInt(req.params.id, 10);
+    await deleteMotorista.execute(id);
     res.status(204).send();
   })
 );
 
-export { motoristaRoutes };
+export default motoristaRoutes;
