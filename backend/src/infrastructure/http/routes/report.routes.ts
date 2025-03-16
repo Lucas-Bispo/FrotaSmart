@@ -39,13 +39,14 @@ reportRoutes.get(
   "/vehicle-costs",
   ensureAdmin,
   asyncHandler(async (req: Request, res: Response) => {
-    const { page, limit, sort, order } = req.query;
+    const { page, limit, sort, order, exportFormat } = req.query;
 
     const filters: { 
       page?: number; 
       limit?: number; 
       sort?: "totalGeral" | "totalManutencao" | "totalMultas" | "placa"; 
       order?: "asc" | "desc"; 
+      exportFormat?: "csv"; // Adicionado
     } = {};
 
     if (page && typeof page === "string") {
@@ -76,12 +77,25 @@ reportRoutes.get(
       }
       filters.order = order as "asc" | "desc";
     }
+    if (exportFormat && typeof exportFormat === "string") {
+      if (exportFormat !== "csv") {
+        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv'." });
+        return;
+      }
+      filters.exportFormat = "csv";
+    }
 
     const report = await generateVehicleCostReport.execute(filters);
-    res.json(report);
+
+    if (filters.exportFormat === "csv") {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=vehicle_costs_report.csv");
+      res.send(report);
+    } else {
+      res.json(report);
+    }
   })
 );
-
 reportRoutes.get(
   "/driver-location-history",
   ensureAdmin,
