@@ -11,6 +11,19 @@ interface VehicleCostReport {
   totalGeral: number;
 }
 
+interface FilterOptions {
+  page?: number;  // Número da página (começa em 1)
+  limit?: number; // Quantidade de veículos por página
+}
+
+interface PaginatedVehicleCostReport {
+  data: VehicleCostReport[];
+  total: number;       // Total de veículos
+  page: number;        // Página atual
+  limit: number;       // Itens por página
+  totalPages: number;  // Total de páginas
+}
+
 export class GenerateVehicleCostReport {
   constructor(
     private veiculoRepository: IVeiculoRepository,
@@ -18,7 +31,7 @@ export class GenerateVehicleCostReport {
     private multaRepository: IMultaRepository
   ) {}
 
-  async execute(): Promise<VehicleCostReport[]> {
+  async execute({ page = 1, limit = 10 }: FilterOptions = {}): Promise<PaginatedVehicleCostReport> {
     const veiculos = await this.veiculoRepository.list();
     const manutencoes = await this.manutencaoRepository.list();
     const multas = await this.multaRepository.list();
@@ -41,6 +54,18 @@ export class GenerateVehicleCostReport {
       };
     });
 
-    return report;
+    const total = veiculos.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = report.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: paginatedData,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 }
