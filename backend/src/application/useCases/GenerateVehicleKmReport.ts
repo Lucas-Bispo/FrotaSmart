@@ -22,6 +22,16 @@ interface VehicleKmReport {
 interface FilterOptions {
   startDate?: Date;
   endDate?: Date;
+  page?: number;  // Número da página (começa em 1)
+  limit?: number; // Quantidade de veículos por página
+}
+
+interface PaginatedVehicleKmReport {
+  data: VehicleKmReport[];
+  total: number;       // Total de veículos
+  page: number;        // Página atual
+  limit: number;       // Itens por página
+  totalPages: number;  // Total de páginas
 }
 
 export class GenerateVehicleKmReport {
@@ -30,7 +40,7 @@ export class GenerateVehicleKmReport {
     private locacaoRepository: ILocacaoRepository
   ) {}
 
-  async execute({ startDate, endDate }: FilterOptions = {}): Promise<VehicleKmReport[]> {
+  async execute({ startDate, endDate, page = 1, limit = 10 }: FilterOptions = {}): Promise<PaginatedVehicleKmReport> {
     const veiculos = await this.veiculoRepository.list();
     const locacoes = await this.locacaoRepository.list();
 
@@ -62,6 +72,18 @@ export class GenerateVehicleKmReport {
       };
     });
 
-    return report;
+    const total = veiculos.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = report.slice(startIndex, endIndex);
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: paginatedData,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 }
