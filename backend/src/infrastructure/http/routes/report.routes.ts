@@ -172,6 +172,7 @@ reportRoutes.get(
       limit?: number; 
       sort?: "totalKm" | "totalLocacoes" | "placa"; 
       order?: "asc" | "desc"; 
+      exportFormat?: "csv";
     } = {};
 
     if (startDate && typeof startDate === "string") {
