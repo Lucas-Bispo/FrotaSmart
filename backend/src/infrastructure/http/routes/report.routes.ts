@@ -20,9 +20,11 @@ const multaRepository = new MultaRepository();
 const motoristaRepository = new MotoristaRepository();
 const locacaoRepository = new LocacaoRepository();
 
+// ADICIONADO DO TUTORIAL: Ajuste na instância para incluir veiculoRepository
 const generateDriverLocationHistoryReport = new GenerateDriverLocationHistoryReport(
   motoristaRepository,
-  locacaoRepository
+  locacaoRepository,
+  veiculoRepository // Adicionado para suprir a necessidade de placas
 );
 
 const generateVehicleCostReport = new GenerateVehicleCostReport(veiculoRepository, manutencaoRepository, multaRepository);
@@ -52,7 +54,7 @@ reportRoutes.get(
       limit?: number; 
       sort?: "totalGeral" | "totalManutencao" | "totalMultas" | "placa"; 
       order?: "asc" | "desc"; 
-      exportFormat?: "csv"; // Adicionado
+      exportFormat?: "csv";
     } = {};
 
     if (page && typeof page === "string") {
@@ -102,6 +104,8 @@ reportRoutes.get(
     }
   })
 );
+
+// ADICIONADO DO TUTORIAL: Ajuste na rota /driver-location-history para refletir o novo caso de uso
 reportRoutes.get(
   "/driver-location-history",
   ensureAdmin,
@@ -179,6 +183,7 @@ reportRoutes.get(
     }
   })
 );
+
 reportRoutes.get(
   "/vehicle-km",
   ensureAdmin,
@@ -256,7 +261,7 @@ reportRoutes.get(
       limit?: number; 
       sort?: "totalMultas" | "totalValor" | "nome"; 
       order?: "asc" | "desc"; 
-      exportFormat?: "csv"; // Ad .icionado
+      exportFormat?: "csv";
     } = {};
 
     if (startDate && typeof startDate === "string") {
