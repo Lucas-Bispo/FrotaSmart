@@ -1,19 +1,15 @@
 import { IMotoristaRepository } from "../../domain/interfaces/IMotoristaRepository";
 import { IMultaRepository } from "../../domain/interfaces/IMultaRepository";
 import { Motorista } from "../../domain/entities/Motorista";
-import { Multa } from "../../domain/entities/Multa";
 
 interface DriverFinesReport {
   motoristaId: number;
-  cpf: string;
   nome: string;
   multas: {
     id: number;
-    veiculoId: number;
     data: Date;
-    tipo: string;
     valor: number;
-    descricao: string | null;
+    descricao: string;
   }[];
   totalMultas: number;
   totalValor: number;
@@ -24,8 +20,9 @@ interface FilterOptions {
   endDate?: Date;
   page?: number;
   limit?: number;
-  sort?: "totalMultas" | "totalValor" | "nome"; // Campos para ordenação
-  order?: "asc" | "desc"; // Direção da ordenação
+  sort?: "totalMultas" | "totalValor" | "nome";
+  order?: "asc" | "desc";
+  exportFormat?: "csv"; // Adicionado para exportação
 }
 
 interface PaginatedDriverFinesReport {
@@ -42,7 +39,15 @@ export class GenerateDriverFinesReport {
     private multaRepository: IMultaRepository
   ) {}
 
-  async execute({ startDate, endDate, page = 1, limit = 10, sort, order = "asc" }: FilterOptions = {}): Promise<PaginatedDriverFinesReport> {
+  async execute({
+    startDate,
+    endDate,
+    page = 1,
+    limit = 10,
+    sort,
+    order = "asc",
+    exportFormat,
+  }: FilterOptions = {}): Promise<PaginatedDriverFinesReport | string> {
     const motoristas = await this.motoristaRepository.list();
     const multas = await this.multaRepository.list();
 
@@ -59,13 +64,10 @@ export class GenerateDriverFinesReport {
 
       return {
         motoristaId: motorista.id!,
-        cpf: motorista.cpf,
         nome: motorista.nome,
-        multas: motoristaMultas.map((m: Multa) => ({
+        multas: motoristaMultas.map((m) => ({
           id: m.id!,
-          veiculoId: m.veiculoId,
           data: m.data,
-          tipo: m.tipo,
           valor: m.valor,
           descricao: m.descricao,
         })),
@@ -77,8 +79,8 @@ export class GenerateDriverFinesReport {
     // Aplicar ordenação
     if (sort) {
       report.sort((a, b) => {
-        const valueA = sort === "nome" ? a.nome : a[sort];
-        const valueB = sort === "nome" ? b.nome : b[sort];
+        const valueA = a[sort];
+        const valueB = b[sort];
         if (order === "asc") {
           return valueA > valueB ? 1 : -1;
         } else {
@@ -92,6 +94,16 @@ export class GenerateDriverFinesReport {
     const endIndex = startIndex + limit;
     const paginatedData = report.slice(startIndex, endIndex);
     const totalPages = Math.ceil(total / limit);
+
+    // Exportação para CSV
+    if (exportFormat === "csv") {
+      const headers = ["Motorista ID", "Nome", "Total Multas", "Total Valor"];
+      const rows = report.map((item) =>
+        [item.motoristaId, item.nome, item.totalMultas, item.totalValor].join(",")
+      );
+      const csv = [headers.join(","), ...rows].join("\n");
+      return csv;
+    }
 
     return {
       data: paginatedData,
