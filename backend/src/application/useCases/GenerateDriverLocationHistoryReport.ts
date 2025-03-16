@@ -2,7 +2,7 @@ import { IMotoristaRepository } from "../../domain/interfaces/IMotoristaReposito
 import { ILocacaoRepository } from "../../domain/interfaces/ILocacaoRepository";
 import { IVeiculoRepository } from "../../domain/interfaces/IVeiculoRepository";
 import { Motorista } from "../../domain/entities/Motorista";
-import * as PDFDocument from "pdfkit";
+import PDFDocument from "pdfkit"; // Corrigido: Importação padrão
 
 interface DriverLocationHistoryReport {
   motoristaId: number;
@@ -114,10 +114,10 @@ export class GenerateDriverLocationHistoryReport {
     }
 
     if (exportFormat === "pdf") {
-      const doc = new PDFDocument({ size: "A4", margin: 50 });
+      const doc = new PDFDocument({ size: "A4", margin: 50 }); // Corrigido: Uso direto da classe
       const buffers: Buffer[] = [];
 
-      doc.on("data", (chunk) => buffers.push(chunk));
+      doc.on("data", (chunk: Buffer) => buffers.push(chunk)); // Corrigido: Tipagem explícita de chunk
       doc.on("end", () => {});
 
       // Cabeçalho
@@ -128,10 +128,9 @@ export class GenerateDriverLocationHistoryReport {
       // Tabela de motoristas
       let yPosition = 120;
       const tableWidth = 500;
-      const colWidths = [50, 150, 80, 80, 80]; // ID, Nome, Locações, KM, Espaço
+      const colWidths = [50, 150, 80, 80, 80];
       const rowHeight = 20;
 
-      // Cabeçalho da tabela
       doc.fontSize(10).font("Helvetica-Bold");
       doc.text("ID", 50, yPosition);
       doc.text("Nome", 100, yPosition);
@@ -140,7 +139,6 @@ export class GenerateDriverLocationHistoryReport {
       doc.moveTo(50, yPosition + rowHeight).lineTo(50 + tableWidth, yPosition + rowHeight).stroke();
       yPosition += rowHeight + 5;
 
-      // Dados da tabela
       doc.font("Helvetica");
       report.forEach((item) => {
         doc.text(item.motoristaId.toString(), 50, yPosition);
@@ -149,7 +147,6 @@ export class GenerateDriverLocationHistoryReport {
         doc.text(item.totalKm.toString(), 330, yPosition);
         yPosition += rowHeight;
 
-        // Detalhes das locações (opcional)
         if (item.locacoes.length > 0) {
           doc.fontSize(8).font("Helvetica-Oblique");
           item.locacoes.forEach((loc) => {
@@ -164,7 +161,6 @@ export class GenerateDriverLocationHistoryReport {
           doc.font("Helvetica");
         }
 
-        // Verifica se precisa de nova página
         if (yPosition > 700) {
           doc.addPage();
           yPosition = 50;
