@@ -9,12 +9,13 @@ interface SummaryReport {
   totalKm: number;
   totalManutencao: number;
   totalMultas: number;
-  totalGeral: number; // Soma de manutenção e multas
+  totalGeral: number;
 }
 
 interface FilterOptions {
   startDate?: Date;
   endDate?: Date;
+  exportFormat?: "csv"; // Renomeado para evitar conflito com 'export'
 }
 
 export class GenerateSummaryReport {
@@ -25,7 +26,7 @@ export class GenerateSummaryReport {
     private multaRepository: IMultaRepository
   ) {}
 
-  async execute({ startDate, endDate }: FilterOptions = {}): Promise<SummaryReport> {
+  async execute({ startDate, endDate, exportFormat }: FilterOptions = {}): Promise<SummaryReport | string> { // Linha 29 corrigida
     const veiculos = await this.veiculoRepository.list();
     const locacoes = await this.locacaoRepository.list();
     const manutencoes = await this.manutencaoRepository.list();
@@ -63,7 +64,7 @@ export class GenerateSummaryReport {
     const totalMultas = filteredMultas.reduce((sum, m) => sum + m.valor, 0);
     const totalGeral = totalManutencao + totalMultas;
 
-    return {
+    const report: SummaryReport = {
       totalVeiculos,
       totalLocacoes,
       totalKm,
@@ -71,5 +72,21 @@ export class GenerateSummaryReport {
       totalMultas,
       totalGeral,
     };
+
+    if (exportFormat === "csv") { // Ajustado para o novo nome
+      const headers = ["Total Veículos", "Total Locações", "Total KM", "Total Manutenção", "Total Multas", "Total Geral"];
+      const values = [
+        report.totalVeiculos,
+        report.totalLocacoes,
+        report.totalKm,
+        report.totalManutencao,
+        report.totalMultas,
+        report.totalGeral,
+      ];
+      const csv = [headers.join(","), values.join(",")].join("\n");
+      return csv;
+    }
+
+    return report;
   }
 }
