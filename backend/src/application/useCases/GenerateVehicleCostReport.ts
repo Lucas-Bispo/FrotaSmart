@@ -12,16 +12,18 @@ interface VehicleCostReport {
 }
 
 interface FilterOptions {
-  page?: number;  // Número da página (começa em 1)
-  limit?: number; // Quantidade de veículos por página
+  page?: number;
+  limit?: number;
+  sort?: "totalGeral" | "totalManutencao" | "totalMultas" | "placa"; // Campos para ordenação
+  order?: "asc" | "desc"; // Direção da ordenação
 }
 
 interface PaginatedVehicleCostReport {
   data: VehicleCostReport[];
-  total: number;       // Total de veículos
-  page: number;        // Página atual
-  limit: number;       // Itens por página
-  totalPages: number;  // Total de páginas
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export class GenerateVehicleCostReport {
@@ -31,12 +33,12 @@ export class GenerateVehicleCostReport {
     private multaRepository: IMultaRepository
   ) {}
 
-  async execute({ page = 1, limit = 10 }: FilterOptions = {}): Promise<PaginatedVehicleCostReport> {
+  async execute({ page = 1, limit = 10, sort, order = "asc" }: FilterOptions = {}): Promise<PaginatedVehicleCostReport> {
     const veiculos = await this.veiculoRepository.list();
     const manutencoes = await this.manutencaoRepository.list();
     const multas = await this.multaRepository.list();
 
-    const report: VehicleCostReport[] = veiculos.map((veiculo: Veiculo) => {
+    let report: VehicleCostReport[] = veiculos.map((veiculo: Veiculo) => {
       const manutencaoCosts = manutencoes
         .filter((m) => m.veiculoId === veiculo.id)
         .reduce((sum, m) => sum + (m.custo || 0), 0);
@@ -53,6 +55,19 @@ export class GenerateVehicleCostReport {
         totalGeral: manutencaoCosts + multaCosts,
       };
     });
+
+    // Aplicar ordenação
+    if (sort) {
+      report.sort((a, b) => {
+        const valueA = sort === "placa" ? a.placa : a[sort];
+        const valueB = sort === "placa" ? b.placa : b[sort];
+        if (order === "asc") {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
+    }
 
     const total = veiculos.length;
     const startIndex = (page - 1) * limit;

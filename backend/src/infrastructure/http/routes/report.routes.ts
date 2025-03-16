@@ -37,8 +37,15 @@ reportRoutes.get(
   "/vehicle-costs",
   ensureAdmin,
   asyncHandler(async (req: Request, res: Response) => {
-    const { page, limit } = req.query;
-    const filters: { page?: number; limit?: number } = {};
+    const { page, limit, sort, order } = req.query;
+
+    const filters: { 
+      page?: number; 
+      limit?: number; 
+      sort?: "totalGeral" | "totalManutencao" | "totalMultas" | "placa"; 
+      order?: "asc" | "desc"; 
+    } = {};
+
     if (page && typeof page === "string") {
       filters.page = parseInt(page, 10);
       if (isNaN(filters.page) || filters.page <= 0) {
@@ -53,6 +60,21 @@ reportRoutes.get(
         return;
       }
     }
+    if (sort && typeof sort === "string") {
+      if (!["totalGeral", "totalManutencao", "totalMultas", "placa"].includes(sort)) {
+        res.status(400).json({ error: "Campo de ordenação inválido" });
+        return;
+      }
+      filters.sort = sort as "totalGeral" | "totalManutencao" | "totalMultas" | "placa";
+    }
+    if (order && typeof order === "string") {
+      if (!["asc", "desc"].includes(order)) {
+        res.status(400).json({ error: "Direção de ordenação inválida" });
+        return;
+      }
+      filters.order = order as "asc" | "desc";
+    }
+
     const report = await generateVehicleCostReport.execute(filters);
     res.json(report);
   })
@@ -69,7 +91,7 @@ reportRoutes.get(
       endDate?: Date; 
       page?: number; 
       limit?: number; 
-      sort?: "totalLocacoes" | "totalKm" | "nome"; // Tipagem específica
+      sort?: "totalLocacoes" | "totalKm" | "nome"; 
       order?: "asc" | "desc"; 
     } = {};
 
@@ -106,17 +128,143 @@ reportRoutes.get(
         res.status(400).json({ error: "Campo de ordenação inválido" });
         return;
       }
-      filters.sort = sort as "totalLocacoes" | "totalKm" | "nome"; // Asserção após validação
+      filters.sort = sort as "totalLocacoes" | "totalKm" | "nome";
     }
     if (order && typeof order === "string") {
       if (!["asc", "desc"].includes(order)) {
         res.status(400).json({ error: "Direção de ordenação inválida" });
         return;
       }
-      filters.order = order as "asc" | "desc"; // Asserção após validação
+      filters.order = order as "asc" | "desc";
     }
 
     const report = await generateDriverLocationHistory.execute(filters);
+    res.json(report);
+  })
+);
+
+reportRoutes.get(
+  "/vehicle-km",
+  ensureAdmin,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { startDate, endDate, page, limit, sort, order } = req.query;
+
+    const filters: { 
+      startDate?: Date; 
+      endDate?: Date; 
+      page?: number; 
+      limit?: number; 
+      sort?: "totalKm" | "totalLocacoes" | "placa"; 
+      order?: "asc" | "desc"; 
+    } = {};
+
+    if (startDate && typeof startDate === "string") {
+      filters.startDate = new Date(startDate);
+      if (isNaN(filters.startDate.getTime())) {
+        res.status(400).json({ error: "Data de início inválida" });
+        return;
+      }
+    }
+    if (endDate && typeof endDate === "string") {
+      filters.endDate = new Date(endDate);
+      if (isNaN(filters.endDate.getTime())) {
+        res.status(400).json({ error: "Data de fim inválida" });
+        return;
+      }
+    }
+    if (page && typeof page === "string") {
+      filters.page = parseInt(page, 10);
+      if (isNaN(filters.page) || filters.page <= 0) {
+        res.status(400).json({ error: "Página inválida" });
+        return;
+      }
+    }
+    if (limit && typeof limit === "string") {
+      filters.limit = parseInt(limit, 10);
+      if (isNaN(filters.limit) || filters.limit <= 0) {
+        res.status(400).json({ error: "Limite inválido" });
+        return;
+      }
+    }
+    if (sort && typeof sort === "string") {
+      if (!["totalKm", "totalLocacoes", "placa"].includes(sort)) {
+        res.status(400).json({ error: "Campo de ordenação inválido" });
+        return;
+      }
+      filters.sort = sort as "totalKm" | "totalLocacoes" | "placa";
+    }
+    if (order && typeof order === "string") {
+      if (!["asc", "desc"].includes(order)) {
+        res.status(400).json({ error: "Direção de ordenação inválida" });
+        return;
+      }
+      filters.order = order as "asc" | "desc";
+    }
+
+    const report = await generateVehicleKmReport.execute(filters);
+    res.json(report);
+  })
+);
+
+reportRoutes.get(
+  "/driver-fines",
+  ensureAdmin,
+  asyncHandler(async (req: Request, res: Response) => {
+    const { startDate, endDate, page, limit, sort, order } = req.query;
+
+    const filters: { 
+      startDate?: Date; 
+      endDate?: Date; 
+      page?: number; 
+      limit?: number; 
+      sort?: "totalMultas" | "totalValor" | "nome"; 
+      order?: "asc" | "desc"; 
+    } = {};
+
+    if (startDate && typeof startDate === "string") {
+      filters.startDate = new Date(startDate);
+      if (isNaN(filters.startDate.getTime())) {
+        res.status(400).json({ error: "Data de início inválida" });
+        return;
+      }
+    }
+    if (endDate && typeof endDate === "string") {
+      filters.endDate = new Date(endDate);
+      if (isNaN(filters.endDate.getTime())) {
+        res.status(400).json({ error: "Data de fim inválida" });
+        return;
+      }
+    }
+    if (page && typeof page === "string") {
+      filters.page = parseInt(page, 10);
+      if (isNaN(filters.page) || filters.page <= 0) {
+        res.status(400).json({ error: "Página inválida" });
+        return;
+      }
+    }
+    if (limit && typeof limit === "string") {
+      filters.limit = parseInt(limit, 10);
+      if (isNaN(filters.limit) || filters.limit <= 0) {
+        res.status(400).json({ error: "Limite inválido" });
+        return;
+      }
+    }
+    if (sort && typeof sort === "string") {
+      if (!["totalMultas", "totalValor", "nome"].includes(sort)) {
+        res.status(400).json({ error: "Campo de ordenação inválido" });
+        return;
+      }
+      filters.sort = sort as "totalMultas" | "totalValor" | "nome";
+    }
+    if (order && typeof order === "string") {
+      if (!["asc", "desc"].includes(order)) {
+        res.status(400).json({ error: "Direção de ordenação inválida" });
+        return;
+      }
+      filters.order = order as "asc" | "desc";
+    }
+
+    const report = await generateDriverFinesReport.execute(filters);
     res.json(report);
   })
 );

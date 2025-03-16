@@ -22,16 +22,18 @@ interface VehicleKmReport {
 interface FilterOptions {
   startDate?: Date;
   endDate?: Date;
-  page?: number;  // Número da página (começa em 1)
-  limit?: number; // Quantidade de veículos por página
+  page?: number;
+  limit?: number;
+  sort?: "totalKm" | "totalLocacoes" | "placa"; // Campos para ordenação
+  order?: "asc" | "desc"; // Direção da ordenação
 }
 
 interface PaginatedVehicleKmReport {
   data: VehicleKmReport[];
-  total: number;       // Total de veículos
-  page: number;        // Página atual
-  limit: number;       // Itens por página
-  totalPages: number;  // Total de páginas
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export class GenerateVehicleKmReport {
@@ -40,7 +42,7 @@ export class GenerateVehicleKmReport {
     private locacaoRepository: ILocacaoRepository
   ) {}
 
-  async execute({ startDate, endDate, page = 1, limit = 10 }: FilterOptions = {}): Promise<PaginatedVehicleKmReport> {
+  async execute({ startDate, endDate, page = 1, limit = 10, sort, order = "asc" }: FilterOptions = {}): Promise<PaginatedVehicleKmReport> {
     const veiculos = await this.veiculoRepository.list();
     const locacoes = await this.locacaoRepository.list();
 
@@ -51,7 +53,7 @@ export class GenerateVehicleKmReport {
       return true;
     });
 
-    const report: VehicleKmReport[] = veiculos.map((veiculo: Veiculo) => {
+    let report: VehicleKmReport[] = veiculos.map((veiculo: Veiculo) => {
       const veiculoLocacoes = filteredLocacoes.filter((l) => l.veiculoId === veiculo.id);
       const totalKm = veiculoLocacoes.reduce((sum, l) => sum + (l.km || 0), 0);
 
@@ -71,6 +73,19 @@ export class GenerateVehicleKmReport {
         totalLocacoes: veiculoLocacoes.length,
       };
     });
+
+    // Aplicar ordenação
+    if (sort) {
+      report.sort((a, b) => {
+        const valueA = sort === "placa" ? a.placa : a[sort];
+        const valueB = sort === "placa" ? b.placa : b[sort];
+        if (order === "asc") {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
+    }
 
     const total = veiculos.length;
     const startIndex = (page - 1) * limit;
