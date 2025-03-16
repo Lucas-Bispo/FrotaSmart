@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction, RequestHandler } from "express
 import { GenerateVehicleCostReport } from "../../../application/useCases/GenerateVehicleCostReport";
 import { GenerateDriverLocationHistory } from "../../../application/useCases/GenerateDriverLocationHistory";
 import { GenerateVehicleKmReport } from "../../../application/useCases/GenerateVehicleKmReport";
-import { GenerateDriverFinesReport } from "../../../application/useCases/GenerateDriverFinesReport"; // Novo import
+import { GenerateDriverFinesReport } from "../../../application/useCases/GenerateDriverFinesReport";
 import { VeiculoRepository } from "../../repositories/VeiculoRepository";
 import { ManutencaoRepository } from "../../repositories/ManutencaoRepository";
 import { MultaRepository } from "../../repositories/MultaRepository";
@@ -21,7 +21,7 @@ const locacaoRepository = new LocacaoRepository();
 const generateVehicleCostReport = new GenerateVehicleCostReport(veiculoRepository, manutencaoRepository, multaRepository);
 const generateDriverLocationHistory = new GenerateDriverLocationHistory(motoristaRepository, locacaoRepository);
 const generateVehicleKmReport = new GenerateVehicleKmReport(veiculoRepository, locacaoRepository);
-const generateDriverFinesReport = new GenerateDriverFinesReport(motoristaRepository, multaRepository); // Nova instância
+const generateDriverFinesReport = new GenerateDriverFinesReport(motoristaRepository, multaRepository);
 
 const asyncHandler = (
   fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
@@ -140,9 +140,9 @@ reportRoutes.get(
   "/driver-fines",
   ensureAdmin,
   asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate, page, limit } = req.query;
+    const { startDate, endDate, page, limit, sort, order } = req.query;
 
-    const filters: { startDate?: Date; endDate?: Date; page?: number; limit?: number } = {};
+    const filters: { startDate?: Date; endDate?: Date; page?: number; limit?: number; sort?: string; order?: string } = {};
     if (startDate && typeof startDate === "string") {
       filters.startDate = new Date(startDate);
       if (isNaN(filters.startDate.getTime())) {
@@ -170,6 +170,20 @@ reportRoutes.get(
         res.status(400).json({ error: "Limite inválido" });
         return;
       }
+    }
+    if (sort && typeof sort === "string") {
+      if (!["totalMultas", "totalValor", "nome"].includes(sort)) {
+        res.status(400).json({ error: "Campo de ordenação inválido" });
+        return;
+      }
+      filters.sort = sort as "totalMultas" | "totalValor" | "nome";
+    }
+    if (order && typeof order === "string") {
+      if (!["asc", "desc"].includes(order)) {
+        res.status(400).json({ error: "Direção de ordenação inválida" });
+        return;
+      }
+      filters.order = order as "asc" | "desc";
     }
 
     const report = await generateDriverFinesReport.execute(filters);
