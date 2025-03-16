@@ -11,6 +11,7 @@ import { MotoristaRepository } from "../../repositories/MotoristaRepository";
 import { LocacaoRepository } from "../../repositories/LocacaoRepository";
 import { ensureAuthenticated } from "../middlewares/ensureAuthenticated";
 import { ensureAdmin } from "../middlewares/ensureAdmin";
+import { GenerateDriverLocationHistoryReport } from "../../../application/useCases/GenerateDriverLocationHistoryReport";
 
 const reportRoutes = Router();
 const veiculoRepository = new VeiculoRepository();
@@ -18,6 +19,11 @@ const manutencaoRepository = new ManutencaoRepository();
 const multaRepository = new MultaRepository();
 const motoristaRepository = new MotoristaRepository();
 const locacaoRepository = new LocacaoRepository();
+
+const generateDriverLocationHistoryReport = new GenerateDriverLocationHistoryReport(
+  motoristaRepository,
+  locacaoRepository
+);
 
 const generateVehicleCostReport = new GenerateVehicleCostReport(veiculoRepository, manutencaoRepository, multaRepository);
 const generateDriverLocationHistory = new GenerateDriverLocationHistory(motoristaRepository, locacaoRepository);
@@ -100,15 +106,16 @@ reportRoutes.get(
   "/driver-location-history",
   ensureAdmin,
   asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate, page, limit, sort, order } = req.query;
+    const { startDate, endDate, page, limit, sort, order, exportFormat } = req.query;
 
     const filters: { 
       startDate?: Date; 
       endDate?: Date; 
       page?: number; 
       limit?: number; 
-      sort?: "totalLocacoes" | "totalKm" | "nome"; 
+      sort?: "totalKm" | "totalLocacoes" | "nome"; 
       order?: "asc" | "desc"; 
+      exportFormat?: "csv";
     } = {};
 
     if (startDate && typeof startDate === "string") {
@@ -140,11 +147,11 @@ reportRoutes.get(
       }
     }
     if (sort && typeof sort === "string") {
-      if (!["totalLocacoes", "totalKm", "nome"].includes(sort)) {
+      if (!["totalKm", "totalLocacoes", "nome"].includes(sort)) {
         res.status(400).json({ error: "Campo de ordenação inválido" });
         return;
       }
-      filters.sort = sort as "totalLocacoes" | "totalKm" | "nome";
+      filters.sort = sort as "totalKm" | "totalLocacoes" | "nome";
     }
     if (order && typeof order === "string") {
       if (!["asc", "desc"].includes(order)) {
@@ -153,12 +160,25 @@ reportRoutes.get(
       }
       filters.order = order as "asc" | "desc";
     }
+    if (exportFormat && typeof exportFormat === "string") {
+      if (exportFormat !== "csv") {
+        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv'." });
+        return;
+      }
+      filters.exportFormat = "csv";
+    }
 
-    const report = await generateDriverLocationHistory.execute(filters);
-    res.json(report);
+    const report = await generateDriverLocationHistoryReport.execute(filters);
+
+    if (filters.exportFormat === "csv") {
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", "attachment; filename=driver_location_history_report.csv");
+      res.send(report);
+    } else {
+      res.json(report);
+    }
   })
 );
-
 reportRoutes.get(
   "/vehicle-km",
   ensureAdmin,
