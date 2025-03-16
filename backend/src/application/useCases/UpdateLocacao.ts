@@ -1,14 +1,6 @@
 import { ILocacaoRepository } from "../../domain/interfaces/ILocacaoRepository";
 import { Locacao } from "../../domain/entities/Locacao";
-
-interface IUpdateLocacaoDTO {
-  veiculoId?: number;
-  motoristaId?: number;
-  dataInicio?: Date;
-  dataFim?: Date;
-  destino?: string;
-  km?: number;
-}
+import { IUpdateLocacaoDTO } from "../dtos/IUpdateLocacaoDTO";
 
 export class UpdateLocacao {
   constructor(private locacaoRepository: ILocacaoRepository) {}
@@ -18,6 +10,17 @@ export class UpdateLocacao {
     if (!locacao) {
       throw new Error("Locação não encontrada");
     }
-    return this.locacaoRepository.update(id, data);
+
+    // Criar um objeto com os campos a serem atualizados
+    const updatedData: Partial<Locacao> = {};
+    if (data.veiculoId !== undefined) updatedData.veiculoId = data.veiculoId;
+    if (data.motoristaId !== undefined) updatedData.motoristaId = data.motoristaId;
+    if (data.dataInicio !== undefined) updatedData.dataInicio = data.dataInicio;
+    if (data.dataFim !== undefined) updatedData.dataFim = data.dataFim;
+    if (data.destino !== undefined) updatedData.destino = data.destino;
+    if (data.km !== undefined) updatedData.km = data.km;
+
+    // Passar o id e os dados atualizados para o repositório
+    return this.locacaoRepository.update(id, updatedData);
   }
 }
