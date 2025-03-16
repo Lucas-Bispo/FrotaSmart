@@ -261,7 +261,7 @@ reportRoutes.get(
       limit?: number; 
       sort?: "totalMultas" | "totalValor" | "nome"; 
       order?: "asc" | "desc"; 
-      exportFormat?: "csv";
+      exportFormat?: "csv" | "pdf"; // Adicionado "pdf"
     } = {};
 
     if (startDate && typeof startDate === "string") {
@@ -307,11 +307,11 @@ reportRoutes.get(
       filters.order = order as "asc" | "desc";
     }
     if (exportFormat && typeof exportFormat === "string") {
-      if (exportFormat !== "csv") {
-        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv'." });
+      if (!["csv", "pdf"].includes(exportFormat)) {
+        res.status(400).json({ error: "Formato de exportação inválido. Use 'csv' ou 'pdf'." });
         return;
       }
-      filters.exportFormat = "csv";
+      filters.exportFormat = exportFormat as "csv" | "pdf";
     }
 
     const report = await generateDriverFinesReport.execute(filters);
@@ -319,6 +319,10 @@ reportRoutes.get(
     if (filters.exportFormat === "csv") {
       res.setHeader("Content-Type", "text/csv");
       res.setHeader("Content-Disposition", "attachment; filename=driver_fines_report.csv");
+      res.send(report);
+    } else if (filters.exportFormat === "pdf") {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=driver_fines_report.pdf");
       res.send(report);
     } else {
       res.json(report);
