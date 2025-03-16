@@ -8,7 +8,7 @@ interface DriverFinesReport {
   nome: string;
   multas: {
     id: number;
-    descricao: string;
+    descricao: string; // Mantido como string
     data: Date;
     valor: number;
   }[];
@@ -23,7 +23,7 @@ interface FilterOptions {
   limit?: number;
   sort?: "totalMultas" | "totalValor" | "nome";
   order?: "asc" | "desc";
-  exportFormat?: "csv" | "pdf"; // Adicionado "pdf"
+  exportFormat?: "csv" | "pdf";
 }
 
 interface PaginatedDriverFinesReport {
@@ -67,7 +67,7 @@ export class GenerateDriverFinesReport {
         nome: motorista.nome,
         multas: motoristaMultas.map((m) => ({
           id: m.id!,
-          descricao: m.descricao,
+          descricao: m.descricao || "N/A", // Corrigido: Garante string com valor padrão
           data: m.data,
           valor: m.valor || 0,
         })),
@@ -118,7 +118,7 @@ export class GenerateDriverFinesReport {
       // Tabela
       let yPosition = 120;
       const tableWidth = 500;
-      const colWidths = [50, 150, 80, 100]; // ID, Nome, Total Multas, Total Valor
+      const colWidths = [50, 150, 80, 100];
       const rowHeight = 20;
 
       doc.fontSize(10).font("Helvetica-Bold");
