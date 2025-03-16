@@ -1,5 +1,6 @@
 import { IMotoristaRepository } from "../../domain/interfaces/IMotoristaRepository";
 import { ILocacaoRepository } from "../../domain/interfaces/ILocacaoRepository";
+import { IVeiculoRepository } from "../../domain/interfaces/IVeiculoRepository"; // Adicionado para buscar veículos
 import { Motorista } from "../../domain/entities/Motorista";
 
 interface DriverLocationHistoryReport {
@@ -10,7 +11,7 @@ interface DriverLocationHistoryReport {
     veiculoId: number;
     placa: string;
     dataInicio: Date;
-    dataFim: Date | null;
+    dataFim: Date | null; // Definido como Date | null na interface
     km: number;
   }[];
   totalLocacoes: number;
@@ -38,7 +39,8 @@ interface PaginatedDriverLocationHistoryReport {
 export class GenerateDriverLocationHistoryReport {
   constructor(
     private motoristaRepository: IMotoristaRepository,
-    private locacaoRepository: ILocacaoRepository
+    private locacaoRepository: ILocacaoRepository,
+    private veiculoRepository: IVeiculoRepository // Adicionado para resolver o erro 2551
   ) {}
 
   async execute({
@@ -52,6 +54,10 @@ export class GenerateDriverLocationHistoryReport {
   }: FilterOptions = {}): Promise<PaginatedDriverLocationHistoryReport | string> {
     const motoristas = await this.motoristaRepository.list();
     const locacoes = await this.locacaoRepository.list();
+    const veiculos = await this.veiculoRepository.list(); // Busca os veículos
+
+    // Mapa para lookup rápido de veículos por ID
+    const veiculoMap = new Map(veiculos.map((v) => [v.id!, v]));
 
     const filteredLocacoes = locacoes.filter((locacao) => {
       const dataInicio = locacao.dataInicio;
@@ -70,9 +76,9 @@ export class GenerateDriverLocationHistoryReport {
         locacoes: motoristaLocacoes.map((l) => ({
           id: l.id!,
           veiculoId: l.veiculoId,
-          placa: l.veiculo?.placa || "N/A", // Assume relação com Veiculo; ajuste se necessário
+          placa: veiculoMap.get(l.veiculoId)?.placa || "N/A", // Resolve erro 2551
           dataInicio: l.dataInicio,
-          dataFim: l.dataFim,
+          dataFim: l.dataFim || null, // Resolve erro 2322 convertendo undefined para null
           km: l.km || 0,
         })),
         totalLocacoes: motoristaLocacoes.length,
