@@ -22,16 +22,18 @@ interface DriverLocationHistory {
 interface FilterOptions {
   startDate?: Date;
   endDate?: Date;
-  page?: number;  // Número da página (começa em 1)
-  limit?: number; // Quantidade de motoristas por página
+  page?: number;
+  limit?: number;
+  sort?: "totalLocacoes" | "totalKm" | "nome"; // Campos para ordenação
+  order?: "asc" | "desc"; // Direção da ordenação
 }
 
 interface PaginatedDriverLocationHistory {
   data: DriverLocationHistory[];
-  total: number;       // Total de motoristas
-  page: number;        // Página atual
-  limit: number;       // Itens por página
-  totalPages: number;  // Total de páginas
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export class GenerateDriverLocationHistory {
@@ -40,7 +42,7 @@ export class GenerateDriverLocationHistory {
     private locacaoRepository: ILocacaoRepository
   ) {}
 
-  async execute({ startDate, endDate, page = 1, limit = 10 }: FilterOptions = {}): Promise<PaginatedDriverLocationHistory> {
+  async execute({ startDate, endDate, page = 1, limit = 10, sort, order = "asc" }: FilterOptions = {}): Promise<PaginatedDriverLocationHistory> {
     const motoristas = await this.motoristaRepository.list();
     const locacoes = await this.locacaoRepository.list();
 
@@ -51,7 +53,7 @@ export class GenerateDriverLocationHistory {
       return true;
     });
 
-    const report: DriverLocationHistory[] = motoristas.map((motorista: Motorista) => {
+    let report: DriverLocationHistory[] = motoristas.map((motorista: Motorista) => {
       const motoristaLocacoes = filteredLocacoes.filter((l) => l.motoristaId === motorista.id);
       const totalKm = motoristaLocacoes.reduce((sum, l) => sum + (l.km || 0), 0);
 
@@ -71,6 +73,19 @@ export class GenerateDriverLocationHistory {
         totalKm,
       };
     });
+
+    // Aplicar ordenação
+    if (sort) {
+      report.sort((a, b) => {
+        const valueA = sort === "nome" ? a.nome : a[sort];
+        const valueB = sort === "nome" ? b.nome : b[sort];
+        if (order === "asc") {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
+    }
 
     const total = motoristas.length;
     const startIndex = (page - 1) * limit;

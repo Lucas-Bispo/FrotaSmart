@@ -62,84 +62,6 @@ reportRoutes.get(
   "/driver-location-history",
   ensureAdmin,
   asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate, page, limit } = req.query;
-    const filters: { startDate?: Date; endDate?: Date; page?: number; limit?: number } = {};
-    if (startDate && typeof startDate === "string") {
-      filters.startDate = new Date(startDate);
-      if (isNaN(filters.startDate.getTime())) {
-        res.status(400).json({ error: "Data de início inválida" });
-        return;
-      }
-    }
-    if (endDate && typeof endDate === "string") {
-      filters.endDate = new Date(endDate);
-      if (isNaN(filters.endDate.getTime())) {
-        res.status(400).json({ error: "Data de fim inválida" });
-        return;
-      }
-    }
-    if (page && typeof page === "string") {
-      filters.page = parseInt(page, 10);
-      if (isNaN(filters.page) || filters.page <= 0) {
-        res.status(400).json({ error: "Página inválida" });
-        return;
-      }
-    }
-    if (limit && typeof limit === "string") {
-      filters.limit = parseInt(limit, 10);
-      if (isNaN(filters.limit) || filters.limit <= 0) {
-        res.status(400).json({ error: "Limite inválido" });
-        return;
-      }
-    }
-    const report = await generateDriverLocationHistory.execute(filters);
-    res.json(report);
-  })
-);
-
-reportRoutes.get(
-  "/vehicle-km",
-  ensureAdmin,
-  asyncHandler(async (req: Request, res: Response) => {
-    const { startDate, endDate, page, limit } = req.query;
-    const filters: { startDate?: Date; endDate?: Date; page?: number; limit?: number } = {};
-    if (startDate && typeof startDate === "string") {
-      filters.startDate = new Date(startDate);
-      if (isNaN(filters.startDate.getTime())) {
-        res.status(400).json({ error: "Data de início inválida" });
-        return;
-      }
-    }
-    if (endDate && typeof endDate === "string") {
-      filters.endDate = new Date(endDate);
-      if (isNaN(filters.endDate.getTime())) {
-        res.status(400).json({ error: "Data de fim inválida" });
-        return;
-      }
-    }
-    if (page && typeof page === "string") {
-      filters.page = parseInt(page, 10);
-      if (isNaN(filters.page) || filters.page <= 0) {
-        res.status(400).json({ error: "Página inválida" });
-        return;
-      }
-    }
-    if (limit && typeof limit === "string") {
-      filters.limit = parseInt(limit, 10);
-      if (isNaN(filters.limit) || filters.limit <= 0) {
-        res.status(400).json({ error: "Limite inválido" });
-        return;
-      }
-    }
-    const report = await generateVehicleKmReport.execute(filters);
-    res.json(report);
-  })
-);
-
-reportRoutes.get(
-  "/driver-fines",
-  ensureAdmin,
-  asyncHandler(async (req: Request, res: Response) => {
     const { startDate, endDate, page, limit, sort, order } = req.query;
 
     const filters: { startDate?: Date; endDate?: Date; page?: number; limit?: number; sort?: string; order?: string } = {};
@@ -172,11 +94,11 @@ reportRoutes.get(
       }
     }
     if (sort && typeof sort === "string") {
-      if (!["totalMultas", "totalValor", "nome"].includes(sort)) {
+      if (!["totalLocacoes", "totalKm", "nome"].includes(sort)) {
         res.status(400).json({ error: "Campo de ordenação inválido" });
         return;
       }
-      filters.sort = sort as "totalMultas" | "totalValor" | "nome";
+      filters.sort = sort as "totalLocacoes" | "totalKm" | "nome";
     }
     if (order && typeof order === "string") {
       if (!["asc", "desc"].includes(order)) {
@@ -186,9 +108,72 @@ reportRoutes.get(
       filters.order = order as "asc" | "desc";
     }
 
-    const report = await generateDriverFinesReport.execute(filters);
+    const report = await generateDriverLocationHistory.execute(filters);
     res.json(report);
   })
 );
+
+reportRoutes.get(
+    "/driver-location-history",
+    ensureAdmin,
+    asyncHandler(async (req: Request, res: Response) => {
+      const { startDate, endDate, page, limit, sort, order } = req.query;
+  
+      const filters: { 
+        startDate?: Date; 
+        endDate?: Date; 
+        page?: number; 
+        limit?: number; 
+        sort?: "totalLocacoes" | "totalKm" | "nome"; // Tipagem específica
+        order?: "asc" | "desc"; 
+      } = {};
+  
+      if (startDate && typeof startDate === "string") {
+        filters.startDate = new Date(startDate);
+        if (isNaN(filters.startDate.getTime())) {
+          res.status(400).json({ error: "Data de início inválida" });
+          return;
+        }
+      }
+      if (endDate && typeof endDate === "string") {
+        filters.endDate = new Date(endDate);
+        if (isNaN(filters.endDate.getTime())) {
+          res.status(400).json({ error: "Data de fim inválida" });
+          return;
+        }
+      }
+      if (page && typeof page === "string") {
+        filters.page = parseInt(page, 10);
+        if (isNaN(filters.page) || filters.page <= 0) {
+          res.status(400).json({ error: "Página inválida" });
+          return;
+        }
+      }
+      if (limit && typeof limit === "string") {
+        filters.limit = parseInt(limit, 10);
+        if (isNaN(filters.limit) || filters.limit <= 0) {
+          res.status(400).json({ error: "Limite inválido" });
+          return;
+        }
+      }
+      if (sort && typeof sort === "string") {
+        if (!["totalLocacoes", "totalKm", "nome"].includes(sort)) {
+          res.status(400).json({ error: "Campo de ordenação inválido" });
+          return;
+        }
+        filters.sort = sort as "totalLocacoes" | "totalKm" | "nome"; // Asserção após validação
+      }
+      if (order && typeof order === "string") {
+        if (!["asc", "desc"].includes(order)) {
+          res.status(400).json({ error: "Direção de ordenação inválida" });
+          return;
+        }
+        filters.order = order as "asc" | "desc"; // Asserção após validação
+      }
+  
+      const report = await generateDriverLocationHistory.execute(filters);
+      res.json(report);
+    })
+  );
 
 export default reportRoutes;
