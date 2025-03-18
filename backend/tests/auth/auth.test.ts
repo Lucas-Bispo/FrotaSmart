@@ -2,18 +2,23 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { UserRepository } from "../../src/infrastructure/repositories/UserRepository";
 import { AuthenticateUser } from "../../src/application/useCases/AuthenticateUser";
 import { CreateUser } from "../../src/application/useCases/CreateUser";
+import { AuthService } from "../../src/domain/services/AuthService";
 import prisma from "../../src/prisma";
 
 describe("Autenticação", () => {
   let userRepository: UserRepository;
   let authenticateUser: AuthenticateUser;
   let createUser: CreateUser;
+  let authService: AuthService;
 
   beforeAll(async () => {
     userRepository = new UserRepository();
+    authService = new AuthService(); // Instanciar o AuthService
     authenticateUser = new AuthenticateUser(userRepository);
-    createUser = new CreateUser(userRepository);
+    createUser = new CreateUser(userRepository, authService); // Passar authService
 
+    // Limpar antes de criar para evitar conflitos
+    await prisma.user.deleteMany({ where: { cpf: "12345678901" } });
     await createUser.execute({
       cpf: "12345678901",
       senha: "test123",
