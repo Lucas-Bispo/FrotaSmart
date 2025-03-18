@@ -1,8 +1,8 @@
 export interface ICreateLocacaoDTO {
-    veiculoId: number;
-    motoristaId: number;
-    dataInicio: Date;
-    destino: string;
-    dataFim?: Date;
-    km?: number;
-  }
+  motoristaId: number;
+  veiculoId: number;
+  dataInicio: Date;
+  destino: string;
+  dataFim: Date | undefined; // Aqui está o tipo esperado
+  km: number;
+}
