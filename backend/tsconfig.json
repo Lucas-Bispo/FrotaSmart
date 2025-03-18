@@ -11,6 +11,6 @@
     "rootDir": ".",
     "types": ["node", "vitest"]
   },
-  "include": ["src/**/*", "test/**/*", "vitest.config.ts", "src/types/**/*"],
+  "include": ["src/**/*", "tests/**/*", "vitest.config.ts", "src/types/**/*"],
   "exclude": ["node_modules", "dist"]
 }
