@@ -1,0 +1,5 @@
+# Arquivos de Ambiente (Segurança)
+.env
+
+# Logs e arquivos de sistema
+*.log
