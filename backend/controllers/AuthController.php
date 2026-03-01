@@ -8,15 +8,18 @@ class AuthController {
             $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
             $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING);
             $model = new UserModel();
-            if ($model->login($username, $password)) {
-            $_SESSION['user'] = $username;
-            header('Location: ../../frontend/views/dashboard.php');
-            exit;
-        } else {
-            error_log("Login failed for user: " . $username);  // Debug
-            $_SESSION['error'] = "Login falhou! Verifique user/senha.";
-            header('Location: ../../frontend/views/login.php');
-            exit;
+            $user = $model->login($username, $password);
+
+            if ($user) {
+                $_SESSION['user'] = $user['username'];
+                $_SESSION['role'] = $user['role']; // Salva a permissão (admin/gerente)
+                header('Location: ../../frontend/views/dashboard.php');
+                exit;
+            } else {
+                error_log("Login failed for user: " . $username);
+                $_SESSION['error'] = "Login falhou! Verifique user/senha.";
+                header('Location: ../../frontend/views/login.php');
+                exit;
             }
         }
     }

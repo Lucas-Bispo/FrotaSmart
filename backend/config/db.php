@@ -19,6 +19,18 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
-    die("Erro DB: " . $e->getMessage());
+    // Se o erro for "Unknown database" (código 1049), tenta criar o banco
+    if ($e->getCode() == 1049) {
+        try {
+            $pdo = new PDO("mysql:host=$host", $user, $pass);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS `$dbname`");
+            $pdo->exec("USE `$dbname`");
+        } catch (PDOException $ex) {
+            die("Erro ao tentar criar o banco de dados: " . $ex->getMessage());
+        }
+    } else {
+        die("Erro DB: " . $e->getMessage());
+    }
 }
 ?>

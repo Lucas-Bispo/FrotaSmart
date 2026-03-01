@@ -5,6 +5,20 @@ require_once __DIR__ . '/../models/UserModel.php'; // Adiciona o UserModel para 
 
 echo "Iniciando script de criação de usuário administrador...\n";
 
+// Garante que a tabela de usuários exista antes de tentar alterar ou inserir
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(50) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        role ENUM('admin', 'gerente', 'motorista') NOT NULL DEFAULT 'gerente',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    echo "Tabela 'users' verificada/criada com sucesso.\n";
+} catch (PDOException $e) {
+    echo "Erro ao verificar tabela users: " . $e->getMessage() . "\n";
+}
+
 // Verifica e cria a coluna 'role' se ela não existir (migração automática)
 try {
     $colCheck = $pdo->query("SHOW COLUMNS FROM users LIKE 'role'");
@@ -28,6 +42,22 @@ try {
     echo "Tabela 'veiculos' verificada/criada com sucesso.\n";
 } catch (PDOException $e) {
     echo "Erro ao verificar tabela veiculos: " . $e->getMessage() . "\n";
+}
+
+// Garante que a tabela de manutenções exista
+try {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS manutencoes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        veiculo_id INT NOT NULL,
+        data DATE NOT NULL,
+        tipo VARCHAR(50) NOT NULL,
+        custo DECIMAL(10, 2) NOT NULL,
+        descricao TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+    echo "Tabela 'manutencoes' verificada/criada com sucesso.\n";
+} catch (PDOException $e) {
+    echo "Erro ao verificar tabela manutencoes: " . $e->getMessage() . "\n";
 }
 
 // Dados do primeiro administrador

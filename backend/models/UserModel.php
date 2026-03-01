@@ -7,10 +7,11 @@ class UserModel {
         $stmt = $pdo->prepare("SELECT * FROM users WHERE username = :username");
         $stmt->execute([':username' => $username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$user) {
-            return false;
+        
+        if ($user && password_verify($password, $user['password'])) {
+            return $user; // Retorna os dados completos (id, username, role)
         }
-        return password_verify($password, $user['password']);
+        return false;
     }
 
     public function register($username, $password, $role = 'gerente') {
