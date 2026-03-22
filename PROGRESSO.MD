@@ -41,6 +41,18 @@
 ### Proximo passo recomendado
 - Iniciar a `Task 03`: criar o contrato de repositorio para o modulo de veiculos
 
+## 2026-03-22 - Task 03
+
+### Contrato de repositorio de veiculos
+- Criado o contrato [VeiculoRepositoryInterface.php](./src/Domain/Repositories/VeiculoRepositoryInterface.php)
+- Definidas operacoes de persistencia, consulta, existencia, listagem e remocao sem acoplamento com `PDO`
+- Adotada [Placa](./src/Domain/ValueObjects/Placa.php) como identidade de consulta do dominio nesta etapa
+- Registrada a task em [task03.md](./AI/Tasks/task03.md)
+- Criado o teste de validacao do contrato em [test-repository-contract.php](./scripts/test-repository-contract.php)
+
+### Proximo passo recomendado
+- Iniciar a `Task 04`: implementar o repositorio concreto em `src/Infrastructure/Persistence`
+
 ## 2026-03-22 - Revisao estrutural do projeto
 
 ### Validacao operacional da arquitetura

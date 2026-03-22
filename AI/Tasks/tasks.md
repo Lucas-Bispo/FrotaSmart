@@ -39,11 +39,17 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
   - script de validacao do dominio criado
 
 ### Task 03 - Contrato de repositorio
-- Status: planejada
+- Status: concluida
 - Objetivo: criar interface de repositorio em `Domain/Repositories`
 - Criterio de aceite:
   - contrato desacoplado de PDO
   - assinatura compativel com casos de uso futuros
+- Documento detalhado: [task03.md](./task03.md)
+- Concluido:
+  - criado `VeiculoRepositoryInterface` em `src/Domain/Repositories`
+  - contrato modelado sem dependencia de `PDO`
+  - consultas e remocao baseadas em `Placa` como identidade de dominio
+  - script de validacao do contrato criado
 
 ### Task 04 - Persistencia PDO na nova arquitetura
 - Status: planejada
