@@ -1,30 +1,37 @@
 <?php
 require_once __DIR__ . '/db.php';
 
-$username = 'admin_frota';
-$new_password = '123456';
+if (!is_cli_request()) {
+    http_response_code(403);
+    exit('Este script só pode ser executado via CLI.' . PHP_EOL);
+}
+
+$newPassword = $argv[1] ?? ($_ENV['RESET_PASSWORD_NEW'] ?? '');
+$username = $argv[2] ?? 'admin_frota';
+
+if ($newPassword === '') {
+    exit("Uso: php backend/config/reset_password.php <nova_senha> [usuario]\n");
+}
 
 echo "--- Redefinição de Senha ---\n";
-echo "Usuário alvo: $username\n";
+echo "Usuário alvo: {$username}\n";
 
 try {
-    // Verifica se usuário existe
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE username = :username");
+    $stmt = $pdo->prepare('SELECT id FROM users WHERE username = :username');
     $stmt->execute([':username' => $username]);
     $user = $stmt->fetch();
 
     if ($user) {
-        // Atualiza senha
-        $hash = password_hash($new_password, PASSWORD_DEFAULT);
-        $update = $pdo->prepare("UPDATE users SET password = :password WHERE id = :id");
+        $hash = password_hash($newPassword, PASSWORD_DEFAULT);
+        $update = $pdo->prepare('UPDATE users SET password = :password WHERE id = :id');
         $update->execute([':password' => $hash, ':id' => $user['id']]);
-        
-        echo "✅ Senha atualizada com sucesso!\n";
-        echo "Nova senha: $new_password\n";
+
+        echo "✅ Senha atualizada com sucesso.\n";
     } else {
         echo "❌ Usuário não encontrado. Execute o seed_admin.php primeiro.\n";
     }
 } catch (PDOException $e) {
-    echo "Erro: " . $e->getMessage() . "\n";
+    error_log('Erro ao redefinir senha: ' . $e->getMessage());
+    echo "Erro interno ao redefinir senha. Consulte os logs.\n";
 }
 ?>
