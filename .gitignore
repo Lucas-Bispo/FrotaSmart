@@ -3,3 +3,9 @@
 
 # Logs e arquivos de sistema
 *.log
+
+# Dependencias PHP
+vendor/
+
+# Estado local do Obsidian
+.obsidian/workspace.json
