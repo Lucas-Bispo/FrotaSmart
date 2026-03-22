@@ -6,6 +6,7 @@
 
 # Dependencias PHP
 vendor/
+composer.phar
 
 # Estado local do Obsidian
 .obsidian/workspace.json

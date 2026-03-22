@@ -17,9 +17,46 @@
 - Ainda nao foi feita a migracao dos controllers e models antigos
 
 ### Bloqueios
-- `php` nao encontrado no PATH desta sessao
-- `composer` nao encontrado no PATH desta sessao
-- Por isso, `composer dump-autoload` e o teste real do autoload ainda nao puderam ser executados
+- `php` e `composer` nao estavam no PATH no inicio da sessao
+- O projeto foi validado usando `C:\xampp\php\php.exe` e `composer.phar` local
 
 ### Proximo passo recomendado
 - Concluir a `Task 02`: enriquecer `Veiculo` como entidade de dominio e criar `Placa` como Value Object
+
+## 2026-03-22 - Task 02
+
+### Dominio inicial de veiculos
+- Criado o Value Object [Placa](C:\Users\lukao\Documents\FrotaSmart\src\Domain\ValueObjects\Placa.php)
+- Enriquecida a entidade [Veiculo](C:\Users\lukao\Documents\FrotaSmart\src\Domain\Entities\Veiculo.php)
+- Criadas exceptions de dominio para falhas de placa e status
+- Registrada a task em [AI/Tasks/task02.md](C:\Users\lukao\Documents\FrotaSmart\AI\Tasks\task02.md)
+- Atualizado o roadmap em [AI/Tasks/tasks.md](C:\Users\lukao\Documents\FrotaSmart\AI\Tasks\tasks.md)
+
+### Regras agora no dominio
+- validacao de placa no proprio dominio
+- normalizacao de status legados para status oficiais
+- transicoes basicas de estado do veiculo
+
+### Proximo passo recomendado
+- Iniciar a `Task 03`: criar o contrato de repositorio para o modulo de veiculos
+
+## 2026-03-22 - Revisao estrutural do projeto
+
+### Validacao operacional da arquitetura
+- Composer local baixado como ferramenta de trabalho e ignorado no Git
+- `composer dump-autoload` executado com sucesso
+- Teste real de autoload validado com `C:\xampp\php\php.exe`
+- `composer.json` alinhado ao PHP real da maquina com `php:^8.2`
+
+### Limpeza arquitetural
+- Removidos scripts CLI de `backend/config`
+- Criados scripts operacionais em [scripts/bootstrap-db.php](C:\Users\lukao\Documents\FrotaSmart\scripts\bootstrap-db.php) e [scripts/reset-password.php](C:\Users\lukao\Documents\FrotaSmart\scripts\reset-password.php)
+- Normalizado o nome da regra geral do Codex para [AI/Contexto/Codex-Regras-Gerais.md](C:\Users\lukao\Documents\FrotaSmart\AI\Contexto\Codex-Regras-Gerais.md)
+
+### Alertas encontrados na revisao
+- o legado ainda usa `global $pdo`
+- o CRUD de veiculos ainda faz exclusao fisica
+- ainda nao existe `public/index.php` como front controller unico
+
+### Proximo passo recomendado
+- Criar a `Task 03` e iniciar o contrato de repositorio para reduzir o acoplamento do legado

@@ -12,27 +12,30 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
 ## Backlog principal
 
 ### Task 01 - Fundacao da arquitetura com Composer e PSR-4
-- Status: em andamento
+- Status: concluida
 - Objetivo: criar a base `src/`, `composer.json` e autoload PSR-4
 - Concluido:
   - estrutura `src/` criada
   - `composer.json` criado
   - classe inicial namespaced criada
   - progresso documentado
-- Pendente:
-  - instalar/configurar PHP no PATH
-  - instalar/configurar Composer no PATH
-  - rodar `composer dump-autoload`
-  - executar teste real do autoload
-- Bloqueio atual: ambiente sem `php` e `composer` acessiveis
+  - `composer dump-autoload` executado
+  - autoload validado com PHP local
+  - requisito de PHP alinhado com o ambiente real
 
 ### Task 02 - Dominio inicial de veiculos
-- Status: planejada
+- Status: concluida
 - Objetivo: evoluir `Veiculo` para entidade rica e criar `Placa` como Value Object
+- Documento detalhado: [task02.md](./task02.md)
 - Criterio de aceite:
   - validacao de placa no dominio
   - entidade sem dependencia de banco ou HTTP
   - testes de regra de negocio preparados
+- Concluido:
+  - `Placa` criada como Value Object
+  - `Veiculo` enriquecido com validacoes e transicoes de estado
+  - exceptions de dominio criadas
+  - cenarios de teste documentados
 
 ### Task 03 - Contrato de repositorio
 - Status: planejada
@@ -82,3 +85,4 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
 - Sempre registrar status e decisoes aqui
 - Sempre preferir migracao incremental em vez de reescrita ampla
 - Toda task nova deve ter objetivo, criterio de aceite e bloqueios claros
+- Sempre criar commit de checkpoint ao final de um bloco relevante

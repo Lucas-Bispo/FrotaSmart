@@ -1,100 +1,90 @@
-**Aqui está o texto completo, sólido e profissional** que você pode copiar e colar **direto** no arquivo `AI/Context/Arquitetura-Projeto.md` (substitua todo o conteúdo antigo).
+# Arquitetura FrotaSmart
 
-```markdown
-# Arquitetura FrotaSmart — Padrão Oficial do Projeto
+## Status do documento
+- Papel: referencia oficial de arquitetura do projeto
+- Ultima revisao: 2026-03-22
+- Relacao com o estado atual: arquitetura alvo com migracao incremental a partir do legado
 
-## Visão Geral
-O FrotaSmart é um sistema de gerenciamento de frota (veículos, ônibus, carros, manutenção, abastecimento, motoristas, secretarias e relatórios) desenvolvido **exclusivamente em PHP puro + MySQL** para prefeituras brasileiras.  
+## Visao geral
+O FrotaSmart e um sistema de gestao de frota publica para prefeituras, construido em PHP puro com MySQL.
 
-Para garantir **manutenibilidade, testabilidade, escalabilidade e conformidade com LGPD**, adotamos a **Clean Architecture** (adaptada para PHP sem framework pesado). Essa é a arquitetura mais moderna e recomendada em 2026 para sistemas públicos administrativos.
+A arquitetura oficial adotada e uma Clean Architecture adaptada:
+- `Domain`
+- `Application`
+- `Infrastructure`
+- `Presentation`
 
-O padrão é obrigatório para todo o código gerado ou revisado pelo **Códex**. Qualquer nova funcionalidade (ex: módulo de viagens, relatórios, API futura) deve respeitar rigorosamente essas camadas.
+O objetivo nao e reescrever o sistema inteiro de uma vez.
+A estrategia correta e migrar o projeto atual por etapas, preservando login, dashboard e CRUD basico enquanto o nucleo novo em `src/` amadurece.
 
-## Princípios Fundamentais (Clean Architecture — Uncle Bob)
+## Principios obrigatorios
+1. O dominio nao depende de banco, HTTP, sessao ou HTML.
+2. A aplicacao orquestra casos de uso e conversa com contratos do dominio.
+3. A infraestrutura implementa detalhes tecnicos, como PDO e configuracoes.
+4. A apresentacao apenas recebe entrada e entrega saida.
+5. Toda migracao deve reduzir acoplamento sem quebrar o legado.
 
-1. **Independência de frameworks** — o core do negócio não depende de PDO, Apache, Tailwind ou qualquer ferramenta externa.
-2. **Independência de banco de dados** — troca de MySQL por PostgreSQL ou SQLite deve ser possível sem alterar regras de negócio.
-3. **Independência da interface** — o sistema pode virar API REST ou app mobile sem mexer no domínio.
-4. **Independência de UI** — views e controllers são apenas “entregadores” de informação.
-5. **Regra de dependência** — as camadas externas podem depender das internas, mas **nunca o contrário**.
+## Fluxo arquitetural correto
+`Presentation -> Application -> Domain`
 
-**Fonte principal**: Robert C. Martin (“Uncle Bob”) — livro *Clean Architecture: A Craftsman’s Guide to Software Structure and Design* (2017) e artigo original de 2012.
+`Infrastructure` entra por injecao de dependencia para satisfazer contratos definidos no dominio ou na aplicacao.
 
-## Camadas da Arquitetura (concentricas — do centro para fora)
+## Estrutura alvo do projeto
 
-### 1. Domain (Centro — o mais sagrado)
-- Entidades ricas (Veiculo, Motorista, Viagem, Manutencao)
-- Value Objects (Placa, Cnh, Quilometragem)
-- Repositórios (apenas interfaces — VeiculoRepositoryInterface)
-- Exceptions de domínio
-- Regras de negócio puras (ex: placa deve ser válida, CNH não pode estar vencida)
-
-**Nunca** sabe de banco, HTTP, sessão ou HTML.
-
-### 2. Application (Use Cases + Services)
-- Services (VeiculoService, ManutencaoService, RelatorioService)
-- Use Cases (CreateVeiculoUseCase, GerarRelatorioCustoUseCase)
-- Orquestra regras de negócio + chama repositórios
-- Aqui fica toda a lógica de aplicação (validações, cálculos de consumo, permissões por role)
-
-### 3. Infrastructure (Detalhes técnicos)
-- Persistence (PdoVeiculoRepository.php — implementação concreta do PDO + MySQL)
-- Config (db.php com PDO factory, security.php com CSRF e sessões)
-- Auditoria (logs de quem alterou, updated_at, created_by)
-
-### 4. Presentation (Camada externa)
-- Controllers (fios finos — recebem request, chamam Service, devolvem view)
-- Views (frontend/views + includes)
-- public/index.php (único ponto de entrada web)
-
-**Fluxo correto**: Presentation → Application → Domain  
-**Infrastructure** é injetada via construtor (Dependency Injection).
-
-## Estrutura de Pastas Oficial (obrigatória)
-
-```
+```text
 FrotaSmart/
-├── src/                          ← Núcleo principal
-│   ├── Domain/
-│   │   ├── Entities/
-│   │   ├── ValueObjects/
-│   │   ├── Repositories/     ← apenas interfaces
-│   │   └── Exceptions/
-│   ├── Application/
-│   │   └── Services/
-│   ├── Infrastructure/
-│   │   ├── Persistence/
-│   │   └── Config/
-│   └── Presentation/
-│       ├── Controllers/
-│       └── Views/
-├── public/                       ← Ponto de entrada web (Apache aponta aqui)
-│   └── index.php
-├── frontend/                     ← Assets estáticos + includes (header, sidebar)
-├── .env
-├── composer.json                 ← PSR-4 autoload (FrotaSmart\ → src/)
-└── PROGRESSO.MD
+|-- src/
+|   |-- Domain/
+|   |   |-- Entities/
+|   |   |-- ValueObjects/
+|   |   |-- Repositories/
+|   |   `-- Exceptions/
+|   |-- Application/
+|   |   `-- Services/
+|   |-- Infrastructure/
+|   |   |-- Persistence/
+|   |   `-- Config/
+|   `-- Presentation/
+|       |-- Controllers/
+|       `-- Views/
+|-- scripts/
+|-- public/
+|-- backend/
+|-- frontend/
+|-- AI/
+|-- composer.json
+`-- PROGRESSO.MD
 ```
 
-## Regras que o Códex deve seguir sempre
+## Estado atual do repositorio
+- `src/` ja existe e iniciou o novo dominio
+- `backend/` e `frontend/` ainda sustentam o fluxo em producao
+- `scripts/` concentra operacoes CLI do projeto
+- `public/` ainda nao foi implantado como front controller unico
 
-- Todo novo módulo começa pelo **Domain** (entidade + interface).
-- Nunca use `global $pdo` ou `require_once` direto em controllers.
-- Sempre injete dependências via construtor.
-- Auditoria obrigatória em toda alteração (created_by, updated_at, ip, role).
-- Placa deve ser UNIQUE + Value Object com validação.
-- Conformidade LGPD: dados pessoais isolados, consentimento, direito ao esquecimento.
-- Testabilidade: Domain e Application devem ser 100% testáveis sem banco ou web.
+## Regras de implementacao
+- Todo modulo novo deve comecar em `src/Domain`
+- Toda regra de negocio deve sair gradualmente de controllers e models legados
+- Evitar `global $pdo`
+- Evitar `require_once` em codigo de dominio e aplicacao
+- Controllers devem ficar finos
+- Toda acao mutavel relevante precisa preparar caminho para auditoria
 
-## Fontes e Referências (pesquisa 2026)
+## Estrategia de migracao
+1. Criar e validar a base tecnica com Composer e PSR-4
+2. Enriquecer o dominio central de veiculos
+3. Definir contratos de repositorio
+4. Implementar persistencia em `src/Infrastructure`
+5. Criar services de aplicacao
+6. Adaptar controllers legados para usar a nova espinha dorsal
+7. Remover partes legadas obsoletas apenas quando substituidas
 
-- Robert C. Martin – Clean Architecture (livro e artigo original)
-- GitHub gushakov/clean-php – Exemplo real de Clean Architecture em PHP puro sem framework
-- GitHub rudirocha/php-clean-architecture – Boilerplate opinado de Clean Arch em PHP
-- Artigo Dmitriy Lezhnev – “Clean architecture implemented as a PHP app” (2025)
-- Medium UNIL – “Clean Architecture with PHP” (exemplo completo)
-- Repositórios brasileiros de frota: marcosggoncalves/gestao-frota-v1 e roldaojr/transporte.php (usados como base procedural que estamos evoluindo para Clean)
-- LGPD Framework (SBC/ANPD) – requisitos de auditoria e governança para sistemas públicos
+## Decisoes atuais
+- O projeto esta validado com PHP 8.2 local
+- O autoload PSR-4 funciona via Composer local
+- O proximo grande passo arquitetural e desacoplar persistencia via repositorios
 
-**Última atualização**: 22 de março de 2026 — por Códex  
-**Versão**: 1.0 — Padrão oficial do FrotaSmart
+## Arquivos relacionados
+- Regras de negocio: [Regras-Negocio.md](C:\Users\lukao\Documents\FrotaSmart\AI\Contexto\Regras-Negocio.md)
+- Estado atual: [Estado-Projeto.md](C:\Users\lukao\Documents\FrotaSmart\AI\Contexto\Estado-Projeto.md)
+- Roadmap: [tasks.md](C:\Users\lukao\Documents\FrotaSmart\AI\Tasks\tasks.md)

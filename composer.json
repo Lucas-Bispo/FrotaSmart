@@ -2,8 +2,9 @@
   "name": "frotasmart/frotasmart",
   "description": "Sistema de gestao de frotas publicas para prefeituras, em PHP puro com Clean Architecture.",
   "type": "project",
+  "license": "proprietary",
   "require": {
-    "php": "^8.3"
+    "php": "^8.2"
   },
   "autoload": {
     "psr-4": {

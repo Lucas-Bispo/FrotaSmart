@@ -1,9 +1,9 @@
 # Task 01 - Fundacao da arquitetura com Composer e PSR-4
 
 ## Status
-- Estado atual: em andamento
-- Viabilidade: sim, com restricao operacional
-- Restricao encontrada: `php` e `composer` nao estao disponiveis no PATH desta maquina/sessao
+- Estado atual: concluida
+- Viabilidade: concluida com ajustes operacionais locais
+- Ambiente validado com `C:\xampp\php\php.exe` + `composer.phar` local
 
 ## Objetivo real desta task
 Criar a base tecnica para a migracao do projeto atual para a arquitetura oficial do FrotaSmart, sem quebrar o sistema existente.
@@ -42,8 +42,8 @@ Vamos:
 - [x] Criar classe de exemplo com namespace `FrotaSmart\\...`
 - [x] Registrar andamento em `AI/Tasks/tasks.md`
 - [x] Atualizar `PROGRESSO.MD`
-- [ ] Rodar `composer dump-autoload`
-- [ ] Validar autoload com execucao real via PHP
+- [x] Rodar `composer dump-autoload`
+- [x] Validar autoload com execucao real via PHP
 
 ## Entregaveis esperados desta task
 - `composer.json`
@@ -56,10 +56,9 @@ Vamos:
 Comandos esperados:
 
 ```powershell
-php -v
-composer --version
-composer dump-autoload
-php .\scripts\test-autoload.php
+& 'C:\xampp\php\php.exe' .\composer.phar --version
+& 'C:\xampp\php\php.exe' .\composer.phar dump-autoload
+& 'C:\xampp\php\php.exe' .\scripts\test-autoload.php
 ```
 
 Resultado esperado:
@@ -68,9 +67,17 @@ Resultado esperado:
 
 ## Criterio de conclusao
 Esta task sera considerada 100% concluida quando:
-- o ambiente tiver PHP e Composer acessiveis
 - o autoload for gerado
 - o teste de autoload rodar com sucesso
+- a configuracao ficar alinhada com o PHP real da maquina
+
+## Resultado da validacao
+- `composer dump-autoload` executado com sucesso
+- `scripts/test-autoload.php` validado com sucesso
+- requisito de PHP ajustado de `^8.3` para `^8.2` para refletir o ambiente real disponivel
 
 ## Proxima task sugerida
 Task 02 - transformar `Veiculo` em entidade rica de dominio e criar o Value Object `Placa`
+
+## Continuidade do trabalho
+- Task seguinte executada em: [task02.md](./task02.md)
