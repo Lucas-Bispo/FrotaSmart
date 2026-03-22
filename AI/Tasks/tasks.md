@@ -36,6 +36,7 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
   - `Veiculo` enriquecido com validacoes e transicoes de estado
   - exceptions de dominio criadas
   - cenarios de teste documentados
+  - script de validacao do dominio criado
 
 ### Task 03 - Contrato de repositorio
 - Status: planejada

@@ -1,8 +1,11 @@
 # Arquivos de Ambiente (Segurança)
 .env
+*.pem
+*.key
 
 # Logs e arquivos de sistema
 *.log
+tmp/
 
 # Dependencias PHP
 vendor/
@@ -10,3 +13,5 @@ composer.phar
 
 # Estado local do Obsidian
 .obsidian/workspace.json
+.vscode/
+.idea/

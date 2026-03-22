@@ -85,6 +85,6 @@ FrotaSmart/
 - O proximo grande passo arquitetural e desacoplar persistencia via repositorios
 
 ## Arquivos relacionados
-- Regras de negocio: [Regras-Negocio.md](C:\Users\lukao\Documents\FrotaSmart\AI\Contexto\Regras-Negocio.md)
-- Estado atual: [Estado-Projeto.md](C:\Users\lukao\Documents\FrotaSmart\AI\Contexto\Estado-Projeto.md)
-- Roadmap: [tasks.md](C:\Users\lukao\Documents\FrotaSmart\AI\Tasks\tasks.md)
+- Regras de negocio: [Regras-Negocio.md](./Regras-Negocio.md)
+- Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
+- Roadmap: [tasks.md](../Tasks/tasks.md)

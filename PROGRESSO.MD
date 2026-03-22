@@ -18,7 +18,7 @@
 
 ### Bloqueios
 - `php` e `composer` nao estavam no PATH no inicio da sessao
-- O projeto foi validado usando `C:\xampp\php\php.exe` e `composer.phar` local
+- O projeto foi validado usando PHP local e `composer.phar` local
 
 ### Proximo passo recomendado
 - Concluir a `Task 02`: enriquecer `Veiculo` como entidade de dominio e criar `Placa` como Value Object
@@ -26,11 +26,12 @@
 ## 2026-03-22 - Task 02
 
 ### Dominio inicial de veiculos
-- Criado o Value Object [Placa](C:\Users\lukao\Documents\FrotaSmart\src\Domain\ValueObjects\Placa.php)
-- Enriquecida a entidade [Veiculo](C:\Users\lukao\Documents\FrotaSmart\src\Domain\Entities\Veiculo.php)
+- Criado o Value Object [Placa](./src/Domain/ValueObjects/Placa.php)
+- Enriquecida a entidade [Veiculo](./src/Domain/Entities/Veiculo.php)
 - Criadas exceptions de dominio para falhas de placa e status
-- Registrada a task em [AI/Tasks/task02.md](C:\Users\lukao\Documents\FrotaSmart\AI\Tasks\task02.md)
-- Atualizado o roadmap em [AI/Tasks/tasks.md](C:\Users\lukao\Documents\FrotaSmart\AI\Tasks\tasks.md)
+- Registrada a task em [task02.md](./AI/Tasks/task02.md)
+- Atualizado o roadmap em [tasks.md](./AI/Tasks/tasks.md)
+- Criado o teste de dominio em [test-domain.php](./scripts/test-domain.php)
 
 ### Regras agora no dominio
 - validacao de placa no proprio dominio
@@ -45,13 +46,17 @@
 ### Validacao operacional da arquitetura
 - Composer local baixado como ferramenta de trabalho e ignorado no Git
 - `composer dump-autoload` executado com sucesso
-- Teste real de autoload validado com `C:\xampp\php\php.exe`
+- Teste real de autoload validado com PHP local
 - `composer.json` alinhado ao PHP real da maquina com `php:^8.2`
 
 ### Limpeza arquitetural
 - Removidos scripts CLI de `backend/config`
-- Criados scripts operacionais em [scripts/bootstrap-db.php](C:\Users\lukao\Documents\FrotaSmart\scripts\bootstrap-db.php) e [scripts/reset-password.php](C:\Users\lukao\Documents\FrotaSmart\scripts\reset-password.php)
-- Normalizado o nome da regra geral do Codex para [AI/Contexto/Codex-Regras-Gerais.md](C:\Users\lukao\Documents\FrotaSmart\AI\Contexto\Codex-Regras-Gerais.md)
+- Criados scripts operacionais em [bootstrap-db.php](./scripts/bootstrap-db.php) e [reset-password.php](./scripts/reset-password.php)
+- Normalizado o nome da regra geral do Codex para [Codex-Regras-Gerais.md](./AI/Contexto/Codex-Regras-Gerais.md)
+
+### Seguranca e higiene do repositorio
+- Removidos caminhos absolutos com dados locais da documentacao principal
+- `.gitignore` reforcado com chaves, arquivos temporarios e configuracoes locais de IDE
 
 ### Alertas encontrados na revisao
 - o legado ainda usa `global $pdo`

@@ -16,7 +16,7 @@
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
 - Ja existem `src/` e `composer.json`
 - Ainda nao existe `public/` como front controller unico
-- O ambiente possui PHP em `C:\xampp\php\php.exe`
+- O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`
 
 ## Conclusao de viabilidade
@@ -42,3 +42,8 @@ Mas ela deve ser entendida como:
 - Evoluir o modulo de veiculos por migracao incremental a partir do dominio novo
 - Avancar para contratos de repositorio antes de adaptar controllers legados
 - Remover scripts operacionais de `backend/config` e concentrar operacoes CLI em `scripts/`
+
+## Guias relacionados
+- Arquitetura alvo: [Arquitetura-Projeto.md](./Arquitetura-Projeto.md)
+- Regras de negocio: [Regras-Negocio.md](./Regras-Negocio.md)
+- Roadmap: [tasks.md](../Tasks/tasks.md)

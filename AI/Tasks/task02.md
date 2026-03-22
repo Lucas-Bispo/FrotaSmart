@@ -9,13 +9,14 @@
 Evoluir o dominio de veiculos em `src/` para sair de uma estrutura anemica e passar a concentrar regras basicas de negocio no proprio dominio.
 
 ## Arquivos envolvidos
-- Entidade: [src/Domain/Entities/Veiculo.php](C:\Users\lukao\Documents\FrotaSmart\src\Domain\Entities\Veiculo.php)
-- Value Object: [src/Domain/ValueObjects/Placa.php](C:\Users\lukao\Documents\FrotaSmart\src\Domain\ValueObjects\Placa.php)
+- Entidade: [Veiculo.php](../../src/Domain/Entities/Veiculo.php)
+- Value Object: [Placa.php](../../src/Domain/ValueObjects/Placa.php)
 - Exceptions:
-  - [src/Domain/Exceptions/DomainException.php](C:\Users\lukao\Documents\FrotaSmart\src\Domain\Exceptions\DomainException.php)
-  - [src/Domain/Exceptions/InvalidPlacaException.php](C:\Users\lukao\Documents\FrotaSmart\src\Domain\Exceptions\InvalidPlacaException.php)
-  - [src/Domain/Exceptions/InvalidVeiculoStatusException.php](C:\Users\lukao\Documents\FrotaSmart\src\Domain\Exceptions\InvalidVeiculoStatusException.php)
-- Regras de referencia: [AI/Contexto/Regras-Negocio.md](C:\Users\lukao\Documents\FrotaSmart\AI\Contexto\Regras-Negocio.md)
+  - [DomainException.php](../../src/Domain/Exceptions/DomainException.php)
+  - [InvalidPlacaException.php](../../src/Domain/Exceptions/InvalidPlacaException.php)
+  - [InvalidVeiculoStatusException.php](../../src/Domain/Exceptions/InvalidVeiculoStatusException.php)
+- Teste de dominio: [test-domain.php](../../scripts/test-domain.php)
+- Regras de referencia: [Regras-Negocio.md](../Contexto/Regras-Negocio.md)
 
 ## Decisoes de engenharia
 - `Placa` virou Value Object dedicado com normalizacao e validacao de formatos brasileiro antigo e Mercosul
@@ -50,6 +51,16 @@ Evoluir o dominio de veiculos em `src/` para sair de uma estrutura anemica e pas
 - Criar `Veiculo` com status legado `ativo` deve normalizar para `disponivel`
 - Reservar veiculo disponivel deve mudar status para `reservado`
 - Enviar veiculo baixado para manutencao deve falhar
+
+## Validacao pratica
+Comando para executar:
+
+```powershell
+php .\scripts\test-domain.php
+```
+
+Resultado esperado:
+- `Testes de dominio executados com sucesso.`
 
 ## Observacoes para a proxima task
 - A `Task 03` deve criar a interface de repositorio em torno desse dominio

@@ -3,7 +3,7 @@
 ## Status
 - Estado atual: concluida
 - Viabilidade: concluida com ajustes operacionais locais
-- Ambiente validado com `C:\xampp\php\php.exe` + `composer.phar` local
+- Ambiente validado com PHP local + `composer.phar` local
 
 ## Objetivo real desta task
 Criar a base tecnica para a migracao do projeto atual para a arquitetura oficial do FrotaSmart, sem quebrar o sistema existente.
@@ -56,9 +56,9 @@ Vamos:
 Comandos esperados:
 
 ```powershell
-& 'C:\xampp\php\php.exe' .\composer.phar --version
-& 'C:\xampp\php\php.exe' .\composer.phar dump-autoload
-& 'C:\xampp\php\php.exe' .\scripts\test-autoload.php
+php .\composer.phar --version
+php .\composer.phar dump-autoload
+php .\scripts\test-autoload.php
 ```
 
 Resultado esperado:
