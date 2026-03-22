@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/security.php';
+
 // Carregador simples de variáveis de ambiente (.env)
 $envPath = __DIR__ . '/../../.env';
 if (file_exists($envPath)) {
@@ -37,15 +39,30 @@ try {
     // Se o erro for "Unknown database" (código 1049), tenta criar o banco
     if ($e->getCode() == 1049) {
         try {
-            $pdo = new PDO("mysql:host=$host", $user, $pass);
+            $pdo = new PDO("mysql:host=$host;port=$port;charset=$charset", $user, $pass, $options);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $pdo->exec("CREATE DATABASE IF NOT EXISTS `$dbname`");
             $pdo->exec("USE `$dbname`");
         } catch (PDOException $ex) {
-            die("Erro ao tentar criar o banco de dados: " . $ex->getMessage());
+            error_log('Erro ao tentar criar o banco de dados: ' . $ex->getMessage());
+            $message = is_cli_request()
+                ? "Erro ao tentar criar o banco de dados. Consulte os logs.\n"
+                : "Erro interno ao preparar o banco de dados.";
+            die($message);
         }
     } else {
-        die("Erro de Conexão ({$e->getCode()}): " . $e->getMessage() . "<br>Verifique se o usuário '{$user}' tem permissão no host '{$host}' e se a senha no .env está correta.");
+        error_log(sprintf(
+            'Erro de conexão com o banco [%s] host=%s db=%s user=%s: %s',
+            $e->getCode(),
+            $host,
+            $dbname,
+            $user,
+            $e->getMessage()
+        ));
+        $message = is_cli_request()
+            ? "Erro de conexão com o banco. Consulte os logs para detalhes.\n"
+            : "Erro interno de conexão com o banco.";
+        die($message);
     }
 }
 ?>
