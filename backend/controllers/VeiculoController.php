@@ -1,6 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 require_once __DIR__ . '/../config/security.php';
 secure_session_start();
+require_same_origin_post();
 
 if (!isset($_SESSION['user'])) {
     header('Location: /login.php');
@@ -10,7 +14,7 @@ if (!isset($_SESSION['user'])) {
 require_once __DIR__ . '/../models/VeiculoModel.php';
 
 class VeiculoController {
-    private $model;
+    private VeiculoModel $model;
 
     public function __construct() {
         $this->model = new VeiculoModel();
@@ -33,6 +37,7 @@ class VeiculoController {
             if ($placa && $modelo !== '' && $this->isValidStatus($status)) {
                 try {
                     $this->model->addVeiculo($placa, $modelo, $status);
+                    audit_log('veiculo.created', ['placa' => $placa, 'status' => $status]);
                     set_flash('success', 'Veículo adicionado com sucesso.');
                 } catch (PDOException $e) {
                     if ($e->getCode() === '23000') {
@@ -69,6 +74,7 @@ class VeiculoController {
             if ($id && $placa && $modelo !== '' && $this->isValidStatus($status)) {
                 try {
                     $this->model->updateVeiculo($id, $placa, $modelo, $status);
+                    audit_log('veiculo.updated', ['id' => $id, 'placa' => $placa, 'status' => $status]);
                     set_flash('success', 'Veículo atualizado com sucesso.');
                 } catch (PDOException $e) {
                     if ($e->getCode() === '23000') {
@@ -100,8 +106,14 @@ class VeiculoController {
             $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 
             if ($id) {
-                $this->model->deleteVeiculo($id);
-                set_flash('success', 'Veículo excluído com sucesso.');
+                try {
+                    $this->model->deleteVeiculo($id);
+                    audit_log('veiculo.deleted', ['id' => $id]);
+                    set_flash('success', 'Veículo excluído com sucesso.');
+                } catch (PDOException $e) {
+                    error_log('Erro ao excluir veículo: ' . $e->getMessage());
+                    set_flash('error', 'Erro interno ao excluir o veículo.');
+                }
             } else {
                 set_flash('error', 'ID inválido.');
             }
@@ -127,7 +139,7 @@ class VeiculoController {
 
     private function normalizePlaca(string $placa): ?string {
         $placa = strtoupper(trim($placa));
-        return preg_match('/^[A-Z0-9-]{7,8}$/', $placa) === 1 ? $placa : null;
+        return preg_match('/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/', str_replace('-', '', $placa)) === 1 ? $placa : null;
     }
 }
 
@@ -145,4 +157,3 @@ if (isset($_POST['action'])) {
         $controller->delete();
     }
 }
-?>
