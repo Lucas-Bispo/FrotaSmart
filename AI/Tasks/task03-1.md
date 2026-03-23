@@ -5,6 +5,12 @@
 - Dependencia anterior: [Task 03](./task03.md)
 - Roadmap principal: [tasks.md](./tasks.md)
 
+## Navegacao rapida
+- Progresso geral: [PROGRESSO.MD](../../PROGRESSO.MD)
+- Guia Linux: [README_LINUX.md](../../README_LINUX.md)
+- Contexto de transicao: [ContextodeTransicao.md](../Contexto/ContextodeTransicao.md)
+- Task anterior: [task03.md](./task03.md)
+
 ## Objetivo
 Eliminar o acoplamento explicito com Windows/XAMPP e preparar o FrotaSmart para execucao padronizada em Linux Ubuntu e WSL.
 

@@ -1,98 +1,80 @@
-# Regras de Negócio — FrotaSmart (Gestão de Frotas Públicas para Prefeituras)
+# Regras de Negocio - FrotaSmart
 
-## Visão Geral
-O FrotaSmart é um sistema completo de gestão de frota municipal (veículos leves, ônibus, caminhões, máquinas) focado em transparência, eficiência, redução de custos e conformidade legal.  
+## Navegacao rapida
+- Arquitetura: [Arquitetura-Projeto.md](./Arquitetura-Projeto.md)
+- Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
+- Roadmap: [tasks.md](../Tasks/tasks.md)
+- Progresso: [PROGRESSO.MD](../../PROGRESSO.MD)
 
-As regras de negócio são **obrigatórias** para todo código gerado ou revisado pelo Códex. Elas seguem as melhores práticas brasileiras de administração pública (TCU, CGU, LGPD, IN SLTI/MPOG, auditorias reais de prefeituras) e sistemas modernos de frota (Cobli, Aspec Frota, MaxiFrota, Geotab).
+## Visao geral
+O FrotaSmart e um sistema completo de gestao de frota municipal focado em transparencia, eficiencia, reducao de custos e conformidade legal.
 
-**Objetivo final**: transformar a frota em um ativo estratégico com custo por km controlado, auditoria total e zero fraudes.
+As regras de negocio sao obrigatorias para todo codigo gerado ou revisado no projeto.
 
-## Princípios Gerais (obrigatórios em todo o sistema)
-- Transparência total (Lei de Acesso à Informação + LGPD)
-- Auditoria completa (quem alterou, quando, por quê)
-- Minimização de dados (LGPD)
-- Controle de custos (custo por km, consumo médio, ociosidade)
-- Segurança e prevenção (manutenção preventiva > corretiva)
-- Conformidade LGPD (dados de motoristas são pessoais/sensíveis)
-- RBAC rígido por perfil (admin, gerente, motorista, auditor)
+## Principios gerais
+- Transparencia total
+- Auditoria completa
+- Minimizacao de dados
+- Controle de custos
+- Seguranca e prevencao
+- Conformidade LGPD
+- RBAC rigido por perfil
 
-## Módulos e Regras de Negócio Detalhadas
+## Modulos e regras de negocio detalhadas
 
-### 1. Veículos
-- Cadastro completo obrigatório: placa (UNIQUE + Value Object com validação), RENAVAM, chassi, ano, modelo, tipo (leve/ônibus/caminhão), combustível, secretaria lotada, quilometragem inicial, data aquisição, documentos (IPVA, licenciamento, seguro, inspeção).
-- Status obrigatório: Disponível, Em Manutenção, Em Viagem, Baixado, Reservado.
-- Vencimentos automáticos alertados (30 dias antes).
-- Soft delete + histórico de alterações (auditoria).
+### 1. Veiculos
+- Cadastro completo obrigatorio: placa, RENAVAM, chassi, ano, modelo, tipo, combustivel, secretaria lotada, quilometragem inicial, data de aquisicao e documentos
+- Status obrigatorio: `disponivel`, `em_manutencao`, `em_viagem`, `baixado`, `reservado`
+- Vencimentos automaticos alertados com antecedencia
+- Soft delete e historico de alteracoes
 
 ### 2. Motoristas
-- Vínculo com usuário do sistema + CNH (número, categoria, validade, exames médicos).
-- Dados pessoais tratados com LGPD: consentimento explícito, política de privacidade, direito de acesso/correção/exclusão.
-- Status: Ativo, Inativo, Em Férias, Bloqueado (CNH vencida).
-- Treinamento obrigatório registrado (condução econômica, segurança).
+- Vinculo com usuario do sistema e CNH
+- Dados pessoais tratados com LGPD
+- Status: ativo, inativo, em ferias e bloqueado
+- Treinamento obrigatorio registrado
 
-### 3. Viagens / Deslocamentos
-- Autorização prévia obrigatória (requisição com origem, destino, finalidade, passageiros, km previsto).
-- Registro de saída/retorno com quilometragem + diário de bordo digital (obrigatório por TCU/IN 3/2008).
-- Finalidade deve ser pública (serviço, fiscalização, transporte escolar, etc.).
-- Motorista responsável + aprovação da secretaria.
+### 3. Viagens e deslocamentos
+- Autorizacao previa obrigatoria
+- Registro de saida e retorno com quilometragem
+- Finalidade sempre publica
+- Motorista responsavel e aprovacao da secretaria
 
 ### 4. Abastecimento
-- Apenas postos credenciados ou cartão frota.
-- Limites por veículo/motorista (valor, litros, frequência).
-- Cálculo automático de consumo médio (litros/km) por veículo.
-- Detecção automática de fraudes (abastecimento fora de rota, volume incompatível, horário suspeito).
-- Integração com manutenção (abastecimento só permitido se veículo em dia).
+- Apenas postos credenciados ou cartao frota
+- Limites por veiculo e motorista
+- Calculo automatico de consumo medio
+- Deteccao automatica de fraudes
+- Integracao com manutencao
 
-### 5. Manutenção
-- Preventiva: agenda automática por km/horas ou tempo (óleo, filtros, pneus).
-- Corretiva: ordem de serviço + aprovação + nota fiscal + garantia.
-- Estoque de peças integrado + controle de custo.
-- Veículo bloqueado automaticamente se manutenção pendente.
+### 5. Manutencao
+- Preventiva por km, horas ou tempo
+- Corretiva com ordem de servico, aprovacao e nota fiscal
+- Estoque de pecas integrado
+- Veiculo bloqueado se manutencao estiver pendente
 
-### 6. Secretarias / Departamentos
-- Vínculo obrigatório de veículos e motoristas.
-- Relatórios por secretaria (custo total, consumo, ociosidade).
+### 6. Secretarias e departamentos
+- Vinculo obrigatorio de veiculos e motoristas
+- Relatorios por secretaria
 
-### 7. Relatórios e Auditoria
-- KPIs obrigatórios:
-  - Custo por km rodado
-  - Consumo médio (litros/km)
-  - Taxa de disponibilidade da frota
-  - % de manutenções preventivas
-  - Ociosidade (veículos parados > 30 dias)
-  - Custo por secretaria
-- Auditoria total: log de todas as ações (created_by, updated_at, ip, role).
-- Relatórios exportáveis em PDF/CSV para TCU, CGU e transparência pública.
+### 7. Relatorios e auditoria
+- KPIs obrigatorios de custo, consumo, disponibilidade, manutencao preventiva, ociosidade e custo por secretaria
+- Auditoria total de acoes
+- Exportacao em PDF e CSV
 
-### 8. Segurança e LGPD (crítico para prefeitura)
-- RBAC: 
-  - Admin → tudo
-  - Gerente → cadastrar/editar veículos/viagens/manutenção
-  - Motorista → ver apenas suas viagens + registrar km
-  - Auditor → só relatórios
-- Todos os dados pessoais (CNH, telefone, geolocalização) com:
-  - Política de privacidade clara
-  - Consentimento registrado
-  - RIPD (Registro de Incidentes)
-  - Encarregado (DPO) configurável
-  - Criptografia e controle de acesso
+### 8. Seguranca e LGPD
+- Perfis: admin, gerente, motorista e auditor
+- Controle de acesso, criptografia e politica de privacidade
 
-## Regras que o Códex deve aplicar sempre
-- Toda ação mutável (cadastro, alteração, exclusão) deve ter auditoria.
-- Placa sempre UNIQUE + validação no Domain.
-- Consumo médio calculado automaticamente em todo abastecimento.
-- Veículo bloqueado se CNH vencida ou manutenção atrasada.
-- Nenhum dado sensível exposto sem autenticação + RBAC.
-- Relatórios sempre com filtro por data, secretaria e veículo.
+## Regras que devem ser aplicadas sempre
+- Toda acao mutavel deve ter auditoria
+- Placa sempre UNIQUE com validacao no dominio
+- Consumo medio calculado automaticamente
+- Veiculo bloqueado se houver restricao critica
+- Nenhum dado sensivel exposto sem autenticacao e RBAC
+- Relatorios com filtros por data, secretaria e veiculo
 
-## Fontes e Referências (pesquisa completa 2026)
-- LGPD (Lei 13.709/2018) + Guias ANPD/TCU para gestores públicos
-- IN SLTI/MPOG nº 3/2008 (cadastro, controle e diário de bordo)
-- Portaria TCU e auditorias de frota pública (UFSM, prefeituras)
-- Boas práticas Cobli, Aspec Frota, MaxiFrota, Geotab
-- Guia de Abastecimento Veic.com.br (limites, fraudes, consumo médio)
-- TCU – Auditoria LGPD e controle de frota oficial
-- Normas estaduais (ex: Paraná, Rio Grande do Sul) sobre uso de veículos públicos
-
-**Última atualização**: 22 de março de 2026 — por Códex  
-**Versão**: 1.0 — Padrão oficial do FrotaSmart
+## Referencias relacionadas
+- Arquitetura: [Arquitetura-Projeto.md](./Arquitetura-Projeto.md)
+- Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
+- Roadmap: [tasks.md](../Tasks/tasks.md)

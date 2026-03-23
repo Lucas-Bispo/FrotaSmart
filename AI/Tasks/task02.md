@@ -5,6 +5,11 @@
 - Dependencia anterior: [Task 01](./task01.md)
 - Roadmap principal: [tasks.md](./tasks.md)
 
+## Navegacao rapida
+- Progresso geral: [PROGRESSO.MD](../../PROGRESSO.MD)
+- Arquitetura: [Arquitetura-Projeto.md](../Contexto/Arquitetura-Projeto.md)
+- Proxima task: [task03.md](./task03.md)
+
 ## Objetivo
 Evoluir o dominio de veiculos em `src/` para sair de uma estrutura anemica e passar a concentrar regras basicas de negocio no proprio dominio.
 
@@ -55,8 +60,8 @@ Evoluir o dominio de veiculos em `src/` para sair de uma estrutura anemica e pas
 ## Validacao pratica
 Comando para executar:
 
-```powershell
-php .\scripts\test-domain.php
+```bash
+php scripts/test-domain.php
 ```
 
 Resultado esperado:

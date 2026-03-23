@@ -4,6 +4,13 @@
 Este arquivo e o quadro de andamento real do projeto.
 Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetura oficial definida em `AI/Contexto`.
 
+## Navegacao rapida
+- Progresso geral: [PROGRESSO.MD](../../PROGRESSO.MD)
+- Arquitetura: [Arquitetura-Projeto.md](../Contexto/Arquitetura-Projeto.md)
+- Estado atual: [Estado-Projeto.md](../Contexto/Estado-Projeto.md)
+- Regras de negocio: [Regras-Negocio.md](../Contexto/Regras-Negocio.md)
+- Transicao Linux: [ContextodeTransicao.md](../Contexto/ContextodeTransicao.md)
+
 ## Estado atual do projeto
 - Arquitetura atual: MVC simples com `backend/` e `frontend/`
 - Arquitetura alvo: Clean Architecture adaptada com `src/`
@@ -14,6 +21,7 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
 ### Task 01 - Fundacao da arquitetura com Composer e PSR-4
 - Status: concluida
 - Objetivo: criar a base `src/`, `composer.json` e autoload PSR-4
+- Documento detalhado: [task01.md](./task01.md)
 - Concluido:
   - estrutura `src/` criada
   - `composer.json` criado

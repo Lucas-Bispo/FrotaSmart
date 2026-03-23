@@ -1,5 +1,12 @@
 # Progresso - FrotaSmart
 
+## Navegacao rapida
+- Roadmap: [tasks.md](./AI/Tasks/tasks.md)
+- Arquitetura: [Arquitetura-Projeto.md](./AI/Contexto/Arquitetura-Projeto.md)
+- Estado atual: [Estado-Projeto.md](./AI/Contexto/Estado-Projeto.md)
+- Regras de negocio: [Regras-Negocio.md](./AI/Contexto/Regras-Negocio.md)
+- Guia Linux: [README_LINUX.md](./README_LINUX.md)
+
 ## 2026-03-22
 
 ### Task 01 - Fundacao da arquitetura
@@ -89,7 +96,7 @@
 ### Alertas encontrados na revisao
 - o legado ainda usa `global $pdo`
 - o CRUD de veiculos ainda faz exclusao fisica
-- ainda nao existe `public/index.php` como front controller unico
+- a integracao completa do legado com `public/` e com a nova arquitetura ainda segue em evolucao
 
 ### Proximo passo recomendado
-- Criar a `Task 03` e iniciar o contrato de repositorio para reduzir o acoplamento do legado
+- Implementar a `Task 04` para reduzir o acoplamento do legado com a persistencia

@@ -5,6 +5,11 @@
 - Dependencia anterior: [Task 02](./task02.md)
 - Roadmap principal: [tasks.md](./tasks.md)
 
+## Navegacao rapida
+- Progresso geral: [PROGRESSO.MD](../../PROGRESSO.MD)
+- Arquitetura: [Arquitetura-Projeto.md](../Contexto/Arquitetura-Projeto.md)
+- Task complementar: [task03-1.md](./task03-1.md)
+
 ## Objetivo
 Criar o contrato de repositorio de veiculos em `src/Domain/Repositories`, desacoplando o dominio de `PDO` e preparando a aplicacao para casos de uso futuros.
 

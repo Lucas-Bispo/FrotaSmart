@@ -1,5 +1,12 @@
 # Arquitetura FrotaSmart
 
+## Navegacao rapida
+- Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
+- Regras de negocio: [Regras-Negocio.md](./Regras-Negocio.md)
+- Roadmap: [tasks.md](../Tasks/tasks.md)
+- Progresso: [PROGRESSO.MD](../../PROGRESSO.MD)
+- Guia Linux: [README_LINUX.md](../../README_LINUX.md)
+
 ## Status do documento
 - Papel: referencia oficial de arquitetura do projeto
 - Ultima revisao: 2026-03-22
@@ -60,7 +67,7 @@ FrotaSmart/
 - `src/` ja existe e iniciou o novo dominio
 - `backend/` e `frontend/` ainda sustentam o fluxo em producao
 - `scripts/` concentra operacoes CLI do projeto
-- `public/` ainda nao foi implantado como front controller unico
+- `public/` ja existe como document root recomendado para Linux/WSL
 
 ## Regras de implementacao
 - Todo modulo novo deve comecar em `src/Domain`
@@ -82,9 +89,11 @@ FrotaSmart/
 ## Decisoes atuais
 - O projeto esta validado com PHP 8.2 local
 - O autoload PSR-4 funciona via Composer local
-- O proximo grande passo arquitetural e desacoplar persistencia via repositorios
+- O projeto ja possui `public/` como base de execucao Linux-friendly
+- O proximo grande passo arquitetural e desacoplar persistencia via repositorios concretos
 
 ## Arquivos relacionados
 - Regras de negocio: [Regras-Negocio.md](./Regras-Negocio.md)
 - Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
 - Roadmap: [tasks.md](../Tasks/tasks.md)
+- Guia Linux: [README_LINUX.md](../../README_LINUX.md)

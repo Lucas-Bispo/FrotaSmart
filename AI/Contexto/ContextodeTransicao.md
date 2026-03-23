@@ -1,35 +1,40 @@
-Contexto de Transição: "Operação Clean Linux" (Pré-Task 04)
-Objetivo: Eliminar o legado de acoplamento com Windows/XAMPP e padronizar o FrotaSmart para um ambiente de desenvolvimento e deploy profissional em Linux/WSL.
+# Contexto de Transicao - Operacao Clean Linux
 
-1. Diagnóstico de Débito Técnico
-O projeto possui raízes no XAMPP que impedem a portabilidade e a automação (SysOps/DevOps).
+## Navegacao rapida
+- Guia Linux: [README_LINUX.md](../../README_LINUX.md)
+- Roadmap: [tasks.md](../Tasks/tasks.md)
+- Task executada: [task03-1.md](../Tasks/task03-1.md)
+- Arquitetura: [Arquitetura-Projeto.md](./Arquitetura-Projeto.md)
 
-Hardcoding: Referências explícitas a C:\xampp\... e .exe.
+## Objetivo
+Eliminar o legado de acoplamento com Windows/XAMPP e padronizar o FrotaSmart para um ambiente de desenvolvimento e deploy profissional em Linux/WSL.
 
-Arquitetura de Entrada: Ausência de um diretório public/ (Entrypoint), expondo arquivos sensíveis na raiz.
+## 1. Diagnostico de debito tecnico
+O projeto possuia raizes no XAMPP que impediam a portabilidade e a automacao.
 
-Gestão de Dependências: composer.lock ausente e falta de uso pleno do Autoload PSR-4 em detrimento de require_once manuais.
+- Hardcoding: referencias explicitas a `C:\xampp\...` e `.exe`
+- Arquitetura de entrada: ausencia inicial de `public/`
+- Gestao de dependencias: `composer.lock` ausente e uso incompleto do autoload PSR-4
+- Instanciacao do banco: uso de `global $pdo` em controllers e models
 
-Instanciação do Banco: O uso de global $pdo em Controllers/Models dificulta testes e isolamento de ambiente.
+## 2. Diretrizes de correcao da Task 03.1
+Antes da Task 04, a correcao deveria seguir estas regras:
 
-2. Diretrizes de Correção (Task 03.1)
-Antes de avançar para a Task 04, o Codex deve seguir estas regras de implementação:
+- substituir caminhos absolutos e referencias a drivers de letra por caminhos relativos e configuracao de ambiente
+- garantir compatibilidade case-sensitive para Linux
+- iniciar a transicao de `global $pdo` para padroes mais isolados
+- padronizar o uso de `php -S 0.0.0.0:8000 -t public`
 
-Portabilidade de Caminhos: Substituir qualquer caminho absoluto ou referência a drivers de letra (C:, D:) por caminhos relativos baseados em __DIR__ ou constantes de ambiente.
+## 3. Checklist de definicao de pronto
+O projeto seria considerado Linux Ready quando:
 
-Normalização Case-Sensitive: Garantir que todos os require, include e namespaces correspondam exatamente ao nome dos arquivos no disco (essencial para Linux).
+- `grep -r "xampp" .` nao retornasse resultado nos scripts operacionais
+- `.env` fosse a fonte de verdade para banco
+- existisse um guia Linux com `composer install`, `php scripts/bootstrap-db.php` e `php -S`
+- `composer.json` gerisse o carregamento de classes via PSR-4
 
-Refatoração de Conexão: Iniciar a transição do global $pdo para Injeção de Dependência ou um Singleton Pattern dentro das Classes de Model.
-
-Ambiente de Execução: Padronizar o uso do servidor embutido do PHP (php -S 0.0.0.0:8000) em vez de depender de uma interface gráfica de controle (Control Panel do XAMPP).
-
-3. Checklist de Definição de Pronto (DoP) para a Task 03.1
-O projeto será considerado "Linux Ready" quando:
-
-[ ] grep -r "xampp" . não retornar nenhum resultado em arquivos de script.
-
-[ ] O arquivo .env for a única fonte de verdade para DB_HOST, DB_PORT, etc.
-
-[ ] Existir um arquivo README_LINUX.md ou similar com o passo a passo: composer install -> php bootstrap-db.php -> php -S.
-
-[ ] O composer.json gerir todos os carregamentos de classe via PSR-4.
+## Resultado observado
+- O guia [README_LINUX.md](../../README_LINUX.md) foi criado
+- `public/` passou a ser o document root recomendado
+- os scripts operacionais foram limpos de referencias explicitas a XAMPP
+- a migracao arquitetural ainda segue pendente na camada de persistencia e aplicacao
