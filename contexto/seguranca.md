@@ -1,9 +1,9 @@
-# Contexto de Seguranca
+# Contexto de seguranca
 
 ## Navegacao rapida
-- Guia Linux: [README_LINUX.md](../../README_LINUX.md)
-- Revisao de seguranca: [SECURITY_REVIEW.md](../../docs/SECURITY_REVIEW.md)
-- Hardening Apache: [APACHE_HARDENING.md](../../docs/APACHE_HARDENING.md)
+- Guia Linux: [readme_linux.md](./readme_linux.md)
+- Revisao de seguranca: [security_review.md](./docs/security_review.md)
+- Hardening Apache: [apache_hardening.md](./docs/apache_hardening.md)
 
 ## Diretrizes principais
 - proibido hardcoding de caminhos absolutos ou nomes locais de usuario
@@ -16,3 +16,4 @@
 - `.gitignore` estrategico para `.env`, chaves e temporarios
 - `pre-commit hook` para bloquear caminhos locais de Windows/WSL
 - varredura de historico com ferramentas como TruffleHog ou Gitleaks
+

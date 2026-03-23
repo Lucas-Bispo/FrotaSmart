@@ -1,11 +1,11 @@
 # Arquitetura FrotaSmart
 
 ## Navegacao rapida
-- Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
-- Regras de negocio: [Regras-Negocio.md](./Regras-Negocio.md)
-- Roadmap: [tasks.md](../Tasks/tasks.md)
-- Progresso: [PROGRESSO.MD](../../PROGRESSO.MD)
-- Guia Linux: [README_LINUX.md](../../README_LINUX.md)
+- Estado atual: [estado_projeto.md](./estado_projeto.md)
+- Regras de negocio: [regras_negocio.md](./regras_negocio.md)
+- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Progresso: [progresso.md](./progresso.md)
+- Guia Linux: [readme_linux.md](./readme_linux.md)
 
 ## Status do documento
 - Papel: referencia oficial de arquitetura do projeto
@@ -58,9 +58,9 @@ FrotaSmart/
 |-- public/
 |-- backend/
 |-- frontend/
-|-- AI/
+|-- contexto/
 |-- composer.json
-`-- PROGRESSO.MD
+`-- .env
 ```
 
 ## Estado atual do repositorio
@@ -92,8 +92,3 @@ FrotaSmart/
 - O projeto ja possui `public/` como base de execucao Linux-friendly
 - O proximo grande passo arquitetural e desacoplar persistencia via repositorios concretos
 
-## Arquivos relacionados
-- Regras de negocio: [Regras-Negocio.md](./Regras-Negocio.md)
-- Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
-- Roadmap: [tasks.md](../Tasks/tasks.md)
-- Guia Linux: [README_LINUX.md](../../README_LINUX.md)

@@ -1,10 +1,10 @@
-# Regras de Negocio - FrotaSmart
+# Regras de negocio - FrotaSmart
 
 ## Navegacao rapida
-- Arquitetura: [Arquitetura-Projeto.md](./Arquitetura-Projeto.md)
-- Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
-- Roadmap: [tasks.md](../Tasks/tasks.md)
-- Progresso: [PROGRESSO.MD](../../PROGRESSO.MD)
+- Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
+- Estado atual: [estado_projeto.md](./estado_projeto.md)
+- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Progresso: [progresso.md](./progresso.md)
 
 ## Visao geral
 O FrotaSmart e um sistema completo de gestao de frota municipal focado em transparencia, eficiencia, reducao de custos e conformidade legal.
@@ -74,7 +74,3 @@ As regras de negocio sao obrigatorias para todo codigo gerado ou revisado no pro
 - Nenhum dado sensivel exposto sem autenticacao e RBAC
 - Relatorios com filtros por data, secretaria e veiculo
 
-## Referencias relacionadas
-- Arquitetura: [Arquitetura-Projeto.md](./Arquitetura-Projeto.md)
-- Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
-- Roadmap: [tasks.md](../Tasks/tasks.md)

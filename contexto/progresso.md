@@ -1,11 +1,11 @@
 # Progresso - FrotaSmart
 
 ## Navegacao rapida
-- Roadmap: [tasks.md](./AI/Tasks/tasks.md)
-- Arquitetura: [Arquitetura-Projeto.md](./AI/Contexto/Arquitetura-Projeto.md)
-- Estado atual: [Estado-Projeto.md](./AI/Contexto/Estado-Projeto.md)
-- Regras de negocio: [Regras-Negocio.md](./AI/Contexto/Regras-Negocio.md)
-- Guia Linux: [README_LINUX.md](./README_LINUX.md)
+- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
+- Estado atual: [estado_projeto.md](./estado_projeto.md)
+- Regras de negocio: [regras_negocio.md](./regras_negocio.md)
+- Guia Linux: [readme_linux.md](./readme_linux.md)
 
 ## 2026-03-22
 
@@ -15,8 +15,8 @@
 - Criada a estrutura base de camadas em `src/`
 - Criada a classe inicial `FrotaSmart\Domain\Entities\Veiculo`
 - Criado `scripts/test-autoload.php` para validacao futura
-- Atualizado o backlog em `AI/Tasks/tasks.md`
-- Registrado o diagnostico arquitetural em `AI/Contexto/Estado-Projeto.md`
+- Atualizado o backlog em [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Registrado o diagnostico arquitetural em [estado_projeto.md](./estado_projeto.md)
 
 ### Estado atual
 - A base para migracao para Clean Architecture foi iniciada
@@ -33,12 +33,12 @@
 ## 2026-03-22 - Task 02
 
 ### Dominio inicial de veiculos
-- Criado o Value Object [Placa](./src/Domain/ValueObjects/Placa.php)
-- Enriquecida a entidade [Veiculo](./src/Domain/Entities/Veiculo.php)
+- Criado o Value Object [Placa](../src/Domain/ValueObjects/Placa.php)
+- Enriquecida a entidade [Veiculo](../src/Domain/Entities/Veiculo.php)
 - Criadas exceptions de dominio para falhas de placa e status
-- Registrada a task em [task02.md](./AI/Tasks/task02.md)
-- Atualizado o roadmap em [tasks.md](./AI/Tasks/tasks.md)
-- Criado o teste de dominio em [test-domain.php](./scripts/test-domain.php)
+- Registrada a task em [task_02.md](./tasks/task_02.md)
+- Atualizado o roadmap em [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Criado o teste de dominio em [test-domain.php](../scripts/test-domain.php)
 
 ### Regras agora no dominio
 - validacao de placa no proprio dominio
@@ -51,11 +51,11 @@
 ## 2026-03-22 - Task 03
 
 ### Contrato de repositorio de veiculos
-- Criado o contrato [VeiculoRepositoryInterface.php](./src/Domain/Repositories/VeiculoRepositoryInterface.php)
+- Criado o contrato [VeiculoRepositoryInterface.php](../src/Domain/Repositories/VeiculoRepositoryInterface.php)
 - Definidas operacoes de persistencia, consulta, existencia, listagem e remocao sem acoplamento com `PDO`
-- Adotada [Placa](./src/Domain/ValueObjects/Placa.php) como identidade de consulta do dominio nesta etapa
-- Registrada a task em [task03.md](./AI/Tasks/task03.md)
-- Criado o teste de validacao do contrato em [test-repository-contract.php](./scripts/test-repository-contract.php)
+- Adotada [Placa](../src/Domain/ValueObjects/Placa.php) como identidade de consulta do dominio nesta etapa
+- Registrada a task em [task_03.md](./tasks/task_03.md)
+- Criado o teste de validacao do contrato em [test-repository-contract.php](../scripts/test-repository-contract.php)
 
 ### Proximo passo recomendado
 - Iniciar a `Task 04`: implementar o repositorio concreto em `src/Infrastructure/Persistence`
@@ -63,8 +63,8 @@
 ## 2026-03-22 - Task 03.1
 
 ### Operacao Clean Linux
-- Criado o guia [README_LINUX.md](./README_LINUX.md) com fluxo de execucao em Linux e WSL
-- Criada a pasta [public](./public/index.php) como document root recomendado para servidor embutido e deploy Linux
+- Criado o guia [readme_linux.md](./readme_linux.md) com fluxo de execucao em Linux e WSL
+- Criada a pasta [public](../public/index.php) como document root recomendado para servidor embutido e deploy Linux
 - Ajustadas views e controllers legados para navegar por entrypoints publicos
 - Removidas referencias explicitas a XAMPP dos scripts operacionais
 
@@ -86,8 +86,8 @@
 
 ### Limpeza arquitetural
 - Removidos scripts CLI de `backend/config`
-- Criados scripts operacionais em [bootstrap-db.php](./scripts/bootstrap-db.php) e [reset-password.php](./scripts/reset-password.php)
-- Normalizado o nome da regra geral do Codex para [Codex-Regras-Gerais.md](./AI/Contexto/Codex-Regras-Gerais.md)
+- Criados scripts operacionais em [bootstrap-db.php](../scripts/bootstrap-db.php) e [reset-password.php](../scripts/reset-password.php)
+- Normalizado o nome da regra geral do Codex para [codex_regras_gerais.md](./codex_regras_gerais.md)
 
 ### Seguranca e higiene do repositorio
 - Removidos caminhos absolutos com dados locais da documentacao principal
@@ -100,3 +100,4 @@
 
 ### Proximo passo recomendado
 - Implementar a `Task 04` para reduzir o acoplamento do legado com a persistencia
+

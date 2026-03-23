@@ -1,13 +1,13 @@
 # FrotaSmart no Linux / WSL
 
 ## Links uteis
-- Progresso do projeto: [PROGRESSO.MD](./PROGRESSO.MD)
-- Roadmap de tasks: [tasks.md](./AI/Tasks/tasks.md)
-- Arquitetura: [Arquitetura-Projeto.md](./AI/Contexto/Arquitetura-Projeto.md)
-- Estado atual: [Estado-Projeto.md](./AI/Contexto/Estado-Projeto.md)
-- Contexto de transicao: [ContextodeTransicao.md](./AI/Contexto/ContextodeTransicao.md)
-- Hardening Apache: [APACHE_HARDENING.md](./docs/APACHE_HARDENING.md)
-- Revisao de seguranca: [SECURITY_REVIEW.md](./docs/SECURITY_REVIEW.md)
+- Progresso do projeto: [progresso.md](./progresso.md)
+- Roadmap de tasks: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
+- Estado atual: [estado_projeto.md](./estado_projeto.md)
+- Contexto de transicao: [contexto_transicao.md](./contexto_transicao.md)
+- Hardening Apache: [apache_hardening.md](./docs/apache_hardening.md)
+- Revisao de seguranca: [security_review.md](./docs/security_review.md)
 
 Este projeto deve ser executado com PHP 8.2+ e MySQL ou MariaDB em ambiente Linux ou WSL, sem depender de XAMPP.
 
@@ -71,4 +71,5 @@ php scripts/reset-password.php <nova_senha> [usuario]
 - Habilite `mod_headers` e `mod_rewrite` no Apache para aplicar as protecoes de `.htaccess`
 - Use HTTPS em producao para que os cookies de sessao sejam enviados com a flag `Secure`
 
-Consulte tambem [APACHE_HARDENING.md](./docs/APACHE_HARDENING.md) e [SECURITY_REVIEW.md](./docs/SECURITY_REVIEW.md).
+Consulte tambem [apache_hardening.md](./docs/apache_hardening.md) e [security_review.md](./docs/security_review.md).
+

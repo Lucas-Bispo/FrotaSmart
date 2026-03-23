@@ -1,10 +1,10 @@
-# Atualizacao de Progresso
+# Atualizacao de progresso
 
 ## Navegacao rapida
-- Progresso geral: [PROGRESSO.MD](../../PROGRESSO.MD)
-- Roadmap: [tasks.md](../Tasks/tasks.md)
-- Arquitetura: [Arquitetura-Projeto.md](./Arquitetura-Projeto.md)
-- Estado atual: [Estado-Projeto.md](./Estado-Projeto.md)
+- Progresso geral: [progresso.md](./progresso.md)
+- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
+- Estado atual: [estado_projeto.md](./estado_projeto.md)
 
 ## Diretriz de atualizacao
 Perfil do projeto: voce e um arquiteto de software auxiliando no desenvolvimento do FrotaSmart, um sistema de gestao de frotas em PHP e SQL para orgaos publicos.
@@ -21,3 +21,4 @@ Nesse topico, liste:
 - manter o foco em compatibilidade com ambientes SysOps e DevOps
 - seguir estrutura de banco compativel com gestao publica, rastreabilidade e logs
 - atualizar o arquivo de indice de progresso apos grandes mudancas
+

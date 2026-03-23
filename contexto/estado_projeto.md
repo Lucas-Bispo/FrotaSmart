@@ -1,11 +1,11 @@
 # Estado atual do projeto
 
 ## Navegacao rapida
-- Arquitetura: [Arquitetura-Projeto.md](./Arquitetura-Projeto.md)
-- Regras de negocio: [Regras-Negocio.md](./Regras-Negocio.md)
-- Roadmap: [tasks.md](../Tasks/tasks.md)
-- Progresso: [PROGRESSO.MD](../../PROGRESSO.MD)
-- Contexto de transicao: [ContextodeTransicao.md](./ContextodeTransicao.md)
+- Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
+- Regras de negocio: [regras_negocio.md](./regras_negocio.md)
+- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Progresso: [progresso.md](./progresso.md)
+- Contexto de transicao: [contexto_transicao.md](./contexto_transicao.md)
 
 ## Data de referencia
 2026-03-22
@@ -27,7 +27,7 @@
 - O Composer foi baixado localmente como `composer.phar`
 
 ## Conclusao de viabilidade
-A `task01` era viavel e foi executada como fundacao arquitetural, nao como refactor total do projeto.
+A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refactor total do projeto.
 
 ## Estrategia recomendada
 - Criar a nova base em paralelo ao legado
@@ -45,8 +45,3 @@ A `task01` era viavel e foi executada como fundacao arquitetural, nao como refac
 - Avancar para repositorio concreto, service de aplicacao e adaptacao gradual dos controllers legados
 - Preservar a compatibilidade com Linux/WSL e com a publicacao via `public/`
 
-## Guias relacionados
-- Arquitetura alvo: [Arquitetura-Projeto.md](./Arquitetura-Projeto.md)
-- Regras de negocio: [Regras-Negocio.md](./Regras-Negocio.md)
-- Roadmap: [tasks.md](../Tasks/tasks.md)
-- Guia Linux: [README_LINUX.md](../../README_LINUX.md)
