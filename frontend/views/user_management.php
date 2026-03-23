@@ -3,13 +3,13 @@ require_once __DIR__ . '/../../backend/config/security.php';
 secure_session_start();
 
 if (!isset($_SESSION['user'])) {
-    header('Location: login.php');
+    header('Location: /login.php');
     exit;
 }
 
 if (($_SESSION['role'] ?? '') !== 'admin') {
     set_flash('error', 'Acesso negado ao gerenciamento de usuários.');
-    header('Location: dashboard.php');
+    header('Location: /dashboard.php');
     exit;
 }
 
@@ -42,7 +42,7 @@ $errorMessage = pull_flash('error');
     <h2 class="text-xl font-semibold text-slate-700 mb-2">Novo usuário</h2>
     <p class="text-sm text-slate-500 mb-6">As senhas devem ser fortes e exclusivas. Perfis administrativos devem ser concedidos com cautela.</p>
 
-    <form method="POST" action="../../backend/controllers/UserController.php" class="space-y-5">
+    <form method="POST" action="/users.php" class="space-y-5">
         <?php echo csrf_input(); ?>
         <input type="hidden" name="action" value="add_user">
 

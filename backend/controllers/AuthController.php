@@ -8,7 +8,7 @@ class AuthController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
                 set_flash('error', 'Sessão inválida. Atualize a página e tente novamente.');
-                header('Location: ../../frontend/views/login.php');
+                header('Location: /login.php');
                 exit;
             }
 
@@ -19,14 +19,14 @@ class AuthController {
                 $remaining = max(1, ($_SESSION['auth_lock_until'] ?? time()) - time());
                 set_flash('error', "Muitas tentativas. Aguarde {$remaining} segundos e tente novamente.");
                 set_flash('old_username', $username);
-                header('Location: ../../frontend/views/login.php');
+                header('Location: /login.php');
                 exit;
             }
 
             if ($username === '' || $password === '') {
                 set_flash('error', 'Informe usuário e senha.');
                 set_flash('old_username', $username);
-                header('Location: ../../frontend/views/login.php');
+                header('Location: /login.php');
                 exit;
             }
 
@@ -41,14 +41,14 @@ class AuthController {
                 $_SESSION['user'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
                 set_flash('success', 'Login realizado com sucesso.');
-                header('Location: ../../frontend/views/dashboard.php');
+                header('Location: /dashboard.php');
                 exit;
             } else {
                 error_log("Login failed for user: " . $username);
                 $this->registerFailedAttempt();
                 set_flash('error', 'Login falhou. Verifique suas credenciais.');
                 set_flash('old_username', $username);
-                header('Location: ../../frontend/views/login.php');
+                header('Location: /login.php');
                 exit;
             }
         }
@@ -63,7 +63,7 @@ class AuthController {
         }
 
         session_destroy();
-        header('Location: ../../frontend/views/login.php');
+        header('Location: /login.php');
         exit;
     }
 
@@ -96,7 +96,7 @@ $controller = new AuthController();
 if (($_SERVER['REQUEST_METHOD'] === 'POST') && (($_POST['action'] ?? '') === 'logout')) {
     if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
         set_flash('error', 'Requisição inválida. Atualize a página e tente novamente.');
-        header('Location: ../../frontend/views/dashboard.php');
+        header('Location: /dashboard.php');
         exit;
     }
     $controller->logout();

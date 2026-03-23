@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config/security.php';
 secure_session_start();
 
 if (!isset($_SESSION['user'])) {
-    header('Location: ../../frontend/views/login.php');
+    header('Location: /login.php');
     exit;
 }
 
@@ -22,7 +22,7 @@ class VeiculoController {
 
             if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
                 set_flash('error', 'Requisição inválida. Atualize a página e tente novamente.');
-                header('Location: ../../frontend/views/dashboard.php');
+                header('Location: /dashboard.php');
                 exit;
             }
 
@@ -46,7 +46,7 @@ class VeiculoController {
                 set_flash('error', 'Campos inválidos. Revise placa, modelo e status.');
             }
 
-            header('Location: ../../frontend/views/dashboard.php');
+            header('Location: /dashboard.php');
             exit;
         }
     }
@@ -57,7 +57,7 @@ class VeiculoController {
 
             if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
                 set_flash('error', 'Requisição inválida. Atualize a página e tente novamente.');
-                header('Location: ../../frontend/views/dashboard.php');
+                header('Location: /dashboard.php');
                 exit;
             }
 
@@ -82,7 +82,7 @@ class VeiculoController {
                 set_flash('error', 'Dados inválidos.');
             }
 
-            header('Location: ../../frontend/views/dashboard.php');
+            header('Location: /dashboard.php');
             exit;
         }
     }
@@ -93,7 +93,7 @@ class VeiculoController {
 
             if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
                 set_flash('error', 'Requisição inválida. Atualize a página e tente novamente.');
-                header('Location: ../../frontend/views/dashboard.php');
+                header('Location: /dashboard.php');
                 exit;
             }
 
@@ -106,7 +106,7 @@ class VeiculoController {
                 set_flash('error', 'ID inválido.');
             }
 
-            header('Location: ../../frontend/views/dashboard.php');
+            header('Location: /dashboard.php');
             exit;
         }
     }
@@ -116,7 +116,7 @@ class VeiculoController {
 
         if (!in_array($_SESSION['role'] ?? '', $allowedRoles, true)) {
             set_flash('error', 'Você não tem permissão para alterar a frota.');
-            header('Location: ../../frontend/views/dashboard.php');
+            header('Location: /dashboard.php');
             exit;
         }
     }

@@ -51,6 +51,21 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
   - consultas e remocao baseadas em `Placa` como identidade de dominio
   - script de validacao do contrato criado
 
+### Task 03.1 - Operacao Clean Linux
+- Status: concluida
+- Objetivo: preparar o projeto para execucao padronizada em Linux Ubuntu e WSL sem XAMPP
+- Documento detalhado: [task03-1.md](./task03-1.md)
+- Criterio de aceite:
+  - scripts sem referencia a XAMPP
+  - `.env` como fonte de verdade para banco
+  - guia Linux criado
+  - `public/` preparado como document root
+- Concluido:
+  - criado `README_LINUX.md`
+  - criada a pasta `public/` com entrypoints do legado
+  - ajustadas rotas das views e controllers para `public/`
+  - removidas referencias explicitas a XAMPP dos scripts
+
 ### Task 04 - Persistencia PDO na nova arquitetura
 - Status: planejada
 - Objetivo: criar repositorio concreto em `Infrastructure/Persistence`

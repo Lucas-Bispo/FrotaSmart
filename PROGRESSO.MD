@@ -53,6 +53,22 @@
 ### Proximo passo recomendado
 - Iniciar a `Task 04`: implementar o repositorio concreto em `src/Infrastructure/Persistence`
 
+## 2026-03-22 - Task 03.1
+
+### Operacao Clean Linux
+- Criado o guia [README_LINUX.md](./README_LINUX.md) com fluxo de execucao em Linux e WSL
+- Criada a pasta [public](./public/index.php) como document root recomendado para servidor embutido e deploy Linux
+- Ajustadas views e controllers legados para navegar por entrypoints publicos
+- Removidas referencias explicitas a XAMPP dos scripts operacionais
+
+### Por que isso foi feito
+- reduzir acoplamento com Windows
+- evitar exposicao da raiz do projeto em servidor web
+- preparar a aplicacao para Ubuntu, WSL e deploy mais profissional
+
+### Proximo passo recomendado
+- Iniciar a `Task 04`: implementar o repositorio concreto em `src/Infrastructure/Persistence` sobre a base Linux pronta
+
 ## 2026-03-22 - Revisao estrutural do projeto
 
 ### Validacao operacional da arquitetura

@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../backend/config/security.php';
 secure_session_start();
 
 if (isset($_SESSION['user'])) {
-    header('Location: dashboard.php');
+    header('Location: /dashboard.php');
     exit;
 }
 
@@ -56,7 +56,7 @@ $oldUsername = pull_flash('old_username') ?? '';
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="../../backend/controllers/AuthController.php" class="space-y-5">
+            <form method="POST" action="/auth.php" class="space-y-5">
                 <?php echo csrf_input(); ?>
 
                 <div>

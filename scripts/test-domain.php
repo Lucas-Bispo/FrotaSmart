@@ -5,7 +5,7 @@ declare(strict_types=1);
 $autoloadPath = dirname(__DIR__) . '/vendor/autoload.php';
 
 if (! file_exists($autoloadPath)) {
-    fwrite(STDERR, "Autoload nao encontrado. Rode `php composer.phar dump-autoload` antes do teste." . PHP_EOL);
+    fwrite(STDERR, "Autoload nao encontrado. Rode `composer dump-autoload` antes do teste." . PHP_EOL);
     exit(1);
 }
 

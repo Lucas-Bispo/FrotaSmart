@@ -34,8 +34,8 @@ Criar o contrato de repositorio de veiculos em `src/Domain/Repositories`, desaco
 ## Validacao pratica
 Comando para executar:
 
-```powershell
-C:\xampp\php\php.exe .\scripts\test-repository-contract.php
+```bash
+php scripts/test-repository-contract.php
 ```
 
 Resultado esperado:

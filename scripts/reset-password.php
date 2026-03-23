@@ -13,7 +13,7 @@ $newPassword = $argv[1] ?? '';
 $username = $argv[2] ?? 'admin_frota';
 
 if ($newPassword === '') {
-    exit("Uso: C:\\xampp\\php\\php.exe scripts/reset-password.php <nova_senha> [usuario]\n");
+    exit("Uso: php scripts/reset-password.php <nova_senha> [usuario]\n");
 }
 
 try {

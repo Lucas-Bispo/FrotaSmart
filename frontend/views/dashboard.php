@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../backend/config/security.php';
 secure_session_start();
 
 if (!isset($_SESSION['user'])) {
-    header('Location: login.php');
+    header('Location: /login.php');
     exit;
 }
 
@@ -101,7 +101,7 @@ foreach ($veiculos as $v) {
             <p class="text-sm text-slate-500 mb-5">Adicione um veículo com placa, modelo e status inicial.</p>
 
             <?php if ($canManageFleet): ?>
-                <form method="POST" action="../../backend/controllers/VeiculoController.php" class="space-y-4">
+                <form method="POST" action="/veiculos.php" class="space-y-4">
                     <?php echo csrf_input(); ?>
                     <input type="hidden" name="action" value="add_veiculo">
 
@@ -166,7 +166,7 @@ foreach ($veiculos as $v) {
                                 </td>
                                 <td class="px-6 py-4 text-right text-sm font-medium">
                                     <?php if ($canManageFleet): ?>
-                                        <form method="POST" action="../../backend/controllers/VeiculoController.php" class="inline-flex">
+                                        <form method="POST" action="/veiculos.php" class="inline-flex">
                                             <?php echo csrf_input(); ?>
                                             <input type="hidden" name="action" value="delete_veiculo">
                                             <input type="hidden" name="id" value="<?php echo (int) $v['id']; ?>">
