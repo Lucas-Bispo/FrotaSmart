@@ -1,8 +1,11 @@
 <?php
+
+declare(strict_types=1);
+
 require_once __DIR__ . '/../../backend/config/security.php';
 secure_session_start();
 
-if (!isset($_SESSION['user'])) {
+if (! isset($_SESSION['user'])) {
     header('Location: /login.php');
     exit;
 }
@@ -26,7 +29,7 @@ try {
     $totalFrota = count($veiculos);
 } catch (Exception $e) {
     error_log('Erro ao carregar dashboard: ' . $e->getMessage());
-    $errorMessage = 'Não foi possível carregar os veículos no momento.';
+    $errorMessage = 'Nao foi possivel carregar os veiculos no momento.';
 }
 
 foreach ($veiculos as $v) {
@@ -78,7 +81,7 @@ foreach ($veiculos as $v) {
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
         </div>
         <div>
-            <p class="text-sm font-medium text-slate-500 uppercase">Em Operação</p>
+            <p class="text-sm font-medium text-slate-500 uppercase">Em Operacao</p>
             <p class="text-2xl font-bold text-slate-800"><?php echo $ativos; ?></p>
         </div>
     </div>
@@ -88,7 +91,7 @@ foreach ($veiculos as $v) {
             <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         </div>
         <div>
-            <p class="text-sm font-medium text-slate-500 uppercase">Manutenção</p>
+            <p class="text-sm font-medium text-slate-500 uppercase">Manutencao</p>
             <p class="text-2xl font-bold text-slate-800"><?php echo $manutencao; ?></p>
         </div>
     </div>
@@ -97,8 +100,8 @@ foreach ($veiculos as $v) {
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
     <div class="xl:col-span-1">
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h2 class="text-lg font-semibold mb-2 text-slate-700">Cadastro rápido de veículo</h2>
-            <p class="text-sm text-slate-500 mb-5">Adicione um veículo com placa, modelo e status inicial.</p>
+            <h2 class="text-lg font-semibold mb-2 text-slate-700">Cadastro rapido de veiculo</h2>
+            <p class="text-sm text-slate-500 mb-5">Adicione um veiculo com placa, modelo e status inicial.</p>
 
             <?php if ($canManageFleet): ?>
                 <form method="POST" action="/veiculos.php" class="space-y-4">
@@ -116,17 +119,20 @@ foreach ($veiculos as $v) {
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
                         <select name="status" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="ativo">Ativo</option>
-                            <option value="manutencao">Manutenção</option>
+                            <option value="disponivel">Disponivel</option>
+                            <option value="em_manutencao">Em manutencao</option>
+                            <option value="reservado">Reservado</option>
+                            <option value="em_viagem">Em viagem</option>
+                            <option value="baixado">Baixado</option>
                         </select>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition duration-200">
-                        Cadastrar veículo
+                        Cadastrar veiculo
                     </button>
                 </form>
             <?php else: ?>
                 <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 text-sm">
-                    Seu perfil possui acesso somente leitura à frota.
+                    Seu perfil possui acesso somente leitura a frota.
                 </div>
             <?php endif; ?>
         </div>
@@ -141,15 +147,15 @@ foreach ($veiculos as $v) {
                 <table class="min-w-full divide-y divide-slate-200">
                     <thead class="bg-slate-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veículo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Ações</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Acoes</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         <?php if (empty($veiculos)): ?>
                             <tr>
-                                <td colspan="3" class="px-6 py-8 text-center text-sm text-slate-500">Nenhum veículo cadastrado até o momento.</td>
+                                <td colspan="3" class="px-6 py-8 text-center text-sm text-slate-500">Nenhum veiculo cadastrado ate o momento.</td>
                             </tr>
                         <?php endif; ?>
 
@@ -161,7 +167,7 @@ foreach ($veiculos as $v) {
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $v['status'] === 'ativo' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'; ?>">
-                                        <?php echo htmlspecialchars(ucfirst($v['status']), ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php echo htmlspecialchars(ucfirst((string) $v['status']), ENT_QUOTES, 'UTF-8'); ?>
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right text-sm font-medium">
@@ -169,8 +175,8 @@ foreach ($veiculos as $v) {
                                         <form method="POST" action="/veiculos.php" class="inline-flex">
                                             <?php echo csrf_input(); ?>
                                             <input type="hidden" name="action" value="delete_veiculo">
-                                            <input type="hidden" name="id" value="<?php echo (int) $v['id']; ?>">
-                                            <button type="submit" class="text-red-600 hover:text-red-800" onclick="return confirm('Tem certeza que deseja excluir este veículo?');">Excluir</button>
+                                            <input type="hidden" name="placa" value="<?php echo htmlspecialchars($v['placa'], ENT_QUOTES, 'UTF-8'); ?>">
+                                            <button type="submit" class="text-red-600 hover:text-red-800" onclick="return confirm('Tem certeza que deseja excluir este veiculo?');">Excluir</button>
                                         </form>
                                     <?php else: ?>
                                         <span class="text-slate-400">Somente leitura</span>
