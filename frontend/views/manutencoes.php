@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../backend/config/security.php';
 require_once __DIR__ . '/../../backend/models/ManutencaoModel.php';
+require_once __DIR__ . '/../../backend/models/ParceiroOperacionalModel.php';
 require_once __DIR__ . '/../../backend/models/VeiculoModel.php';
 
 secure_session_start();
@@ -15,9 +16,11 @@ if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac
 }
 
 $manutencaoModel = new ManutencaoModel();
+$parceiroModel = new ParceiroOperacionalModel();
 $veiculoModel = new VeiculoModel();
 
 $manutencoes = $manutencaoModel->getAll();
+$parceirosOficina = $parceiroModel->getActiveByTipos(['oficina', 'fornecedor_pecas', 'prestador_servico']);
 $veiculos = $veiculoModel->getAllVeiculos();
 $canManage = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);
 $successMessage = pull_flash('success');
@@ -145,6 +148,18 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Parceiro cadastrado</label>
+                        <select name="parceiro_id" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Selecionar depois</option>
+                            <?php foreach ($parceirosOficina as $parceiro): ?>
+                                <option value="<?php echo (int) $parceiro['id']; ?>" <?php echo ((int) ($editingManutencao['parceiro_id'] ?? 0) === (int) $parceiro['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars((string) $parceiro['nome_fantasia'] . ' - ' . str_replace('_', ' ', (string) $parceiro['tipo']), ENT_QUOTES, 'UTF-8'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Fornecedor ou oficina</label>
                         <input type="text" name="fornecedor" value="<?php echo htmlspecialchars((string) ($editingManutencao['fornecedor'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
@@ -238,7 +253,10 @@ require_once __DIR__ . '/../includes/header.php';
                                     <div class="text-xs text-slate-500 mt-1 max-w-xs"><?php echo htmlspecialchars((string) $manutencao['descricao'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-slate-700">
-                                    <?php echo htmlspecialchars((string) ($manutencao['fornecedor'] ?? 'Nao informado'), ENT_QUOTES, 'UTF-8'); ?>
+                                    <div><?php echo htmlspecialchars((string) ($manutencao['parceiro_nome'] ?? $manutencao['fornecedor'] ?? 'Nao informado'), ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <?php if (!empty($manutencao['parceiro_tipo'])): ?>
+                                        <div class="text-xs text-slate-500 mt-1"><?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', (string) $manutencao['parceiro_tipo'])), ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $badgeClass; ?>">

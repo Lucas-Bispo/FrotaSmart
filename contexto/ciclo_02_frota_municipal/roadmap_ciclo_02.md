@@ -46,7 +46,7 @@ Este ciclo prioriza:
 - Documento: [task_13_viagens_rotas.md](./task_13_viagens_rotas.md)
 
 ### Task 14 - Fornecedores, oficinas e parceiros operacionais
-- Status: planejada
+- Status: concluida
 - Documento: [task_14_fornecedores_oficinas.md](./task_14_fornecedores_oficinas.md)
 
 ## Resultado esperado ao final do ciclo

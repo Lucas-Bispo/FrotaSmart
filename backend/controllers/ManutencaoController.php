@@ -83,6 +83,7 @@ final class ManutencaoController
         $status = (string) ($_POST['status'] ?? '');
         $dataAbertura = (string) ($_POST['data_abertura'] ?? '');
         $dataConclusao = trim((string) ($_POST['data_conclusao'] ?? ''));
+        $parceiroId = (int) ($_POST['parceiro_id'] ?? 0);
         $fornecedor = trim((string) ($_POST['fornecedor'] ?? ''));
         $descricao = trim((string) ($_POST['descricao'] ?? ''));
         $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
@@ -114,6 +115,7 @@ final class ManutencaoController
             'status' => $status,
             'data_abertura' => $dataAbertura,
             'data_conclusao' => $dataConclusao !== '' ? $dataConclusao : null,
+            'parceiro_id' => $parceiroId > 0 ? $parceiroId : null,
             'fornecedor' => $fornecedor !== '' ? $fornecedor : null,
             'custo_estimado' => $this->normalizeDecimal($custoEstimado),
             'custo_final' => $this->normalizeDecimal($custoFinal),

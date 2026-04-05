@@ -82,6 +82,7 @@ final class AbastecimentoController
     {
         $veiculoId = (int) ($_POST['veiculo_id'] ?? 0);
         $motoristaId = (int) ($_POST['motorista_id'] ?? 0);
+        $parceiroId = (int) ($_POST['parceiro_id'] ?? 0);
         $dataAbastecimento = (string) ($_POST['data_abastecimento'] ?? '');
         $posto = trim((string) ($_POST['posto'] ?? ''));
         $tipoCombustivel = (string) ($_POST['tipo_combustivel'] ?? '');
@@ -128,6 +129,7 @@ final class AbastecimentoController
         return [
             'veiculo_id' => $veiculoId,
             'motorista_id' => $motoristaId,
+            'parceiro_id' => $parceiroId > 0 ? $parceiroId : null,
             'data_abastecimento' => $dataAbastecimento,
             'posto' => $posto,
             'tipo_combustivel' => $tipoCombustivel,

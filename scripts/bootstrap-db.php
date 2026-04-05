@@ -113,6 +113,7 @@ $statements = [
         id INT AUTO_INCREMENT PRIMARY KEY,
         veiculo_id INT NOT NULL,
         motorista_id INT NOT NULL,
+        parceiro_id INT NULL,
         data_abastecimento DATE NOT NULL,
         posto VARCHAR(120) NOT NULL,
         tipo_combustivel ENUM('gasolina', 'etanol', 'diesel', 'diesel_s10', 'gnv', 'flex') NOT NULL DEFAULT 'gasolina',
@@ -124,6 +125,20 @@ $statements = [
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (veiculo_id) REFERENCES veiculos(id) ON DELETE CASCADE,
         FOREIGN KEY (motorista_id) REFERENCES motoristas(id) ON DELETE CASCADE
+    )",
+    "CREATE TABLE IF NOT EXISTS parceiros_operacionais (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nome_fantasia VARCHAR(120) NOT NULL,
+        razao_social VARCHAR(160) NOT NULL,
+        cnpj VARCHAR(14) NOT NULL UNIQUE,
+        tipo ENUM('oficina', 'posto_combustivel', 'fornecedor_pecas', 'prestador_servico') NOT NULL,
+        telefone VARCHAR(20) DEFAULT NULL,
+        endereco VARCHAR(180) DEFAULT NULL,
+        contato_responsavel VARCHAR(120) DEFAULT NULL,
+        status ENUM('ativo', 'inativo') NOT NULL DEFAULT 'ativo',
+        observacoes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )",
     "CREATE TABLE IF NOT EXISTS viagens (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -197,8 +212,11 @@ try {
     if (!table_has_column($pdo, 'manutencoes', 'fornecedor')) {
         $pdo->exec("ALTER TABLE manutencoes ADD COLUMN fornecedor VARCHAR(120) NULL AFTER status");
     }
+    if (!table_has_column($pdo, 'manutencoes', 'parceiro_id')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN parceiro_id INT NULL AFTER fornecedor");
+    }
     if (!table_has_column($pdo, 'manutencoes', 'custo_estimado')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN custo_estimado DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER fornecedor");
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN custo_estimado DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER parceiro_id");
     }
     if (!table_has_column($pdo, 'manutencoes', 'custo_final')) {
         $pdo->exec("ALTER TABLE manutencoes ADD COLUMN custo_final DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER custo_estimado");
@@ -221,6 +239,9 @@ try {
 
     if (!table_has_column($pdo, 'abastecimentos', 'posto')) {
         $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN posto VARCHAR(120) NULL AFTER data_abastecimento");
+    }
+    if (!table_has_column($pdo, 'abastecimentos', 'parceiro_id')) {
+        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN parceiro_id INT NULL AFTER motorista_id");
     }
     if (!table_has_column($pdo, 'abastecimentos', 'tipo_combustivel')) {
         $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN tipo_combustivel VARCHAR(20) NULL AFTER posto");

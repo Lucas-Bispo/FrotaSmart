@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../backend/config/security.php';
 require_once __DIR__ . '/../../backend/models/AbastecimentoModel.php';
 require_once __DIR__ . '/../../backend/models/MotoristaModel.php';
+require_once __DIR__ . '/../../backend/models/ParceiroOperacionalModel.php';
 require_once __DIR__ . '/../../backend/models/VeiculoModel.php';
 
 secure_session_start();
@@ -18,12 +19,14 @@ if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac
 $abastecimentoModel = new AbastecimentoModel();
 $veiculoModel = new VeiculoModel();
 $motoristaModel = new MotoristaModel();
+$parceiroModel = new ParceiroOperacionalModel();
 
 $filtroVeiculoId = isset($_GET['veiculo_id']) ? (int) $_GET['veiculo_id'] : null;
 $filtroInicio = trim((string) ($_GET['data_inicio'] ?? ''));
 $filtroFim = trim((string) ($_GET['data_fim'] ?? ''));
 
 $abastecimentos = $abastecimentoModel->getAll($filtroVeiculoId, $filtroInicio !== '' ? $filtroInicio : null, $filtroFim !== '' ? $filtroFim : null);
+$parceirosPosto = $parceiroModel->getActiveByTipos(['posto_combustivel', 'prestador_servico']);
 $veiculos = $veiculoModel->getAllVeiculos();
 $motoristas = $motoristaModel->getAllMotoristas();
 $canManage = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);
@@ -156,6 +159,18 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Parceiro cadastrado</label>
+                        <select name="parceiro_id" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Selecionar depois</option>
+                            <?php foreach ($parceirosPosto as $parceiro): ?>
+                                <option value="<?php echo (int) $parceiro['id']; ?>" <?php echo ((int) ($editingAbastecimento['parceiro_id'] ?? 0) === (int) $parceiro['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars((string) $parceiro['nome_fantasia'] . ' - ' . str_replace('_', ' ', (string) $parceiro['tipo']), ENT_QUOTES, 'UTF-8'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Posto ou fornecedor</label>
                         <input type="text" name="posto" required value="<?php echo htmlspecialchars((string) ($editingAbastecimento['posto'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
                     </div>
@@ -270,7 +285,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-slate-800"><?php echo htmlspecialchars((string) $abastecimento['data_abastecimento'], ENT_QUOTES, 'UTF-8'); ?></div>
-                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $abastecimento['posto'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) ($abastecimento['parceiro_nome'] ?? $abastecimento['posto']), ENT_QUOTES, 'UTF-8'); ?></div>
                                     <div class="text-xs mt-1 inline-flex rounded-full bg-cyan-100 px-2.5 py-1 font-semibold text-cyan-800">
                                         <?php echo htmlspecialchars(strtoupper(str_replace('_', ' ', (string) $abastecimento['tipo_combustivel'])), ENT_QUOTES, 'UTF-8'); ?>
                                     </div>

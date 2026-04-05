@@ -10,9 +10,10 @@ final class ManutencaoModel
     {
         global $pdo;
         $stmt = $pdo->query(
-            'SELECT m.*, v.placa, v.modelo
+            'SELECT m.*, v.placa, v.modelo, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
+             LEFT JOIN parceiros_operacionais p ON p.id = m.parceiro_id
              ORDER BY m.data_abertura DESC, m.id DESC'
         );
 
@@ -23,9 +24,10 @@ final class ManutencaoModel
     {
         global $pdo;
         $stmt = $pdo->prepare(
-            'SELECT m.*, v.placa, v.modelo
+            'SELECT m.*, v.placa, v.modelo, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
+             LEFT JOIN parceiros_operacionais p ON p.id = m.parceiro_id
              WHERE m.id = :id
              LIMIT 1'
         );
@@ -41,9 +43,10 @@ final class ManutencaoModel
 
         $limit = max(1, $limit);
         $stmt = $pdo->query(
-            'SELECT m.*, v.placa, v.modelo
+            'SELECT m.*, v.placa, v.modelo, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
+             LEFT JOIN parceiros_operacionais p ON p.id = m.parceiro_id
              ORDER BY m.data_abertura DESC, m.id DESC
              LIMIT ' . $limit
         );
@@ -63,6 +66,7 @@ final class ManutencaoModel
                 tipo,
                 status,
                 fornecedor,
+                parceiro_id,
                 custo_estimado,
                 custo_final,
                 custo,
@@ -76,6 +80,7 @@ final class ManutencaoModel
                 :tipo,
                 :status,
                 :fornecedor,
+                :parceiro_id,
                 :custo_estimado,
                 :custo_final,
                 :custo_legado,
@@ -92,6 +97,7 @@ final class ManutencaoModel
             ':tipo' => $data['tipo'],
             ':status' => $data['status'],
             ':fornecedor' => $data['fornecedor'],
+            ':parceiro_id' => $data['parceiro_id'] ?? null,
             ':custo_estimado' => $data['custo_estimado'],
             ':custo_final' => $data['custo_final'],
             ':custo_legado' => $this->legacyCost($data),
@@ -117,6 +123,7 @@ final class ManutencaoModel
                  tipo = :tipo,
                  status = :status,
                  fornecedor = :fornecedor,
+                 parceiro_id = :parceiro_id,
                  custo_estimado = :custo_estimado,
                  custo_final = :custo_final,
                  custo = :custo_legado,
@@ -134,6 +141,7 @@ final class ManutencaoModel
             ':tipo' => $data['tipo'],
             ':status' => $data['status'],
             ':fornecedor' => $data['fornecedor'],
+            ':parceiro_id' => $data['parceiro_id'] ?? null,
             ':custo_estimado' => $data['custo_estimado'],
             ':custo_final' => $data['custo_final'],
             ':custo_legado' => $this->legacyCost($data),

@@ -338,3 +338,33 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 14`: fornecedores, oficinas e parceiros operacionais
+
+## 2026-04-05 - Task 14
+
+### Fornecedores, oficinas e parceiros operacionais
+- Criado o controller [ParceiroOperacionalController.php](../backend/controllers/ParceiroOperacionalController.php)
+- Criado o model [ParceiroOperacionalModel.php](../backend/models/ParceiroOperacionalModel.php)
+- Criada a tela [parceiros.php](../frontend/views/parceiros.php)
+- Criado o entrypoint [parceiros.php](../public/parceiros.php)
+- Atualizado o menu lateral para expor o modulo
+- Expandido o schema em [bootstrap-db.php](../scripts/bootstrap-db.php) para cadastro central de parceiros e vinculo operacional
+- Integrados [ManutencaoModel.php](../backend/models/ManutencaoModel.php) e [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) com `parceiro_id`
+- Criado o teste [test-parceiro-operacional-model.php](../scripts/test-parceiro-operacional-model.php)
+- Atualizada a task em [task_14_fornecedores_oficinas.md](./ciclo_02_frota_municipal/task_14_fornecedores_oficinas.md)
+
+### Resultado tecnico
+- o sistema agora possui uma base unica para oficinas, postos, fornecedores de pecas e prestadores
+- manutencoes e abastecimentos podem ser vinculados a parceiros reais sem perder compatibilidade com registros antigos
+- o cadastro ficou pronto para relatorios futuros por parceiro e por tipo de operacao
+- a rastreabilidade do gasto operacional ficou mais forte e menos dependente de texto solto
+
+### Validacao realizada
+- `php scripts/bootstrap-db.php`
+- `php scripts/test-parceiro-operacional-model.php`
+- `php scripts/test-manutencao-model.php`
+- `php scripts/test-abastecimento-model.php`
+- `php -l` executado com sucesso nos arquivos novos e integrados
+- `http://127.0.0.1:8000/parceiros.php` validado com `200` apos login
+
+### Proximo passo recomendado
+- consolidar o backlog do proximo ciclo com base no que ja foi entregue no ciclo 02
