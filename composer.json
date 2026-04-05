@@ -11,7 +11,8 @@
     "test:autoload": "php scripts/test-autoload.php",
     "test:domain": "php scripts/test-domain.php",
     "test:repository-contract": "php scripts/test-repository-contract.php",
-    "test:repository-pdo": "php scripts/test-repository-pdo.php"
+    "test:repository-pdo": "php scripts/test-repository-pdo.php",
+    "test:veiculo-service": "php scripts/test-veiculo-service.php"
   },
   "autoload": {
     "psr-4": {
