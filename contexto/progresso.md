@@ -101,3 +101,63 @@
 ### Proximo passo recomendado
 - Implementar a `Task 04` para reduzir o acoplamento do legado com a persistencia
 
+## 2026-04-05 - Task 04
+
+### Persistencia PDO na nova arquitetura
+- Criado o loader de ambiente [EnvLoader.php](../src/Infrastructure/Config/EnvLoader.php)
+- Criada a fabrica de conexao [PdoConnectionFactory.php](../src/Infrastructure/Config/PdoConnectionFactory.php)
+- Implementado o repositorio [PdoVeiculoRepository.php](../src/Infrastructure/Persistence/PdoVeiculoRepository.php)
+- Criado o teste [test-repository-pdo.php](../scripts/test-repository-pdo.php)
+- Atualizada a task em [task_04.md](./tasks/task_04.md)
+
+### Resultado tecnico
+- O fluxo novo deixou de depender de `global $pdo`
+- O repositorio faz traducao entre status oficiais do dominio e status legados do banco
+- A remocao ficou preparada para evoluir para soft delete quando a estrutura do banco acompanhar
+
+### Bloqueio encontrado
+- O teste real do repositorio no MySQL ainda falha com erro de acesso por credencial atual do `.env`
+
+### Proximo passo recomendado
+- Executar a `Task 05`: mover a orquestracao de veiculos para a camada de aplicacao
+
+## 2026-04-05 - Task 05
+
+### Service de aplicacao para veiculos
+- Criado o service [VeiculoService.php](../src/Application/Services/VeiculoService.php)
+- Criadas exceptions de aplicacao para duplicidade e ausencia de veiculo
+- Criado o teste [test-veiculo-service.php](../scripts/test-veiculo-service.php)
+- Atualizada a task em [task_05.md](./tasks/task_05.md)
+
+### Resultado tecnico
+- O fluxo de cadastro, atualizacao, consulta, listagem e remocao passou a existir fora da camada HTTP
+- O service depende apenas de contrato de repositorio e objetos do dominio
+- A aplicacao passou a ter um ponto unico para orquestrar o modulo de veiculos
+
+### Validacao realizada
+- `test-veiculo-service.php` executado com sucesso
+- `test-domain.php` executado com sucesso
+
+### Proximo passo recomendado
+- Executar a `Task 06`: adaptar o controller legado para usar o novo service
+
+## 2026-04-05 - Task 06
+
+### Adaptacao do controller legado
+- Reescrito [VeiculoController.php](../backend/controllers/VeiculoController.php) para consumir `VeiculoService`
+- Atualizado o entrypoint [veiculos.php](../public/veiculos.php) para instanciar e despachar o controller novo
+- Ajustada a dashboard [dashboard.php](../frontend/views/dashboard.php) para enviar placa na remocao e usar status oficiais no cadastro
+- Criado o teste [test-veiculo-controller-flow.php](../scripts/test-veiculo-controller-flow.php)
+- Atualizada a task em [task_06.md](./tasks/task_06.md)
+
+### Resultado tecnico
+- O fluxo de escrita de veiculos nao depende mais diretamente de `VeiculoModel`
+- O controller ficou focado em HTTP, autorizacao, CSRF, flash e redirecionamento
+- O cadastro passou a aceitar os status oficiais definidos no dominio
+
+### Validacao realizada
+- `test-veiculo-controller-flow.php` executado com sucesso
+- `php -l` executado com sucesso nos arquivos alterados da task
+
+### Proximo passo recomendado
+- Executar a `Task 07`: iniciar a auditoria minima obrigatoria do modulo de veiculos

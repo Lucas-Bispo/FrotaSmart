@@ -8,7 +8,7 @@
 - Contexto de transicao: [contexto_transicao.md](./contexto_transicao.md)
 
 ## Data de referencia
-2026-03-22
+2026-04-05
 
 ## Leitura rapida
 - O FrotaSmart hoje esta organizado em `backend/` e `frontend/`
@@ -16,11 +16,12 @@
 - Ja existe autenticacao, dashboard e CRUD basico de veiculos
 - A arquitetura alvo oficial e Clean Architecture adaptada em `src/`
 - O dominio novo de veiculos ja possui `Veiculo` e `Placa` em `src/Domain`
+- O fluxo de escrita de veiculos agora passa por `VeiculoService` e por um repositorio PDO novo
 - O projeto ja possui `public/` como document root recomendado para Linux/WSL
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
-- `backend/controllers/VeiculoController.php` mistura validacao, autorizacao e fluxo HTTP
+- `backend/controllers/VeiculoController.php` ja delega a escrita para o service, mas a listagem do dashboard ainda vem do model legado
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
@@ -37,11 +38,11 @@ A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refa
 ## Riscos atuais
 - O legado ainda depende de `global $pdo` e `require_once`
 - O CRUD legado de veiculos ainda faz `DELETE` fisico, enquanto a regra de negocio pede soft delete
-- O dominio novo ainda nao governa o fluxo completo do CRUD em producao
+- A leitura do dashboard ainda depende de `VeiculoModel`, mesmo com a escrita ja migrada
+- A validacao real do repositorio PDO ainda depende de ajustar as credenciais atuais do banco
 
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento
 - Evoluir o modulo de veiculos por migracao incremental a partir do dominio novo
-- Avancar para repositorio concreto, service de aplicacao e adaptacao gradual dos controllers legados
+- Consolidar a migracao de leitura, auditoria e RBAC apos a escrita passar a usar a nova espinha dorsal
 - Preservar a compatibilidade com Linux/WSL e com a publicacao via `public/`
-

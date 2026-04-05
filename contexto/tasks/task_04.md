@@ -10,7 +10,7 @@
 - Task seguinte: [task_05.md](./task_05.md)
 
 ## Status
-- Estado atual: planejada
+- Estado atual: concluida
 - Dependencia anterior: [task_03.md](./task_03.md)
 
 ## Objetivo
