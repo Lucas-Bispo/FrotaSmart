@@ -59,6 +59,6 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
 - Documento detalhado: [task_07.md](./task_07.md)
 
 ### Task 08 - RBAC alinhado com regras de negocio
-- Status: planejada
+- Status: concluida
 - Objetivo: alinhar perfis atuais com as regras oficiais de [regras_negocio.md](../regras_negocio.md)
 - Documento detalhado: [task_08.md](./task_08.md)

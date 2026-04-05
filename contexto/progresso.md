@@ -186,3 +186,28 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 08`: alinhar RBAC com os perfis oficiais das regras de negocio
+
+## 2026-04-05 - Task 08
+
+### RBAC alinhado com regras de negocio
+- Criada a politica central [Rbac.php](../src/Application/Security/Rbac.php)
+- Adicionados helpers de permissao em [security.php](../backend/config/security.php)
+- Adaptados [VeiculoController.php](../backend/controllers/VeiculoController.php) e [UserController.php](../backend/controllers/UserController.php) para usar a politica central
+- Adaptados [dashboard.php](../frontend/views/dashboard.php), [user_management.php](../frontend/views/user_management.php) e [sidebar.php](../frontend/includes/sidebar.php) para consumir o RBAC central
+- Atualizado [UserModel.php](../backend/models/UserModel.php) para aceitar os papeis oficiais, incluindo `auditor`
+- Criado o teste [test-rbac-veiculos.php](../scripts/test-rbac-veiculos.php)
+- Atualizada a task em [task_08.md](./tasks/task_08.md)
+
+### Resultado tecnico
+- O modulo de veiculos passou a usar uma base unica de permissao para leitura e escrita
+- O gerenciamento de usuarios ficou restrito por permissao central, sem depender de comparacoes soltas de role
+- O perfil `auditor` passou a existir como opcao valida e com acesso de leitura, conforme as regras oficiais
+
+### Validacao realizada
+- `test-rbac-veiculos.php` executado com sucesso
+- `test-veiculo-controller-flow.php` executado com sucesso
+- `test-audit-flow.php` executado com sucesso
+- `test-veiculo-service.php` executado com sucesso
+
+### Proximo passo recomendado
+- Revisar a camada de leitura do dashboard para migrar tambem a consulta de veiculos para a nova espinha dorsal
