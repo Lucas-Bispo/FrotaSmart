@@ -23,6 +23,7 @@
 - O historico inicial de manutencoes por veiculo agora existe com abertura, andamento e conclusao
 - O modulo inicial de abastecimentos agora existe com filtros, custo total e vinculo com motorista
 - O dashboard agora consolidou leitura operacional com alertas, custos e atalhos da rotina
+- O modulo inicial de viagens agora conecta secretaria, motorista e veiculo no uso administrativo da frota
 - O projeto ja possui `public/` como document root recomendado para Linux/WSL
 
 ## Achados tecnicos
@@ -33,6 +34,7 @@
 - Os modulos de motoristas e manutencoes ainda usam models legados, mas ja estao integrados ao fluxo principal da aplicacao
 - O modulo de abastecimentos segue o mesmo padrao incremental dos modulos operacionais do ciclo 02
 - O dashboard ainda e uma view legacy, mas agora usa dados reais dos modulos operacionais do ciclo
+- O modulo de viagens reutiliza schema legado compatibilizado, sem exigir cadastro formal de secretaria nesta fase
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
@@ -50,7 +52,7 @@ A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refa
 - O legado ainda depende de `global $pdo` e `require_once`
 - O CRUD legado de veiculos ainda faz `DELETE` fisico, enquanto a regra de negocio pede soft delete
 - A leitura do dashboard ainda depende de `VeiculoModel`, mesmo com a escrita ja migrada
-- A proxima frente funcional do ciclo 02 e operacao de uso da frota com viagens e rotas
+- A proxima frente funcional do ciclo 02 e fornecedores, oficinas e parceiros operacionais
 
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento

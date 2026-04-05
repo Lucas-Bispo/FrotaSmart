@@ -129,18 +129,23 @@ $statements = [
         id INT AUTO_INCREMENT PRIMARY KEY,
         veiculo_id INT NOT NULL,
         motorista_id INT NOT NULL,
-        secretaria_id INT NOT NULL,
+        secretaria_id INT NULL,
+        secretaria VARCHAR(100) NOT NULL,
+        solicitante VARCHAR(120) NOT NULL,
+        origem VARCHAR(120) NOT NULL,
         km_saida INT NOT NULL,
         km_chegada INT,
-        destino TEXT NOT NULL,
-        data_saida DATETIME DEFAULT CURRENT_TIMESTAMP,
+        destino VARCHAR(160) NOT NULL,
+        finalidade TEXT NOT NULL,
+        data_saida DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         data_retorno DATETIME,
         status ENUM('em_curso', 'concluida', 'cancelada') DEFAULT 'em_curso',
+        observacoes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (veiculo_id) REFERENCES veiculos(id),
         FOREIGN KEY (motorista_id) REFERENCES motoristas(id),
-        FOREIGN KEY (secretaria_id) REFERENCES secretarias(id)
+        FOREIGN KEY (secretaria_id) REFERENCES secretarias(id) ON DELETE SET NULL
     )",
 ];
 
@@ -237,6 +242,34 @@ try {
     $pdo->exec("UPDATE abastecimentos SET tipo_combustivel = COALESCE(NULLIF(tipo_combustivel, ''), 'gasolina')");
     $pdo->exec("ALTER TABLE abastecimentos MODIFY posto VARCHAR(120) NOT NULL");
     $pdo->exec("ALTER TABLE abastecimentos MODIFY tipo_combustivel ENUM('gasolina', 'etanol', 'diesel', 'diesel_s10', 'gnv', 'flex') NOT NULL DEFAULT 'gasolina'");
+
+    if (!table_has_column($pdo, 'viagens', 'secretaria')) {
+        $pdo->exec("ALTER TABLE viagens ADD COLUMN secretaria VARCHAR(100) NULL AFTER secretaria_id");
+    }
+    if (!table_has_column($pdo, 'viagens', 'solicitante')) {
+        $pdo->exec("ALTER TABLE viagens ADD COLUMN solicitante VARCHAR(120) NULL AFTER secretaria");
+    }
+    if (!table_has_column($pdo, 'viagens', 'origem')) {
+        $pdo->exec("ALTER TABLE viagens ADD COLUMN origem VARCHAR(120) NULL AFTER solicitante");
+    }
+    if (!table_has_column($pdo, 'viagens', 'finalidade')) {
+        $pdo->exec("ALTER TABLE viagens ADD COLUMN finalidade TEXT NULL AFTER destino");
+    }
+    if (!table_has_column($pdo, 'viagens', 'observacoes')) {
+        $pdo->exec("ALTER TABLE viagens ADD COLUMN observacoes TEXT NULL AFTER status");
+    }
+
+    $pdo->exec("UPDATE viagens v LEFT JOIN secretarias s ON s.id = v.secretaria_id SET v.secretaria = COALESCE(NULLIF(v.secretaria, ''), s.nome, 'Secretaria nao informada')");
+    $pdo->exec("UPDATE viagens SET solicitante = COALESCE(NULLIF(solicitante, ''), 'Solicitante nao informado')");
+    $pdo->exec("UPDATE viagens SET origem = COALESCE(NULLIF(origem, ''), 'Origem nao informada')");
+    $pdo->exec("UPDATE viagens SET finalidade = COALESCE(NULLIF(finalidade, ''), 'Finalidade nao informada')");
+    $pdo->exec("ALTER TABLE viagens MODIFY secretaria_id INT NULL");
+    $pdo->exec("ALTER TABLE viagens MODIFY secretaria VARCHAR(100) NOT NULL");
+    $pdo->exec("ALTER TABLE viagens MODIFY solicitante VARCHAR(120) NOT NULL");
+    $pdo->exec("ALTER TABLE viagens MODIFY origem VARCHAR(120) NOT NULL");
+    $pdo->exec("ALTER TABLE viagens MODIFY destino VARCHAR(160) NOT NULL");
+    $pdo->exec("ALTER TABLE viagens MODIFY data_saida DATETIME NOT NULL");
+    $pdo->exec("ALTER TABLE viagens MODIFY status ENUM('em_curso', 'concluida', 'cancelada') NOT NULL DEFAULT 'em_curso'");
 
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = :username');
     $stmt->execute([':username' => $adminUsername]);

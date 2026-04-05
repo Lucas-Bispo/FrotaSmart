@@ -42,7 +42,7 @@ Este ciclo prioriza:
 - Documento: [task_12_dashboard_operacional.md](./task_12_dashboard_operacional.md)
 
 ### Task 13 - Operacao de uso da frota com viagens e rotas
-- Status: planejada
+- Status: concluida
 - Documento: [task_13_viagens_rotas.md](./task_13_viagens_rotas.md)
 
 ### Task 14 - Fornecedores, oficinas e parceiros operacionais

@@ -6,7 +6,7 @@
 - Arquitetura: [../arquitetura_projeto.md](../arquitetura_projeto.md)
 
 ## Status
-- Estado atual: planejada
+- Estado atual: concluida
 - Dependencia anterior: [task_12_dashboard_operacional.md](./task_12_dashboard_operacional.md)
 
 ## Objetivo
@@ -45,3 +45,27 @@ Criar o primeiro modulo de operacao real da frota, conectando veiculo, motorista
 - esse modulo e um divisor de aguas entre cadastro de frota e gestao de frota
 - o foco nao e roteirizacao avancada neste momento
 - o foco e controle administrativo e operacional da utilizacao dos veiculos
+
+## Entrega realizada
+- modulo inicial de viagens implementado com cadastro, listagem, filtros e edicao
+- vinculo entre secretaria solicitante, veiculo, motorista e trajeto preservado no banco
+- historico de uso da frota agora fica consultavel por status e por secretaria
+- fluxo mutavel registra auditoria minima para rastreabilidade
+
+## Escopo entregue nesta fase
+- tela publica em `public/viagens.php`
+- controller dedicado com validacao de horario, km e status
+- model legado para consulta e persistencia das viagens
+- filtros por status e secretaria
+- indicadores basicos de operacao em curso, concluidas e km percorridos
+- compatibilizacao do schema existente de `viagens` com o novo modulo
+
+## Validacao realizada
+- `php -l backend/models/ViagemModel.php`
+- `php -l backend/controllers/ViagemController.php`
+- `php -l frontend/views/viagens.php`
+- `php -l public/viagens.php`
+- `php -l scripts/test-viagem-model.php`
+- `php scripts/bootstrap-db.php`
+- `php scripts/test-viagem-model.php`
+- acesso autenticado em `http://127.0.0.1:8000/viagens.php` com `200 OK`

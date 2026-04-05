@@ -311,3 +311,30 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 13`: operacao de uso da frota com viagens e rotas
+
+## 2026-04-05 - Task 13
+
+### Operacao de uso da frota com viagens e rotas
+- Criado o controller [ViagemController.php](../backend/controllers/ViagemController.php)
+- Criado o model [ViagemModel.php](../backend/models/ViagemModel.php)
+- Criada a tela [viagens.php](../frontend/views/viagens.php)
+- Criado o entrypoint [viagens.php](../public/viagens.php)
+- Atualizado o menu lateral para expor o modulo
+- Expandido o schema em [bootstrap-db.php](../scripts/bootstrap-db.php) para compatibilizar `viagens` com o modulo operacional
+- Criado o teste [test-viagem-model.php](../scripts/test-viagem-model.php)
+- Atualizada a task em [task_13_viagens_rotas.md](./ciclo_02_frota_municipal/task_13_viagens_rotas.md)
+
+### Resultado tecnico
+- o sistema agora registra o uso da frota com secretaria, solicitante, veiculo, motorista, trajeto, horario e km
+- o historico pode ser filtrado por status e secretaria
+- o modulo abre caminho para indicadores futuros de utilizacao, custo e produtividade
+- a base ficou integrada ao fluxo operacional do ciclo 02 sem exigir framework ou cadastro extra de secretaria
+
+### Validacao realizada
+- `php scripts/bootstrap-db.php`
+- `php scripts/test-viagem-model.php`
+- `php -l` executado com sucesso nos arquivos novos do modulo
+- `http://127.0.0.1:8000/viagens.php` validado com `200` apos login
+
+### Proximo passo recomendado
+- Executar a `Task 14`: fornecedores, oficinas e parceiros operacionais
