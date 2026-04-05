@@ -12,6 +12,7 @@
     "test:domain": "php scripts/test-domain.php",
     "test:repository-contract": "php scripts/test-repository-contract.php",
     "test:repository-pdo": "php scripts/test-repository-pdo.php",
+    "test:audit-flow": "php scripts/test-audit-flow.php",
     "test:veiculo-service": "php scripts/test-veiculo-service.php",
     "test:veiculo-controller-flow": "php scripts/test-veiculo-controller-flow.php"
   },

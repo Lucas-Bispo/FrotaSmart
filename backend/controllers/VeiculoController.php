@@ -6,15 +6,19 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 require_once __DIR__ . '/../config/security.php';
 
 use FrotaSmart\Application\Exceptions\ApplicationException;
+use FrotaSmart\Application\Services\AuditTrailService;
 use FrotaSmart\Application\Services\VeiculoService;
 use FrotaSmart\Domain\Exceptions\DomainException;
+use FrotaSmart\Infrastructure\Audit\ErrorLogAuditLogger;
+use FrotaSmart\Infrastructure\Audit\RequestAuditContextProvider;
 use FrotaSmart\Infrastructure\Config\PdoConnectionFactory;
 use FrotaSmart\Infrastructure\Persistence\PdoVeiculoRepository;
 
 final class VeiculoController
 {
     public function __construct(
-        private readonly VeiculoService $service
+        private readonly VeiculoService $service,
+        private readonly AuditTrailService $auditTrail
     ) {
     }
 
@@ -29,6 +33,10 @@ final class VeiculoController
                 new PdoVeiculoRepository(
                     PdoConnectionFactory::make()
                 )
+            ),
+            new AuditTrailService(
+                new ErrorLogAuditLogger(),
+                new RequestAuditContextProvider()
             )
         );
     }
@@ -53,10 +61,6 @@ final class VeiculoController
                 default => ['level' => 'error', 'message' => 'Acao de veiculo nao suportada.'],
             };
 
-            if (isset($result['audit_event'])) {
-                audit_log($result['audit_event'], $result['audit_context'] ?? []);
-            }
-
             $this->flashAndRedirect($result['level'], $result['message']);
         } catch (ApplicationException | DomainException $exception) {
             $this->flashAndRedirect('error', $exception->getMessage());
@@ -75,7 +79,7 @@ final class VeiculoController
 
     /**
      * @param array<string, mixed> $input
-     * @return array{level:string,message:string,audit_event?:string,audit_context?:array<string,mixed>}
+     * @return array{level:string,message:string}
      */
     public function processAdd(array $input): array
     {
@@ -85,20 +89,26 @@ final class VeiculoController
             (string) ($input['status'] ?? '')
         );
 
+        $this->auditTrail->recordMutation(
+            'veiculo.created',
+            'create',
+            'veiculo',
+            $veiculo->placaFormatada(),
+            [
+                'placa' => $veiculo->placaFormatada(),
+                'status' => $veiculo->status(),
+            ]
+        );
+
         return [
             'level' => 'success',
             'message' => 'Veiculo adicionado com sucesso.',
-            'audit_event' => 'veiculo.created',
-            'audit_context' => [
-                'placa' => $veiculo->placaFormatada(),
-                'status' => $veiculo->status(),
-            ],
         ];
     }
 
     /**
      * @param array<string, mixed> $input
-     * @return array{level:string,message:string,audit_event?:string,audit_context?:array<string,mixed>}
+     * @return array{level:string,message:string}
      */
     public function processUpdate(array $input): array
     {
@@ -110,21 +120,27 @@ final class VeiculoController
             (string) ($input['status'] ?? '')
         );
 
-        return [
-            'level' => 'success',
-            'message' => 'Veiculo atualizado com sucesso.',
-            'audit_event' => 'veiculo.updated',
-            'audit_context' => [
+        $this->auditTrail->recordMutation(
+            'veiculo.updated',
+            'update',
+            'veiculo',
+            $veiculo->placaFormatada(),
+            [
                 'placa_anterior' => $placaAtual,
                 'placa' => $veiculo->placaFormatada(),
                 'status' => $veiculo->status(),
-            ],
+            ]
+        );
+
+        return [
+            'level' => 'success',
+            'message' => 'Veiculo atualizado com sucesso.',
         ];
     }
 
     /**
      * @param array<string, mixed> $input
-     * @return array{level:string,message:string,audit_event?:string,audit_context?:array<string,mixed>}
+     * @return array{level:string,message:string}
      */
     public function processDelete(array $input): array
     {
@@ -137,14 +153,20 @@ final class VeiculoController
 
         $this->service->remover($placa);
 
+        $this->auditTrail->recordMutation(
+            'veiculo.deleted',
+            'delete',
+            'veiculo',
+            $veiculo->placaFormatada(),
+            [
+                'placa' => $veiculo->placaFormatada(),
+                'status' => $veiculo->status(),
+            ]
+        );
+
         return [
             'level' => 'success',
             'message' => 'Veiculo excluido com sucesso.',
-            'audit_event' => 'veiculo.deleted',
-            'audit_context' => [
-                'placa' => $veiculo->placaFormatada(),
-                'status' => $veiculo->status(),
-            ],
         ];
     }
 

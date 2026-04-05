@@ -12,6 +12,10 @@ if (! file_exists($autoloadPath)) {
 require_once $autoloadPath;
 require_once dirname(__DIR__) . '/backend/controllers/VeiculoController.php';
 
+use FrotaSmart\Application\Audit\AuditEntry;
+use FrotaSmart\Application\Contracts\AuditContextProviderInterface;
+use FrotaSmart\Application\Contracts\AuditLoggerInterface;
+use FrotaSmart\Application\Services\AuditTrailService;
 use FrotaSmart\Application\Services\VeiculoService;
 use FrotaSmart\Domain\Entities\Veiculo;
 use FrotaSmart\Domain\Repositories\VeiculoRepositoryInterface;
@@ -57,8 +61,38 @@ final class InMemoryVeiculoRepositoryForController implements VeiculoRepositoryI
     }
 }
 
+final class InMemoryAuditLoggerForController implements AuditLoggerInterface
+{
+    /**
+     * @var list<AuditEntry>
+     */
+    public array $entries = [];
+
+    public function record(AuditEntry $entry): void
+    {
+        $this->entries[] = $entry;
+    }
+}
+
+final class FixedAuditContextProviderForController implements AuditContextProviderInterface
+{
+    public function actor(): ?string
+    {
+        return 'gerente_frota';
+    }
+
+    public function ip(): ?string
+    {
+        return '192.168.0.10';
+    }
+}
+
 $service = new VeiculoService(new InMemoryVeiculoRepositoryForController());
-$controller = new VeiculoController($service);
+$auditLogger = new InMemoryAuditLoggerForController();
+$controller = new VeiculoController(
+    $service,
+    new AuditTrailService($auditLogger, new FixedAuditContextProviderForController())
+);
 
 $resultadoAdd = $controller->processAdd([
     'placa' => 'ABC1D23',
@@ -67,7 +101,6 @@ $resultadoAdd = $controller->processAdd([
 ]);
 
 assertTrue($resultadoAdd['level'] === 'success', 'Cadastro deveria retornar sucesso.');
-assertTrue($resultadoAdd['audit_event'] === 'veiculo.created', 'Cadastro deveria informar evento de auditoria.');
 
 $resultadoUpdate = $controller->processUpdate([
     'placa_atual' => 'ABC1D23',
@@ -77,16 +110,16 @@ $resultadoUpdate = $controller->processUpdate([
 ]);
 
 assertTrue($resultadoUpdate['level'] === 'success', 'Atualizacao deveria retornar sucesso.');
-assertTrue(
-    ($resultadoUpdate['audit_context']['placa'] ?? null) === 'DEF1G23',
-    'Atualizacao deveria refletir a placa nova.'
-);
 
 $resultadoDelete = $controller->processDelete([
     'placa' => 'DEF1G23',
 ]);
 
 assertTrue($resultadoDelete['level'] === 'success', 'Remocao deveria retornar sucesso.');
-assertTrue($resultadoDelete['audit_event'] === 'veiculo.deleted', 'Remocao deveria informar evento de auditoria.');
+assertTrue(count($auditLogger->entries) === 3, 'Controller deveria registrar auditoria para tres operacoes.');
+
+$ultimoEvento = $auditLogger->entries[2]->toArray();
+assertTrue($ultimoEvento['event'] === 'veiculo.deleted', 'Remocao deveria gerar evento de exclusao.');
+assertTrue($ultimoEvento['actor'] === 'gerente_frota', 'Auditoria deveria preservar o ator do contexto.');
 
 echo "Fluxo do controller de veiculos validado com sucesso." . PHP_EOL;
