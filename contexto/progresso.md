@@ -261,3 +261,29 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 11`: controle de abastecimento
+
+## 2026-04-05 - Task 11
+
+### Controle de abastecimento
+- Criado o controller [AbastecimentoController.php](../backend/controllers/AbastecimentoController.php)
+- Criado o model [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php)
+- Criada a tela [abastecimentos.php](../frontend/views/abastecimentos.php)
+- Criado o entrypoint [abastecimentos.php](../public/abastecimentos.php)
+- Atualizado o menu lateral para expor o modulo
+- Expandido o schema em [bootstrap-db.php](../scripts/bootstrap-db.php) para historico de abastecimentos
+- Criado o teste [test-abastecimento-model.php](../scripts/test-abastecimento-model.php)
+- Atualizada a task em [task_11_abastecimento.md](./ciclo_02_frota_municipal/task_11_abastecimento.md)
+
+### Resultado tecnico
+- o sistema agora registra abastecimentos com veiculo, motorista, combustivel, litros, valor e km atual
+- o historico pode ser filtrado por veiculo e por periodo
+- a base ficou pronta para dashboard de custo e leitura futura de consumo medio
+- o modulo registra auditoria minima nas alteracoes
+
+### Validacao realizada
+- `php scripts/bootstrap-db.php`
+- `php scripts/test-abastecimento-model.php`
+- `php -l` executado com sucesso nos arquivos novos do modulo
+
+### Proximo passo recomendado
+- Executar a `Task 12`: dashboard operacional da frota

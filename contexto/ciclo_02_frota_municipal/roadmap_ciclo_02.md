@@ -34,7 +34,7 @@ Este ciclo prioriza:
 - Documento: [task_10_manutencao_historico.md](./task_10_manutencao_historico.md)
 
 ### Task 11 - Controle de abastecimento
-- Status: planejada
+- Status: concluida
 - Documento: [task_11_abastecimento.md](./task_11_abastecimento.md)
 
 ### Task 12 - Dashboard operacional da frota

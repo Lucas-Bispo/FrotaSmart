@@ -109,6 +109,22 @@ $statements = [
         UNIQUE KEY uk_motoristas_cpf (cpf),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     )",
+    "CREATE TABLE IF NOT EXISTS abastecimentos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        veiculo_id INT NOT NULL,
+        motorista_id INT NOT NULL,
+        data_abastecimento DATE NOT NULL,
+        posto VARCHAR(120) NOT NULL,
+        tipo_combustivel ENUM('gasolina', 'etanol', 'diesel', 'diesel_s10', 'gnv', 'flex') NOT NULL DEFAULT 'gasolina',
+        litros DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+        valor_total DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+        km_atual INT NOT NULL DEFAULT 0,
+        observacoes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (veiculo_id) REFERENCES veiculos(id) ON DELETE CASCADE,
+        FOREIGN KEY (motorista_id) REFERENCES motoristas(id) ON DELETE CASCADE
+    )",
     "CREATE TABLE IF NOT EXISTS viagens (
         id INT AUTO_INCREMENT PRIMARY KEY,
         veiculo_id INT NOT NULL,
@@ -197,6 +213,30 @@ try {
     $pdo->exec("UPDATE manutencoes SET status = COALESCE(NULLIF(status, ''), 'aberta')");
     $pdo->exec("ALTER TABLE manutencoes MODIFY data_abertura DATE NOT NULL");
     $pdo->exec("ALTER TABLE manutencoes MODIFY status ENUM('aberta', 'em_andamento', 'concluida', 'cancelada') NOT NULL DEFAULT 'aberta'");
+
+    if (!table_has_column($pdo, 'abastecimentos', 'posto')) {
+        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN posto VARCHAR(120) NULL AFTER data_abastecimento");
+    }
+    if (!table_has_column($pdo, 'abastecimentos', 'tipo_combustivel')) {
+        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN tipo_combustivel VARCHAR(20) NULL AFTER posto");
+    }
+    if (!table_has_column($pdo, 'abastecimentos', 'litros')) {
+        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN litros DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER tipo_combustivel");
+    }
+    if (!table_has_column($pdo, 'abastecimentos', 'valor_total')) {
+        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN valor_total DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER litros");
+    }
+    if (!table_has_column($pdo, 'abastecimentos', 'km_atual')) {
+        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN km_atual INT NOT NULL DEFAULT 0 AFTER valor_total");
+    }
+    if (!table_has_column($pdo, 'abastecimentos', 'observacoes')) {
+        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN observacoes TEXT NULL AFTER km_atual");
+    }
+
+    $pdo->exec("UPDATE abastecimentos SET posto = COALESCE(NULLIF(posto, ''), 'Posto nao informado')");
+    $pdo->exec("UPDATE abastecimentos SET tipo_combustivel = COALESCE(NULLIF(tipo_combustivel, ''), 'gasolina')");
+    $pdo->exec("ALTER TABLE abastecimentos MODIFY posto VARCHAR(120) NOT NULL");
+    $pdo->exec("ALTER TABLE abastecimentos MODIFY tipo_combustivel ENUM('gasolina', 'etanol', 'diesel', 'diesel_s10', 'gnv', 'flex') NOT NULL DEFAULT 'gasolina'");
 
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = :username');
     $stmt->execute([':username' => $adminUsername]);

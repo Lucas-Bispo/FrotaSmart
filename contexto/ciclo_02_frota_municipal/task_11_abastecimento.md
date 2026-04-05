@@ -6,7 +6,7 @@
 - Regras de negocio: [../regras_negocio.md](../regras_negocio.md)
 
 ## Status
-- Estado atual: planejada
+- Estado atual: concluida
 - Dependencia anterior: [task_10_manutencao_historico.md](./task_10_manutencao_historico.md)
 
 ## Objetivo
@@ -39,3 +39,26 @@ Registrar abastecimentos da frota para permitir controle de custo, consumo e ano
 ## Observacoes de negocio
 - esse modulo ajuda a detectar desperdicio
 - esse modulo prepara o FrotaSmart para custo operacional real
+
+## Entrega realizada
+- modulo de abastecimento implementado com cadastro, listagem, filtros e edicao
+- vinculo entre abastecimento, veiculo e motorista preservado no banco
+- base preparada para leitura futura de consumo medio e gasto por secretaria
+- trilha minima de auditoria adicionada para operacoes mutaveis
+
+## Escopo entregue nesta fase
+- tela publica em `public/abastecimentos.php`
+- controller dedicado para validacao e persistencia
+- model legado para consulta e escrita do historico
+- filtros por veiculo e por periodo
+- indicadores operacionais basicos de litros, gasto total e ticket medio
+- teste automatizado do model e bootstrap de schema
+
+## Validacao realizada
+- `php -l backend/models/AbastecimentoModel.php`
+- `php -l backend/controllers/AbastecimentoController.php`
+- `php -l frontend/views/abastecimentos.php`
+- `php -l public/abastecimentos.php`
+- `php -l scripts/test-abastecimento-model.php`
+- `php scripts/bootstrap-db.php`
+- `php scripts/test-abastecimento-model.php`

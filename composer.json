@@ -14,6 +14,7 @@
     "test:repository-pdo": "php scripts/test-repository-pdo.php",
     "test:motorista-model": "php scripts/test-motorista-model.php",
     "test:manutencao-model": "php scripts/test-manutencao-model.php",
+    "test:abastecimento-model": "php scripts/test-abastecimento-model.php",
     "test:audit-flow": "php scripts/test-audit-flow.php",
     "test:rbac-veiculos": "php scripts/test-rbac-veiculos.php",
     "test:veiculo-service": "php scripts/test-veiculo-service.php",
