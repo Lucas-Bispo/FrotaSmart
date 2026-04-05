@@ -41,20 +41,24 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
 ### Task 04 - Persistencia PDO na nova arquitetura
 - Status: planejada
 - Objetivo: criar repositorio concreto em `Infrastructure/Persistence`
+- Documento detalhado: [task_04.md](./task_04.md)
 
 ### Task 05 - Service de aplicacao para veiculos
 - Status: planejada
 - Objetivo: mover regras de orquestracao para `Application/Services`
+- Documento detalhado: [task_05.md](./task_05.md)
 
 ### Task 06 - Adaptacao do controller legado
 - Status: planejada
 - Objetivo: fazer `backend/controllers/VeiculoController.php` consumir o novo service
+- Documento detalhado: [task_06.md](./task_06.md)
 
 ### Task 07 - Auditoria minima obrigatoria
 - Status: planejada
 - Objetivo: iniciar trilha de auditoria para operacoes mutaveis
+- Documento detalhado: [task_07.md](./task_07.md)
 
 ### Task 08 - RBAC alinhado com regras de negocio
 - Status: planejada
 - Objetivo: alinhar perfis atuais com as regras oficiais de [regras_negocio.md](../regras_negocio.md)
-
+- Documento detalhado: [task_08.md](./task_08.md)
