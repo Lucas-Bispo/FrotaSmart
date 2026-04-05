@@ -6,6 +6,7 @@
 - Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
 - Estado atual: [estado_projeto.md](./estado_projeto.md)
 - Contexto de transicao: [contexto_transicao.md](./contexto_transicao.md)
+- Guia WSL Ubuntu no Windows: [readme_wsl_ubuntu_windows.md](./readme_wsl_ubuntu_windows.md)
 - Hardening Apache: [apache_hardening.md](./docs/apache_hardening.md)
 - Revisao de seguranca: [security_review.md](./docs/security_review.md)
 
@@ -72,4 +73,3 @@ php scripts/reset-password.php <nova_senha> [usuario]
 - Use HTTPS em producao para que os cookies de sessao sejam enviados com a flag `Secure`
 
 Consulte tambem [apache_hardening.md](./docs/apache_hardening.md) e [security_review.md](./docs/security_review.md).
-
