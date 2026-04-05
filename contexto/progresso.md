@@ -236,3 +236,28 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 10`: historico de manutencao por veiculo
+
+## 2026-04-05 - Task 10
+
+### Historico de manutencao por veiculo
+- Criado o controller [ManutencaoController.php](../backend/controllers/ManutencaoController.php)
+- Reestruturado o model [ManutencaoModel.php](../backend/models/ManutencaoModel.php)
+- Criada a tela [manutencoes.php](../frontend/views/manutencoes.php)
+- Criado o entrypoint [manutencoes.php](../public/manutencoes.php)
+- Atualizado o menu lateral para expor o modulo
+- Expandido o schema em [bootstrap-db.php](../scripts/bootstrap-db.php) para historico de manutencao
+- Criado o teste [test-manutencao-model.php](../scripts/test-manutencao-model.php)
+- Atualizada a task em [task_10_manutencao_historico.md](./ciclo_02_frota_municipal/task_10_manutencao_historico.md)
+
+### Resultado tecnico
+- o sistema agora registra manutencao com tipo, status, fornecedor, custos e observacoes
+- o historico fica preservado por veiculo
+- o status do veiculo e sincronizado com manutencoes abertas ou em andamento
+- o modulo fica pronto para alimentar dashboard e previsao futura
+
+### Validacao realizada
+- `php scripts/bootstrap-db.php`
+- `php scripts/test-manutencao-model.php`
+
+### Proximo passo recomendado
+- Executar a `Task 11`: controle de abastecimento

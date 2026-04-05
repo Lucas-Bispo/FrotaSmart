@@ -20,6 +20,7 @@
 - O modulo de veiculos agora possui trilha minima de auditoria reutilizavel
 - O RBAC do modulo de veiculos e do gerenciamento de usuarios agora usa uma base central em `src/`
 - O modulo inicial de motoristas agora existe com cadastro, listagem e edicao operacional
+- O historico inicial de manutencoes por veiculo agora existe com abertura, andamento e conclusao
 - O projeto ja possui `public/` como document root recomendado para Linux/WSL
 
 ## Achados tecnicos
@@ -27,7 +28,7 @@
 - `backend/controllers/VeiculoController.php` ja delega a escrita para o service, mas a listagem do dashboard ainda vem do model legado
 - A auditoria de veiculos agora usa servico e contratos proprios em `src/`
 - O legado de autorizacao passou a consumir uma politica unica de permissoes por perfil
-- O modulo de motoristas ainda usa model legado, mas ja esta integrado ao fluxo principal da aplicacao
+- Os modulos de motoristas e manutencoes ainda usam models legados, mas ja estao integrados ao fluxo principal da aplicacao
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
@@ -45,7 +46,7 @@ A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refa
 - O legado ainda depende de `global $pdo` e `require_once`
 - O CRUD legado de veiculos ainda faz `DELETE` fisico, enquanto a regra de negocio pede soft delete
 - A leitura do dashboard ainda depende de `VeiculoModel`, mesmo com a escrita ja migrada
-- A proxima frente funcional do ciclo 02 e historico de manutencao por veiculo
+- A proxima frente funcional do ciclo 02 e controle de abastecimento
 
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento

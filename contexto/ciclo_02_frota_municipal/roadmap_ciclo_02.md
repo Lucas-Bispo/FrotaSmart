@@ -30,7 +30,7 @@ Este ciclo prioriza:
 - Documento: [task_09_motoristas.md](./task_09_motoristas.md)
 
 ### Task 10 - Historico de manutencao por veiculo
-- Status: planejada
+- Status: concluida
 - Documento: [task_10_manutencao_historico.md](./task_10_manutencao_historico.md)
 
 ### Task 11 - Controle de abastecimento

@@ -9,9 +9,6 @@ if (! is_cli_request()) {
     exit("Este script so pode ser executado via CLI.\n");
 }
 
-/**
- * @param PDO $pdo
- */
 function table_has_column(PDO $pdo, string $table, string $column): bool
 {
     $stmt = $pdo->prepare(
@@ -29,9 +26,6 @@ function table_has_column(PDO $pdo, string $table, string $column): bool
     return (int) $stmt->fetchColumn() > 0;
 }
 
-/**
- * @param PDO $pdo
- */
 function table_has_index(PDO $pdo, string $table, string $indexName): bool
 {
     $stmt = $pdo->prepare(
@@ -79,10 +73,15 @@ $statements = [
     "CREATE TABLE IF NOT EXISTS manutencoes (
         id INT AUTO_INCREMENT PRIMARY KEY,
         veiculo_id INT NOT NULL,
-        data DATE NOT NULL,
+        data_abertura DATE NOT NULL,
+        data_conclusao DATE NULL,
         tipo VARCHAR(50) NOT NULL,
-        custo DECIMAL(10, 2) NOT NULL,
+        status ENUM('aberta', 'em_andamento', 'concluida', 'cancelada') NOT NULL DEFAULT 'aberta',
+        fornecedor VARCHAR(120) DEFAULT NULL,
+        custo_estimado DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+        custo_final DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
         descricao TEXT,
+        observacoes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (veiculo_id) REFERENCES veiculos(id) ON DELETE CASCADE
@@ -137,19 +136,15 @@ try {
     if (!table_has_column($pdo, 'motoristas', 'nome')) {
         $pdo->exec("ALTER TABLE motoristas ADD COLUMN nome VARCHAR(120) NULL AFTER id");
     }
-
     if (!table_has_column($pdo, 'motoristas', 'cpf')) {
         $pdo->exec("ALTER TABLE motoristas ADD COLUMN cpf VARCHAR(14) NULL AFTER nome");
     }
-
     if (!table_has_column($pdo, 'motoristas', 'telefone')) {
         $pdo->exec("ALTER TABLE motoristas ADD COLUMN telefone VARCHAR(20) NULL AFTER cpf");
     }
-
     if (!table_has_column($pdo, 'motoristas', 'secretaria')) {
         $pdo->exec("ALTER TABLE motoristas ADD COLUMN secretaria VARCHAR(100) NULL AFTER telefone");
     }
-
     if (!table_has_column($pdo, 'motoristas', 'user_id')) {
         $pdo->exec("ALTER TABLE motoristas ADD COLUMN user_id INT NULL AFTER status");
     }
@@ -157,7 +152,6 @@ try {
     $pdo->exec("UPDATE motoristas SET nome = COALESCE(NULLIF(nome, ''), CONCAT('Motorista ', id))");
     $pdo->exec("UPDATE motoristas SET cpf = COALESCE(NULLIF(cpf, ''), LPAD(id, 11, '0'))");
     $pdo->exec("UPDATE motoristas SET secretaria = COALESCE(NULLIF(secretaria, ''), 'Secretaria nao informada')");
-
     $pdo->exec("ALTER TABLE motoristas MODIFY nome VARCHAR(120) NOT NULL");
     $pdo->exec("ALTER TABLE motoristas MODIFY cpf VARCHAR(14) NOT NULL");
     $pdo->exec("ALTER TABLE motoristas MODIFY secretaria VARCHAR(100) NOT NULL");
@@ -166,10 +160,43 @@ try {
     $pdo->exec("ALTER TABLE motoristas MODIFY cnh_vencimento DATE NOT NULL");
     $pdo->exec("ALTER TABLE motoristas MODIFY status ENUM('ativo', 'afastado', 'ferias', 'desligado') DEFAULT 'ativo'");
     $pdo->exec("ALTER TABLE motoristas MODIFY user_id INT NULL");
-
     if (!table_has_index($pdo, 'motoristas', 'uk_motoristas_cpf')) {
         $pdo->exec("ALTER TABLE motoristas ADD UNIQUE KEY uk_motoristas_cpf (cpf)");
     }
+
+    if (!table_has_column($pdo, 'manutencoes', 'data_abertura')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN data_abertura DATE NULL AFTER veiculo_id");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'data_conclusao')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN data_conclusao DATE NULL AFTER data_abertura");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'status')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN status VARCHAR(20) NULL AFTER tipo");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'fornecedor')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN fornecedor VARCHAR(120) NULL AFTER status");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'custo_estimado')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN custo_estimado DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER fornecedor");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'custo_final')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN custo_final DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER custo_estimado");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'observacoes')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN observacoes TEXT NULL AFTER descricao");
+    }
+
+    if (table_has_column($pdo, 'manutencoes', 'data')) {
+        $pdo->exec("UPDATE manutencoes SET data_abertura = COALESCE(data_abertura, data)");
+    }
+    if (table_has_column($pdo, 'manutencoes', 'custo')) {
+        $pdo->exec("UPDATE manutencoes SET custo_estimado = COALESCE(custo_estimado, 0.00), custo_final = CASE WHEN custo_final = 0.00 THEN custo ELSE custo_final END");
+    }
+
+    $pdo->exec("UPDATE manutencoes SET data_abertura = COALESCE(data_abertura, CURRENT_DATE())");
+    $pdo->exec("UPDATE manutencoes SET status = COALESCE(NULLIF(status, ''), 'aberta')");
+    $pdo->exec("ALTER TABLE manutencoes MODIFY data_abertura DATE NOT NULL");
+    $pdo->exec("ALTER TABLE manutencoes MODIFY status ENUM('aberta', 'em_andamento', 'concluida', 'cancelada') NOT NULL DEFAULT 'aberta'");
 
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = :username');
     $stmt->execute([':username' => $adminUsername]);
