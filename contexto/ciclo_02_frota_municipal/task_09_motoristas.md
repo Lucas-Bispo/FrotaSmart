@@ -6,7 +6,7 @@
 - Estado atual: [../estado_projeto.md](../estado_projeto.md)
 
 ## Status
-- Estado atual: planejada
+- Estado atual: concluida
 - Dependencia anterior: conclusao da base atual de veiculos, autenticacao e RBAC
 
 ## Objetivo
@@ -40,3 +40,26 @@ Criar o modulo inicial de motoristas para que a frota municipal deixe de depende
 - evitar repetir o acoplamento legado com `global $pdo`
 - preferir seguir o caminho incremental ja adotado em `src/`
 - manter controller fino e regras de negocio fora da camada HTTP
+
+## Entrega realizada
+- criado o entrypoint publico `public/motoristas.php`
+- criada a tela `frontend/views/motoristas.php`
+- criado o `MotoristaController`
+- criado o `MotoristaModel`
+- adicionada integracao do menu lateral com o modulo
+- ampliado o `bootstrap-db.php` para suportar um schema de motoristas mais aderente ao contexto operacional
+- adicionada validacao pratica em `scripts/test-motorista-model.php`
+
+## Escopo entregue nesta fase
+- cadastro de motorista
+- listagem de motoristas
+- edicao de dados principais
+- status operacional
+- secretaria de lotacao
+- alerta visual de CNH proxima do vencimento
+
+## Validacao pratica
+```bash
+php scripts/bootstrap-db.php
+php scripts/test-motorista-model.php
+```

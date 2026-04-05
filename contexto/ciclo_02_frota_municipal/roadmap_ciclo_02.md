@@ -26,7 +26,7 @@ Este ciclo prioriza:
 ## Ordem sugerida
 
 ### Task 09 - Cadastro operacional de motoristas
-- Status: planejada
+- Status: concluida
 - Documento: [task_09_motoristas.md](./task_09_motoristas.md)
 
 ### Task 10 - Historico de manutencao por veiculo

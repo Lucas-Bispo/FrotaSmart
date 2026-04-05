@@ -9,6 +9,46 @@ if (! is_cli_request()) {
     exit("Este script so pode ser executado via CLI.\n");
 }
 
+/**
+ * @param PDO $pdo
+ */
+function table_has_column(PDO $pdo, string $table, string $column): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*)
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = :table
+           AND COLUMN_NAME = :column'
+    );
+    $stmt->execute([
+        ':table' => $table,
+        ':column' => $column,
+    ]);
+
+    return (int) $stmt->fetchColumn() > 0;
+}
+
+/**
+ * @param PDO $pdo
+ */
+function table_has_index(PDO $pdo, string $table, string $indexName): bool
+{
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*)
+         FROM information_schema.STATISTICS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = :table
+           AND INDEX_NAME = :index_name'
+    );
+    $stmt->execute([
+        ':table' => $table,
+        ':index_name' => $indexName,
+    ]);
+
+    return (int) $stmt->fetchColumn() > 0;
+}
+
 $adminUsername = $_ENV['ADMIN_DEFAULT_USER'] ?? 'admin_frota';
 $adminPassword = $_ENV['ADMIN_DEFAULT_PASS'] ?? '';
 
@@ -56,14 +96,19 @@ $statements = [
     )",
     "CREATE TABLE IF NOT EXISTS motoristas (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
+        nome VARCHAR(120) NOT NULL,
+        cpf VARCHAR(14) NOT NULL UNIQUE,
+        telefone VARCHAR(20) DEFAULT NULL,
+        secretaria VARCHAR(100) NOT NULL,
         cnh_numero VARCHAR(20) NOT NULL UNIQUE,
         cnh_categoria VARCHAR(5) NOT NULL,
         cnh_vencimento DATE NOT NULL,
-        status ENUM('ativo', 'afastado', 'ferias') DEFAULT 'ativo',
+        status ENUM('ativo', 'afastado', 'ferias', 'desligado') DEFAULT 'ativo',
+        user_id INT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        UNIQUE KEY uk_motoristas_cpf (cpf),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     )",
     "CREATE TABLE IF NOT EXISTS viagens (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -87,6 +132,43 @@ $statements = [
 try {
     foreach ($statements as $statement) {
         $pdo->exec($statement);
+    }
+
+    if (!table_has_column($pdo, 'motoristas', 'nome')) {
+        $pdo->exec("ALTER TABLE motoristas ADD COLUMN nome VARCHAR(120) NULL AFTER id");
+    }
+
+    if (!table_has_column($pdo, 'motoristas', 'cpf')) {
+        $pdo->exec("ALTER TABLE motoristas ADD COLUMN cpf VARCHAR(14) NULL AFTER nome");
+    }
+
+    if (!table_has_column($pdo, 'motoristas', 'telefone')) {
+        $pdo->exec("ALTER TABLE motoristas ADD COLUMN telefone VARCHAR(20) NULL AFTER cpf");
+    }
+
+    if (!table_has_column($pdo, 'motoristas', 'secretaria')) {
+        $pdo->exec("ALTER TABLE motoristas ADD COLUMN secretaria VARCHAR(100) NULL AFTER telefone");
+    }
+
+    if (!table_has_column($pdo, 'motoristas', 'user_id')) {
+        $pdo->exec("ALTER TABLE motoristas ADD COLUMN user_id INT NULL AFTER status");
+    }
+
+    $pdo->exec("UPDATE motoristas SET nome = COALESCE(NULLIF(nome, ''), CONCAT('Motorista ', id))");
+    $pdo->exec("UPDATE motoristas SET cpf = COALESCE(NULLIF(cpf, ''), LPAD(id, 11, '0'))");
+    $pdo->exec("UPDATE motoristas SET secretaria = COALESCE(NULLIF(secretaria, ''), 'Secretaria nao informada')");
+
+    $pdo->exec("ALTER TABLE motoristas MODIFY nome VARCHAR(120) NOT NULL");
+    $pdo->exec("ALTER TABLE motoristas MODIFY cpf VARCHAR(14) NOT NULL");
+    $pdo->exec("ALTER TABLE motoristas MODIFY secretaria VARCHAR(100) NOT NULL");
+    $pdo->exec("ALTER TABLE motoristas MODIFY cnh_numero VARCHAR(20) NOT NULL");
+    $pdo->exec("ALTER TABLE motoristas MODIFY cnh_categoria VARCHAR(5) NOT NULL");
+    $pdo->exec("ALTER TABLE motoristas MODIFY cnh_vencimento DATE NOT NULL");
+    $pdo->exec("ALTER TABLE motoristas MODIFY status ENUM('ativo', 'afastado', 'ferias', 'desligado') DEFAULT 'ativo'");
+    $pdo->exec("ALTER TABLE motoristas MODIFY user_id INT NULL");
+
+    if (!table_has_index($pdo, 'motoristas', 'uk_motoristas_cpf')) {
+        $pdo->exec("ALTER TABLE motoristas ADD UNIQUE KEY uk_motoristas_cpf (cpf)");
     }
 
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = :username');

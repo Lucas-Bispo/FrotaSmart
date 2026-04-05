@@ -211,3 +211,28 @@
 
 ### Proximo passo recomendado
 - Revisar a camada de leitura do dashboard para migrar tambem a consulta de veiculos para a nova espinha dorsal
+
+## 2026-04-05 - Task 09
+
+### Modulo inicial de motoristas
+- Criado o model [MotoristaModel.php](../backend/models/MotoristaModel.php)
+- Criado o controller [MotoristaController.php](../backend/controllers/MotoristaController.php)
+- Criada a tela [motoristas.php](../frontend/views/motoristas.php)
+- Criado o entrypoint [motoristas.php](../public/motoristas.php)
+- Atualizado o menu lateral para expor o modulo aos perfis com leitura de frota
+- Atualizado o bootstrap em [bootstrap-db.php](../scripts/bootstrap-db.php) para schema de motorista mais aderente ao ciclo 02
+- Criado o teste [test-motorista-model.php](../scripts/test-motorista-model.php)
+- Atualizada a task em [task_09_motoristas.md](./ciclo_02_frota_municipal/task_09_motoristas.md)
+
+### Resultado tecnico
+- o sistema agora possui cadastro, listagem e edicao basica de motoristas
+- o modulo respeita RBAC ja existente
+- o fluxo mutavel registra auditoria minima
+- o schema ficou preparado para secretaria de lotacao e evolucao futura para viagens
+
+### Validacao realizada
+- `php scripts/bootstrap-db.php`
+- `php scripts/test-motorista-model.php`
+
+### Proximo passo recomendado
+- Executar a `Task 10`: historico de manutencao por veiculo

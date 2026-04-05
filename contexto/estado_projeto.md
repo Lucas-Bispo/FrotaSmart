@@ -19,6 +19,7 @@
 - O fluxo de escrita de veiculos agora passa por `VeiculoService` e por um repositorio PDO novo
 - O modulo de veiculos agora possui trilha minima de auditoria reutilizavel
 - O RBAC do modulo de veiculos e do gerenciamento de usuarios agora usa uma base central em `src/`
+- O modulo inicial de motoristas agora existe com cadastro, listagem e edicao operacional
 - O projeto ja possui `public/` como document root recomendado para Linux/WSL
 
 ## Achados tecnicos
@@ -26,6 +27,7 @@
 - `backend/controllers/VeiculoController.php` ja delega a escrita para o service, mas a listagem do dashboard ainda vem do model legado
 - A auditoria de veiculos agora usa servico e contratos proprios em `src/`
 - O legado de autorizacao passou a consumir uma politica unica de permissoes por perfil
+- O modulo de motoristas ainda usa model legado, mas ja esta integrado ao fluxo principal da aplicacao
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
@@ -43,10 +45,11 @@ A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refa
 - O legado ainda depende de `global $pdo` e `require_once`
 - O CRUD legado de veiculos ainda faz `DELETE` fisico, enquanto a regra de negocio pede soft delete
 - A leitura do dashboard ainda depende de `VeiculoModel`, mesmo com a escrita ja migrada
-- A validacao real do repositorio PDO ainda depende de ajustar as credenciais atuais do banco
+- A proxima frente funcional do ciclo 02 e historico de manutencao por veiculo
 
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento
 - Evoluir o modulo de veiculos por migracao incremental a partir do dominio novo
 - Consolidar a migracao de leitura e finalizar o alinhamento de persistencia com soft delete e banco real
 - Preservar a compatibilidade com Linux/WSL e com a publicacao via `public/`
+- Evoluir o ciclo 02 mantendo foco em frota municipal, sem desviar para transporte escolar
