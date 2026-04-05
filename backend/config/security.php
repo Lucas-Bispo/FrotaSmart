@@ -152,8 +152,15 @@ function is_same_origin_request(): bool
         return true;
     }
 
-    $host = $_SERVER['HTTP_HOST'] ?? '';
-    if ($host === '') {
+    $requestHost = $_SERVER['HTTP_HOST'] ?? '';
+    if ($requestHost === '') {
+        return false;
+    }
+
+    $requestHostName = strtolower((string) parse_url('http://' . $requestHost, PHP_URL_HOST));
+    $requestPort = (int) (parse_url('http://' . $requestHost, PHP_URL_PORT) ?? 0);
+
+    if ($requestHostName === '') {
         return false;
     }
 
@@ -167,7 +174,14 @@ function is_same_origin_request(): bool
             return false;
         }
 
-        if (!hash_equals(strtolower($host), strtolower($originHost))) {
+        $originHost = strtolower($originHost);
+        $originPort = (int) (parse_url($_SERVER[$header], PHP_URL_PORT) ?? 0);
+
+        if (!hash_equals($requestHostName, $originHost)) {
+            return false;
+        }
+
+        if ($originPort !== 0 && $requestPort !== 0 && $originPort !== $requestPort) {
             return false;
         }
     }
