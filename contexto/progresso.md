@@ -161,3 +161,28 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 07`: iniciar a auditoria minima obrigatoria do modulo de veiculos
+
+## 2026-04-05 - Task 07
+
+### Auditoria minima obrigatoria
+- Criada a estrutura de auditoria reutilizavel com [AuditEntry.php](../src/Application/Audit/AuditEntry.php)
+- Criados os contratos [AuditLoggerInterface.php](../src/Application/Contracts/AuditLoggerInterface.php) e [AuditContextProviderInterface.php](../src/Application/Contracts/AuditContextProviderInterface.php)
+- Criado o servico [AuditTrailService.php](../src/Application/Services/AuditTrailService.php)
+- Criadas as implementacoes [ErrorLogAuditLogger.php](../src/Infrastructure/Audit/ErrorLogAuditLogger.php) e [RequestAuditContextProvider.php](../src/Infrastructure/Audit/RequestAuditContextProvider.php)
+- Adaptado [VeiculoController.php](../backend/controllers/VeiculoController.php) para registrar auditoria via servico
+- Criado o teste [test-audit-flow.php](../scripts/test-audit-flow.php)
+- Atualizada a task em [task_07.md](./tasks/task_07.md)
+
+### Resultado tecnico
+- Criacao, atualizacao e remocao de veiculos agora geram eventos com ator, acao, alvo, IP e data
+- O formato minimo de auditoria ficou padronizado e reaproveitavel para outros modulos
+- A trilha de auditoria deixou de depender de detalhes espalhados no controller legado
+
+### Validacao realizada
+- `test-audit-flow.php` executado com sucesso
+- `test-veiculo-controller-flow.php` executado com sucesso
+- `test-veiculo-service.php` executado com sucesso
+- `test-domain.php` executado com sucesso
+
+### Proximo passo recomendado
+- Executar a `Task 08`: alinhar RBAC com os perfis oficiais das regras de negocio

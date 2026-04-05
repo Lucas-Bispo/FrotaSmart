@@ -54,7 +54,7 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
 - Documento detalhado: [task_06.md](./task_06.md)
 
 ### Task 07 - Auditoria minima obrigatoria
-- Status: planejada
+- Status: concluida
 - Objetivo: iniciar trilha de auditoria para operacoes mutaveis
 - Documento detalhado: [task_07.md](./task_07.md)
 

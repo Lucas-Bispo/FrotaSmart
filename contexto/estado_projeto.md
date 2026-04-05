@@ -17,11 +17,13 @@
 - A arquitetura alvo oficial e Clean Architecture adaptada em `src/`
 - O dominio novo de veiculos ja possui `Veiculo` e `Placa` em `src/Domain`
 - O fluxo de escrita de veiculos agora passa por `VeiculoService` e por um repositorio PDO novo
+- O modulo de veiculos agora possui trilha minima de auditoria reutilizavel
 - O projeto ja possui `public/` como document root recomendado para Linux/WSL
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
 - `backend/controllers/VeiculoController.php` ja delega a escrita para o service, mas a listagem do dashboard ainda vem do model legado
+- A auditoria de veiculos agora usa servico e contratos proprios em `src/`
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
@@ -44,5 +46,5 @@ A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refa
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento
 - Evoluir o modulo de veiculos por migracao incremental a partir do dominio novo
-- Consolidar a migracao de leitura, auditoria e RBAC apos a escrita passar a usar a nova espinha dorsal
+- Consolidar a migracao de leitura e RBAC apos a escrita e a auditoria passarem a usar a nova espinha dorsal
 - Preservar a compatibilidade com Linux/WSL e com a publicacao via `public/`
