@@ -287,3 +287,27 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 12`: dashboard operacional da frota
+
+## 2026-04-05 - Task 12
+
+### Dashboard operacional da frota
+- Evoluida a tela [dashboard.php](../frontend/views/dashboard.php) com indicadores gerenciais e operacionais reais
+- Expandido [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) com leitura de recentes e total por periodo
+- Expandido [ManutencaoModel.php](../backend/models/ManutencaoModel.php) com leitura de manutencoes recentes
+- Atualizada a task em [task_12_dashboard_operacional.md](./ciclo_02_frota_municipal/task_12_dashboard_operacional.md)
+
+### Resultado tecnico
+- o painel agora mostra frota, operacao, manutencao, custo do periodo, motoristas ativos e CNHs vencendo
+- o dashboard passou a destacar alertas operacionais e atalhos para os modulos principais
+- a pagina inicial agora exibe abastecimentos e manutencoes recentes com dados reais
+- a segmentacao inicial por secretaria ficou preparada no proprio painel
+
+### Validacao realizada
+- `php -l backend/models/AbastecimentoModel.php`
+- `php -l backend/models/ManutencaoModel.php`
+- `php -l frontend/views/dashboard.php`
+- `php -l public/dashboard.php`
+- `http://127.0.0.1:8000/dashboard.php` validado com `200` apos login
+
+### Proximo passo recomendado
+- Executar a `Task 13`: operacao de uso da frota com viagens e rotas

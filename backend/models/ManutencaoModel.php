@@ -35,6 +35,22 @@ final class ManutencaoModel
         return $result !== false ? $result : null;
     }
 
+    public function getRecent(int $limit = 5): array
+    {
+        global $pdo;
+
+        $limit = max(1, $limit);
+        $stmt = $pdo->query(
+            'SELECT m.*, v.placa, v.modelo
+             FROM manutencoes m
+             INNER JOIN veiculos v ON v.id = m.veiculo_id
+             ORDER BY m.data_abertura DESC, m.id DESC
+             LIMIT ' . $limit
+        );
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function create(array $data): int
     {
         global $pdo;

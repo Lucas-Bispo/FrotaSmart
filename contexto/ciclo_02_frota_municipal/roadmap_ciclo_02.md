@@ -38,7 +38,7 @@ Este ciclo prioriza:
 - Documento: [task_11_abastecimento.md](./task_11_abastecimento.md)
 
 ### Task 12 - Dashboard operacional da frota
-- Status: planejada
+- Status: concluida
 - Documento: [task_12_dashboard_operacional.md](./task_12_dashboard_operacional.md)
 
 ### Task 13 - Operacao de uso da frota com viagens e rotas

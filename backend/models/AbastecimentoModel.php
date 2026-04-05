@@ -137,4 +137,50 @@ final class AbastecimentoModel
             ':observacoes' => $data['observacoes'],
         ]);
     }
+
+    public function getRecent(int $limit = 5): array
+    {
+        global $pdo;
+
+        $limit = max(1, $limit);
+        $stmt = $pdo->query(
+            'SELECT a.*, v.placa, v.modelo, m.nome AS motorista_nome, m.secretaria
+             FROM abastecimentos a
+             INNER JOIN veiculos v ON v.id = a.veiculo_id
+             INNER JOIN motoristas m ON m.id = a.motorista_id
+             ORDER BY a.data_abastecimento DESC, a.id DESC
+             LIMIT ' . $limit
+        );
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function totalValorPeriodo(?string $dataInicio = null, ?string $dataFim = null): float
+    {
+        global $pdo;
+
+        $conditions = [];
+        $params = [];
+
+        if ($dataInicio !== null && $dataInicio !== '') {
+            $conditions[] = 'data_abastecimento >= :data_inicio';
+            $params[':data_inicio'] = $dataInicio;
+        }
+
+        if ($dataFim !== null && $dataFim !== '') {
+            $conditions[] = 'data_abastecimento <= :data_fim';
+            $params[':data_fim'] = $dataFim;
+        }
+
+        $sql = 'SELECT COALESCE(SUM(valor_total), 0) FROM abastecimentos';
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return (float) $stmt->fetchColumn();
+    }
 }

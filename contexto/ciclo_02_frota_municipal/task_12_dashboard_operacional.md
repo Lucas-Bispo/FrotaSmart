@@ -6,7 +6,7 @@
 - Estado atual: [../estado_projeto.md](../estado_projeto.md)
 
 ## Status
-- Estado atual: planejada
+- Estado atual: concluida
 - Dependencia anterior: [task_11_abastecimento.md](./task_11_abastecimento.md)
 
 ## Objetivo
@@ -38,3 +38,24 @@ Evoluir o dashboard atual para um painel realmente operacional e gerencial para 
 - manter o estilo objetivo do projeto
 - usar blocos de destaque, alertas e atalhos
 - evitar poluicao visual desnecessaria
+
+## Entrega realizada
+- dashboard evoluido para leitura operacional e gerencial da frota
+- indicadores reais integrados com veiculos, motoristas, manutencoes e abastecimentos
+- painel com alertas, acoes rapidas e blocos de segmentacao por secretaria
+- historicos recentes de manutencao e abastecimento visiveis na pagina inicial
+
+## Escopo entregue nesta fase
+- novos cards de indicadores operacionais
+- custo do periodo calculado com dados reais de abastecimento
+- contagem de manutencoes abertas, motoristas ativos e CNHs vencendo
+- atalhos para modulos operacionais mais frequentes
+- consolidacao inicial por secretaria para apoiar leituras futuras
+- correcoes de consistencia visual no cadastro rapido de veiculos
+
+## Validacao realizada
+- `php -l backend/models/AbastecimentoModel.php`
+- `php -l backend/models/ManutencaoModel.php`
+- `php -l frontend/views/dashboard.php`
+- `php -l public/dashboard.php`
+- acesso autenticado em `http://127.0.0.1:8000/dashboard.php` com `200 OK`
