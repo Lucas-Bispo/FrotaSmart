@@ -86,7 +86,8 @@ final class VeiculoController
         $veiculo = $this->service->cadastrar(
             (string) ($input['placa'] ?? ''),
             (string) ($input['modelo'] ?? ''),
-            (string) ($input['status'] ?? '')
+            (string) ($input['status'] ?? ''),
+            $this->extractCadastroData($input)
         );
 
         $this->auditTrail->recordMutation(
@@ -97,6 +98,8 @@ final class VeiculoController
             [
                 'placa' => $veiculo->placaFormatada(),
                 'status' => $veiculo->status(),
+                'secretaria_lotada' => $veiculo->secretariaLotada(),
+                'tipo' => $veiculo->tipo(),
             ]
         );
 
@@ -117,7 +120,8 @@ final class VeiculoController
             $placaAtual,
             (string) ($input['placa'] ?? ''),
             (string) ($input['modelo'] ?? ''),
-            (string) ($input['status'] ?? '')
+            (string) ($input['status'] ?? ''),
+            $this->extractCadastroData($input)
         );
 
         $this->auditTrail->recordMutation(
@@ -129,6 +133,8 @@ final class VeiculoController
                 'placa_anterior' => $placaAtual,
                 'placa' => $veiculo->placaFormatada(),
                 'status' => $veiculo->status(),
+                'secretaria_lotada' => $veiculo->secretariaLotada(),
+                'tipo' => $veiculo->tipo(),
             ]
         );
 
@@ -190,5 +196,24 @@ final class VeiculoController
         set_flash($level, $message);
         header('Location: /dashboard.php');
         exit;
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array<string, mixed>
+     */
+    private function extractCadastroData(array $input): array
+    {
+        return [
+            'renavam' => $input['renavam'] ?? null,
+            'chassi' => $input['chassi'] ?? null,
+            'ano_fabricacao' => $input['ano_fabricacao'] ?? null,
+            'tipo' => $input['tipo'] ?? null,
+            'combustivel' => $input['combustivel'] ?? null,
+            'secretaria_lotada' => $input['secretaria_lotada'] ?? null,
+            'quilometragem_inicial' => $input['quilometragem_inicial'] ?? 0,
+            'data_aquisicao' => $input['data_aquisicao'] ?? null,
+            'documentos_observacoes' => $input['documentos_observacoes'] ?? null,
+        ];
     }
 }

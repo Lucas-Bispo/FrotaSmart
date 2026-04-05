@@ -14,6 +14,9 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
     private const STORAGE_STATUS_MAP = [
         'disponivel' => 'ativo',
         'em_manutencao' => 'manutencao',
+        'em_viagem' => 'em_viagem',
+        'reservado' => 'reservado',
+        'baixado' => 'baixado',
     ];
 
     public function __construct(
@@ -25,11 +28,50 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
     {
         if ($this->existsByPlaca($veiculo->placa())) {
             $statement = $this->connection->prepare(
-                'UPDATE veiculos SET modelo = :modelo, status = :status WHERE placa = :placa'
+                'UPDATE veiculos
+                 SET modelo = :modelo,
+                     status = :status,
+                     renavam = :renavam,
+                     chassi = :chassi,
+                     ano_fabricacao = :ano_fabricacao,
+                     tipo = :tipo,
+                     combustivel = :combustivel,
+                     secretaria_lotada = :secretaria_lotada,
+                     quilometragem_inicial = :quilometragem_inicial,
+                     data_aquisicao = :data_aquisicao,
+                     documentos_observacoes = :documentos_observacoes,
+                     deleted_at = NULL
+                 WHERE placa = :placa'
             );
         } else {
             $statement = $this->connection->prepare(
-                'INSERT INTO veiculos (placa, modelo, status) VALUES (:placa, :modelo, :status)'
+                'INSERT INTO veiculos (
+                    placa,
+                    modelo,
+                    status,
+                    renavam,
+                    chassi,
+                    ano_fabricacao,
+                    tipo,
+                    combustivel,
+                    secretaria_lotada,
+                    quilometragem_inicial,
+                    data_aquisicao,
+                    documentos_observacoes
+                 ) VALUES (
+                    :placa,
+                    :modelo,
+                    :status,
+                    :renavam,
+                    :chassi,
+                    :ano_fabricacao,
+                    :tipo,
+                    :combustivel,
+                    :secretaria_lotada,
+                    :quilometragem_inicial,
+                    :data_aquisicao,
+                    :documentos_observacoes
+                 )'
             );
         }
 
@@ -37,13 +79,38 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
             ':placa' => $veiculo->placaFormatada(),
             ':modelo' => $veiculo->modelo(),
             ':status' => $this->toStorageStatus($veiculo->status()),
+            ':renavam' => $veiculo->renavam(),
+            ':chassi' => $veiculo->chassi(),
+            ':ano_fabricacao' => $veiculo->anoFabricacao(),
+            ':tipo' => $veiculo->tipo(),
+            ':combustivel' => $veiculo->combustivel(),
+            ':secretaria_lotada' => $veiculo->secretariaLotada(),
+            ':quilometragem_inicial' => $veiculo->quilometragemInicial(),
+            ':data_aquisicao' => $veiculo->dataAquisicao(),
+            ':documentos_observacoes' => $veiculo->documentosObservacoes(),
         ]);
     }
 
     public function findByPlaca(Placa $placa): ?Veiculo
     {
         $statement = $this->connection->prepare(
-            'SELECT placa, modelo, status FROM veiculos WHERE placa = :placa LIMIT 1'
+            'SELECT
+                placa,
+                modelo,
+                status,
+                renavam,
+                chassi,
+                ano_fabricacao,
+                tipo,
+                combustivel,
+                secretaria_lotada,
+                quilometragem_inicial,
+                data_aquisicao,
+                documentos_observacoes
+             FROM veiculos
+             WHERE placa = :placa
+               AND deleted_at IS NULL
+             LIMIT 1'
         );
         $statement->execute([':placa' => $placa->value()]);
 
@@ -59,7 +126,7 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
     public function existsByPlaca(Placa $placa): bool
     {
         $statement = $this->connection->prepare(
-            'SELECT 1 FROM veiculos WHERE placa = :placa LIMIT 1'
+            'SELECT 1 FROM veiculos WHERE placa = :placa AND deleted_at IS NULL LIMIT 1'
         );
         $statement->execute([':placa' => $placa->value()]);
 
@@ -69,7 +136,22 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
     public function findAll(): array
     {
         $statement = $this->connection->query(
-            'SELECT placa, modelo, status FROM veiculos ORDER BY placa ASC'
+            'SELECT
+                placa,
+                modelo,
+                status,
+                renavam,
+                chassi,
+                ano_fabricacao,
+                tipo,
+                combustivel,
+                secretaria_lotada,
+                quilometragem_inicial,
+                data_aquisicao,
+                documentos_observacoes
+             FROM veiculos
+             WHERE deleted_at IS NULL
+             ORDER BY placa ASC'
         );
 
         $veiculos = [];
@@ -83,28 +165,33 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
 
     public function removeByPlaca(Placa $placa): void
     {
-        if ($this->hasDeletedAtColumn()) {
-            $statement = $this->connection->prepare(
-                'UPDATE veiculos SET deleted_at = CURRENT_TIMESTAMP WHERE placa = :placa'
-            );
-        } else {
-            $statement = $this->connection->prepare(
-                'DELETE FROM veiculos WHERE placa = :placa'
-            );
-        }
+        $statement = $this->connection->prepare(
+            'UPDATE veiculos SET deleted_at = CURRENT_TIMESTAMP WHERE placa = :placa'
+        );
 
         $statement->execute([':placa' => $placa->value()]);
     }
 
     /**
-     * @param array{placa:string,modelo:string,status:string} $row
+     * @param array<string, mixed> $row
      */
     private function hydrateVeiculo(array $row): Veiculo
     {
         return new Veiculo(
             $row['placa'],
             $row['modelo'],
-            $this->fromStorageStatus($row['status'])
+            $this->fromStorageStatus($row['status']),
+            [
+                'renavam' => $row['renavam'] ?? null,
+                'chassi' => $row['chassi'] ?? null,
+                'ano_fabricacao' => $row['ano_fabricacao'] ?? null,
+                'tipo' => $row['tipo'] ?? null,
+                'combustivel' => $row['combustivel'] ?? null,
+                'secretaria_lotada' => $row['secretaria_lotada'] ?? null,
+                'quilometragem_inicial' => $row['quilometragem_inicial'] ?? 0,
+                'data_aquisicao' => $row['data_aquisicao'] ?? null,
+                'documentos_observacoes' => $row['documentos_observacoes'] ?? null,
+            ]
         );
     }
 
@@ -120,20 +207,5 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
             'manutencao' => 'em_manutencao',
             default => $storageStatus,
         };
-    }
-
-    private function hasDeletedAtColumn(): bool
-    {
-        static $hasDeletedAtColumn;
-
-        if ($hasDeletedAtColumn !== null) {
-            return $hasDeletedAtColumn;
-        }
-
-        $statement = $this->connection->query("SHOW COLUMNS FROM veiculos LIKE 'deleted_at'");
-
-        $hasDeletedAtColumn = $statement->fetch() !== false;
-
-        return $hasDeletedAtColumn;
     }
 }

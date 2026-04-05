@@ -25,6 +25,7 @@
 - O dashboard agora consolidou leitura operacional com alertas, custos e atalhos da rotina
 - O modulo inicial de viagens agora conecta secretaria, motorista e veiculo no uso administrativo da frota
 - O modulo inicial de parceiros operacionais agora centraliza oficinas, postos e fornecedores com vinculo real nas operacoes
+- O backlog do ciclo 03 foi aberto para consolidar o nucleo do sistema, com foco em veiculos, prevencao e relatorios
 - O projeto ja possui `public/` como document root recomendado para Linux/WSL
 
 ## Achados tecnicos
@@ -55,6 +56,7 @@ A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refa
 - O CRUD legado de veiculos ainda faz `DELETE` fisico, enquanto a regra de negocio pede soft delete
 - A leitura do dashboard ainda depende de `VeiculoModel`, mesmo com a escrita ja migrada
 - O ciclo 02 planejado foi concluido e o proximo passo natural e consolidar backlog do ciclo seguinte
+- O cadastro de veiculos ainda precisava de dados mais aderentes a frota municipal real
 
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento
@@ -62,3 +64,4 @@ A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refa
 - Consolidar a migracao de leitura e finalizar o alinhamento de persistencia com soft delete e banco real
 - Preservar a compatibilidade com Linux/WSL e com a publicacao via `public/`
 - Evoluir o ciclo 02 mantendo foco em frota municipal, sem desviar para transporte escolar
+- Executar o ciclo 03 priorizando consolidacao do cadastro de veiculos, soft delete e inteligencia operacional

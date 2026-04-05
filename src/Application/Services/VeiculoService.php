@@ -17,9 +17,12 @@ final class VeiculoService
     ) {
     }
 
-    public function cadastrar(string $placa, string $modelo, string $status): Veiculo
+    /**
+     * @param array<string, mixed> $dadosCadastro
+     */
+    public function cadastrar(string $placa, string $modelo, string $status, array $dadosCadastro = []): Veiculo
     {
-        $veiculo = new Veiculo($placa, $modelo, $status);
+        $veiculo = new Veiculo($placa, $modelo, $status, $dadosCadastro);
 
         if ($this->repository->existsByPlaca($veiculo->placa())) {
             throw VeiculoAlreadyExistsException::forPlaca($veiculo->placaFormatada());
@@ -34,7 +37,8 @@ final class VeiculoService
         string $placaAtual,
         string $novaPlaca,
         string $modelo,
-        string $status
+        string $status,
+        array $dadosCadastro = []
     ): Veiculo {
         $placaAtualVo = new Placa($placaAtual);
         $veiculoAtual = $this->repository->findByPlaca($placaAtualVo);
@@ -43,7 +47,7 @@ final class VeiculoService
             throw VeiculoNotFoundException::forPlaca($placaAtualVo->value());
         }
 
-        $veiculoAtualizado = new Veiculo($novaPlaca, $modelo, $status);
+        $veiculoAtualizado = new Veiculo($novaPlaca, $modelo, $status, $dadosCadastro);
         $placaFoiAlterada = ! $placaAtualVo->equals($veiculoAtualizado->placa());
 
         if ($placaFoiAlterada && $this->repository->existsByPlaca($veiculoAtualizado->placa())) {

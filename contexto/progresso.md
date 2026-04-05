@@ -368,3 +368,41 @@
 
 ### Proximo passo recomendado
 - consolidar o backlog do proximo ciclo com base no que ja foi entregue no ciclo 02
+
+## 2026-04-05 - Ciclo 03 aberto
+
+### Planejamento do novo ciclo
+- Criado o roadmap [roadmap_ciclo_03.md](./ciclo_03_consolidacao_nucleo/roadmap_ciclo_03.md)
+- Criadas as tasks [task_15_cadastro_completo_veiculos.md](./ciclo_03_consolidacao_nucleo/task_15_cadastro_completo_veiculos.md), [task_16_soft_delete_veiculos.md](./ciclo_03_consolidacao_nucleo/task_16_soft_delete_veiculos.md), [task_17_manutencao_preventiva.md](./ciclo_03_consolidacao_nucleo/task_17_manutencao_preventiva.md), [task_18_consumo_alertas_abastecimento.md](./ciclo_03_consolidacao_nucleo/task_18_consumo_alertas_abastecimento.md) e [task_19_relatorios_operacionais.md](./ciclo_03_consolidacao_nucleo/task_19_relatorios_operacionais.md)
+
+### Direcao assumida
+- o ciclo 03 ficou focado em consolidacao de cadastro, prevencao e leitura gerencial
+- a referencia `sete_ref` foi usada apenas para inspirar profundidade funcional
+- a stack do FrotaSmart segue em PHP puro com MySQL
+
+## 2026-04-05 - Task 15
+
+### Consolidacao completa do cadastro de veiculos
+- Expandido o schema `veiculos` em [bootstrap-db.php](../scripts/bootstrap-db.php) com os campos operacionais do cadastro municipal
+- Enriquecida a entidade [Veiculo.php](../src/Domain/Entities/Veiculo.php) com dados complementares e validacoes de entrada
+- Adaptados [VeiculoService.php](../src/Application/Services/VeiculoService.php), [PdoVeiculoRepository.php](../src/Infrastructure/Persistence/PdoVeiculoRepository.php) e [VeiculoController.php](../backend/controllers/VeiculoController.php)
+- Reescrito o model legado [VeiculoModel.php](../backend/models/VeiculoModel.php) para respeitar `deleted_at` e ler o cadastro consolidado
+- Atualizada a view [dashboard.php](../frontend/views/dashboard.php) com formulario mais completo e leitura operacional da lotacao
+- Atualizada a task em [task_15_cadastro_completo_veiculos.md](./ciclo_03_consolidacao_nucleo/task_15_cadastro_completo_veiculos.md)
+
+### Resultado tecnico
+- o cadastro de veiculos passou a refletir melhor a realidade da frota por secretaria
+- a base ficou pronta para evoluir `soft delete` e arquivamento sem perder rastreabilidade
+- o modulo continuou compativel com MySQL no WSL e com o fluxo autenticado atual
+
+### Validacao realizada
+- `php -l` nos arquivos alterados pelo WSL
+- `php scripts/test-domain.php`
+- `php scripts/test-veiculo-service.php`
+- `php scripts/test-veiculo-controller-flow.php`
+- `php scripts/bootstrap-db.php`
+- `php scripts/test-repository-pdo.php`
+- login em `http://127.0.0.1:8000/auth.php` com redirecionamento final para `dashboard.php` e `200 OK`
+
+### Proximo passo recomendado
+- Executar a `Task 16`: soft delete, arquivamento e historico forte de veiculos

@@ -281,31 +281,85 @@ function dashboard_vehicle_status_badge(string $status): string
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h2 class="text-lg font-semibold mb-2 text-slate-700">Cadastro rapido de veiculo</h2>
-            <p class="text-sm text-slate-500 mb-5">Adicione um veiculo com placa, modelo e status inicial alinhado ao dominio atual.</p>
+            <h2 class="text-lg font-semibold mb-2 text-slate-700">Cadastro consolidado de veiculo</h2>
+            <p class="text-sm text-slate-500 mb-5">Base do ciclo 03 com identificacao, lotacao e dados iniciais de operacao da frota.</p>
 
             <?php if ($canManageFleet): ?>
                 <form method="POST" action="/veiculos.php" class="space-y-4">
                     <?php echo csrf_input(); ?>
                     <input type="hidden" name="action" value="add_veiculo">
 
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Placa</label>
-                        <input type="text" name="placa" placeholder="ABC1D23" required class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none uppercase">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Placa</label>
+                            <input type="text" name="placa" placeholder="ABC1D23" required class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Modelo</label>
+                            <input type="text" name="modelo" placeholder="Ex: Mercedes Sprinter" required class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">RENAVAM</label>
+                            <input type="text" name="renavam" placeholder="Opcional" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Chassi</label>
+                            <input type="text" name="chassi" placeholder="Opcional" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none uppercase">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Secretaria lotada</label>
+                            <input type="text" name="secretaria_lotada" placeholder="Ex: Saude" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
+                            <select name="status" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="disponivel">Disponivel</option>
+                                <option value="em_manutencao">Em manutencao</option>
+                                <option value="reservado">Reservado</option>
+                                <option value="em_viagem">Em viagem</option>
+                                <option value="baixado">Baixado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Tipo</label>
+                            <input type="text" name="tipo" placeholder="Ex: Van, Caminhonete, Caminhao" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Combustivel</label>
+                            <select name="combustivel" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Selecione</option>
+                                <option value="gasolina">Gasolina</option>
+                                <option value="etanol">Etanol</option>
+                                <option value="diesel">Diesel</option>
+                                <option value="diesel_s10">Diesel S10</option>
+                                <option value="flex">Flex</option>
+                                <option value="gnv">GNV</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Ano</label>
+                            <input type="number" name="ano_fabricacao" min="1950" max="<?php echo (int) date('Y') + 1; ?>" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Km inicial</label>
+                            <input type="number" name="quilometragem_inicial" min="0" value="0" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Data de aquisicao</label>
+                            <input type="date" name="data_aquisicao" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Modelo</label>
-                        <input type="text" name="modelo" placeholder="Ex: Mercedes OF-1721" required class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
-                        <select name="status" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                            <option value="disponivel">Disponivel</option>
-                            <option value="em_manutencao">Em manutencao</option>
-                            <option value="reservado">Reservado</option>
-                            <option value="em_viagem">Em viagem</option>
-                            <option value="baixado">Baixado</option>
-                        </select>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Documentos e observacoes</label>
+                        <textarea name="documentos_observacoes" rows="3" placeholder="CRLV, numero de apolice, observacoes iniciais..." class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none"></textarea>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition duration-200">
                         Cadastrar veiculo
@@ -458,6 +512,7 @@ function dashboard_vehicle_status_badge(string $status): string
                     <thead class="bg-slate-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Lotacao</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Acoes</th>
                         </tr>
@@ -465,7 +520,7 @@ function dashboard_vehicle_status_badge(string $status): string
                     <tbody class="divide-y divide-slate-200">
                         <?php if (empty($veiculos)): ?>
                             <tr>
-                                <td colspan="3" class="px-6 py-8 text-center text-sm text-slate-500">Nenhum veiculo cadastrado ate o momento.</td>
+                                <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">Nenhum veiculo cadastrado ate o momento.</td>
                             </tr>
                         <?php endif; ?>
 
@@ -474,6 +529,13 @@ function dashboard_vehicle_status_badge(string $status): string
                                 <td class="px-6 py-4">
                                     <div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars($v['placa'], ENT_QUOTES, 'UTF-8'); ?></div>
                                     <div class="text-xs text-slate-500"><?php echo htmlspecialchars($v['modelo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-700">
+                                    <div><?php echo htmlspecialchars((string) ($v['secretaria_lotada'] ?: 'Nao informada'), ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500">
+                                        <?php echo htmlspecialchars((string) (($v['tipo'] ?: 'Tipo n/i') . ' • ' . ($v['combustivel'] ?: 'Combustivel n/i')), ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                    <div class="text-xs text-slate-400">Km inicial: <?php echo (int) ($v['quilometragem_inicial'] ?? 0); ?></div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo dashboard_vehicle_status_badge((string) $v['status']); ?>">

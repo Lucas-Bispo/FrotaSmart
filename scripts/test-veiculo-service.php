@@ -78,16 +78,31 @@ final class InMemoryVeiculoRepository implements VeiculoRepositoryInterface
 
 $service = new VeiculoService(new InMemoryVeiculoRepository());
 
-$veiculo = $service->cadastrar('ABC1D23', 'Onibus Escolar', 'ativo');
+$veiculo = $service->cadastrar('ABC1D23', 'Onibus Escolar', 'ativo', [
+    'renavam' => '12345678901',
+    'tipo' => 'Onibus',
+    'combustivel' => 'diesel',
+    'secretaria_lotada' => 'Educacao',
+    'quilometragem_inicial' => 45200,
+]);
 assertTrue($veiculo->status() === 'disponivel', 'Cadastro deve normalizar status legado.');
+assertTrue($veiculo->secretariaLotada() === 'Educacao', 'Cadastro deve preservar secretaria lotada.');
 
 $buscado = $service->buscarPorPlaca('ABC1D23');
 assertTrue($buscado instanceof Veiculo, 'Busca deve retornar o veiculo cadastrado.');
 assertTrue($buscado->modelo() === 'Onibus Escolar', 'Busca deve preservar o modelo.');
+assertTrue($buscado->renavam() === '12345678901', 'Busca deve preservar RENAVAM.');
 
-$atualizado = $service->atualizar('ABC1D23', 'XYZ9K88', 'Van Adaptada', 'em_manutencao');
+$atualizado = $service->atualizar('ABC1D23', 'XYZ9K88', 'Van Adaptada', 'em_manutencao', [
+    'tipo' => 'Van',
+    'combustivel' => 'flex',
+    'secretaria_lotada' => 'Saude',
+    'quilometragem_inicial' => 1200,
+    'data_aquisicao' => '2026-02-01',
+]);
 assertTrue($atualizado->placaFormatada() === 'XYZ9K88', 'Atualizacao deve permitir trocar a placa.');
 assertTrue($atualizado->status() === 'em_manutencao', 'Atualizacao deve manter status oficial.');
+assertTrue($atualizado->combustivel() === 'flex', 'Atualizacao deve persistir combustivel.');
 assertTrue($service->buscarPorPlaca('ABC1D23') === null, 'Placa antiga nao deve permanecer ativa apos troca.');
 
 $todos = $service->listarTodos();

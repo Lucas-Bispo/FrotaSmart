@@ -25,15 +25,38 @@ final class Veiculo
     private Placa $placa;
     private string $modelo;
     private string $status;
+    private ?string $renavam;
+    private ?string $chassi;
+    private ?int $anoFabricacao;
+    private ?string $tipo;
+    private ?string $combustivel;
+    private ?string $secretariaLotada;
+    private int $quilometragemInicial;
+    private ?string $dataAquisicao;
+    private ?string $documentosObservacoes;
 
     public function __construct(
         Placa|string $placa,
         string $modelo,
-        string $status
+        string $status,
+        array $dados = []
     ) {
         $this->placa = $placa instanceof Placa ? $placa : new Placa($placa);
         $this->modelo = $this->normalizeModelo($modelo);
         $this->status = $this->normalizeStatus($status);
+        $this->renavam = $this->normalizeOptionalDigits($dados['renavam'] ?? null, 9, 20, 'RENAVAM');
+        $this->chassi = $this->normalizeOptionalText($dados['chassi'] ?? null, 30, 'Chassi');
+        $this->anoFabricacao = $this->normalizeAnoFabricacao($dados['ano_fabricacao'] ?? null);
+        $this->tipo = $this->normalizeOptionalText($dados['tipo'] ?? null, 50, 'Tipo');
+        $this->combustivel = $this->normalizeOptionalText($dados['combustivel'] ?? null, 30, 'Combustivel');
+        $this->secretariaLotada = $this->normalizeOptionalText($dados['secretaria_lotada'] ?? null, 100, 'Secretaria lotada');
+        $this->quilometragemInicial = $this->normalizeQuilometragemInicial($dados['quilometragem_inicial'] ?? 0);
+        $this->dataAquisicao = $this->normalizeOptionalDate($dados['data_aquisicao'] ?? null, 'Data de aquisicao');
+        $this->documentosObservacoes = $this->normalizeOptionalText(
+            $dados['documentos_observacoes'] ?? null,
+            1000,
+            'Documentos e observacoes'
+        );
     }
 
     public function placa(): Placa
@@ -54,6 +77,51 @@ final class Veiculo
     public function status(): string
     {
         return $this->status;
+    }
+
+    public function renavam(): ?string
+    {
+        return $this->renavam;
+    }
+
+    public function chassi(): ?string
+    {
+        return $this->chassi;
+    }
+
+    public function anoFabricacao(): ?int
+    {
+        return $this->anoFabricacao;
+    }
+
+    public function tipo(): ?string
+    {
+        return $this->tipo;
+    }
+
+    public function combustivel(): ?string
+    {
+        return $this->combustivel;
+    }
+
+    public function secretariaLotada(): ?string
+    {
+        return $this->secretariaLotada;
+    }
+
+    public function quilometragemInicial(): int
+    {
+        return $this->quilometragemInicial;
+    }
+
+    public function dataAquisicao(): ?string
+    {
+        return $this->dataAquisicao;
+    }
+
+    public function documentosObservacoes(): ?string
+    {
+        return $this->documentosObservacoes;
     }
 
     public function reservar(): void
@@ -105,6 +173,24 @@ final class Veiculo
         return sprintf('%s - %s (%s)', $this->placa->value(), $this->modelo, $this->status);
     }
 
+    /**
+     * @return array<string, int|string|null>
+     */
+    public function detalhesCadastro(): array
+    {
+        return [
+            'renavam' => $this->renavam,
+            'chassi' => $this->chassi,
+            'ano_fabricacao' => $this->anoFabricacao,
+            'tipo' => $this->tipo,
+            'combustivel' => $this->combustivel,
+            'secretaria_lotada' => $this->secretariaLotada,
+            'quilometragem_inicial' => $this->quilometragemInicial,
+            'data_aquisicao' => $this->dataAquisicao,
+            'documentos_observacoes' => $this->documentosObservacoes,
+        ];
+    }
+
     public static function supportedStatuses(): array
     {
         return [
@@ -150,5 +236,100 @@ final class Veiculo
         }
 
         $this->status = $targetStatus;
+    }
+
+    private function normalizeOptionalDigits(mixed $value, int $minLength, int $maxLength, string $field): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $digits = preg_replace('/\D+/', '', (string) $value);
+
+        if ($digits === '') {
+            return null;
+        }
+
+        if (strlen($digits) < $minLength || strlen($digits) > $maxLength) {
+            throw new DomainException($field . ' deve ter entre ' . $minLength . ' e ' . $maxLength . ' digitos.');
+        }
+
+        return $digits;
+    }
+
+    private function normalizeOptionalText(mixed $value, int $maxLength, string $field): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $text = trim((string) $value);
+
+        if ($text === '') {
+            return null;
+        }
+
+        if (mb_strlen($text) > $maxLength) {
+            throw new DomainException($field . ' excede o limite de ' . $maxLength . ' caracteres.');
+        }
+
+        return $text;
+    }
+
+    private function normalizeAnoFabricacao(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $ano = (int) $value;
+        $anoMinimo = 1950;
+        $anoMaximo = (int) date('Y') + 1;
+
+        if ($ano < $anoMinimo || $ano > $anoMaximo) {
+            throw new DomainException('Ano de fabricacao invalido.');
+        }
+
+        return $ano;
+    }
+
+    private function normalizeQuilometragemInicial(mixed $value): int
+    {
+        if ($value === null || $value === '') {
+            return 0;
+        }
+
+        if (! is_numeric($value)) {
+            throw new DomainException('Quilometragem inicial invalida.');
+        }
+
+        $quilometragem = (int) $value;
+
+        if ($quilometragem < 0) {
+            throw new DomainException('Quilometragem inicial nao pode ser negativa.');
+        }
+
+        return $quilometragem;
+    }
+
+    private function normalizeOptionalDate(mixed $value, string $field): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $date = trim((string) $value);
+
+        if ($date === '') {
+            return null;
+        }
+
+        $parsed = \DateTimeImmutable::createFromFormat('Y-m-d', $date);
+
+        if (! $parsed instanceof \DateTimeImmutable || $parsed->format('Y-m-d') !== $date) {
+            throw new DomainException($field . ' invalida.');
+        }
+
+        return $date;
     }
 }

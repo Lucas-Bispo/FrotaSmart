@@ -49,6 +49,21 @@ assertTrue($veiculoMercosul->status() === 'em_viagem', 'Veiculo reservado deve p
 $veiculoMercosul->liberarParaUso();
 assertTrue($veiculoMercosul->estaDisponivel(), 'Veiculo em viagem deve poder voltar para disponivel.');
 
+$veiculoCompleto = new Veiculo('QWE1R23', 'Pickup 4x4', 'disponivel', [
+    'renavam' => '12345678901',
+    'chassi' => '9BWZZZ377VT004251',
+    'ano_fabricacao' => 2024,
+    'tipo' => 'Caminhonete',
+    'combustivel' => 'diesel_s10',
+    'secretaria_lotada' => 'Obras',
+    'quilometragem_inicial' => 12500,
+    'data_aquisicao' => '2026-01-10',
+    'documentos_observacoes' => 'CRLV regularizado.',
+]);
+assertTrue($veiculoCompleto->renavam() === '12345678901', 'RENAVAM deve ser preservado.');
+assertTrue($veiculoCompleto->secretariaLotada() === 'Obras', 'Secretaria lotada deve ser preservada.');
+assertTrue($veiculoCompleto->quilometragemInicial() === 12500, 'Km inicial deve ser preservada.');
+
 expectException(
     static fn () => new Veiculo('placa-invalida', 'Modelo X', 'disponivel'),
     InvalidPlacaException::class,
@@ -59,6 +74,12 @@ expectException(
     static fn () => new Veiculo('ABC1234', '', 'disponivel'),
     DomainException::class,
     'Modelo vazio deveria falhar.'
+);
+
+expectException(
+    static fn () => new Veiculo('ABC1D23', 'Modelo', 'disponivel', ['ano_fabricacao' => 1900]),
+    DomainException::class,
+    'Ano de fabricacao invalido deveria falhar.'
 );
 
 $veiculoBaixado = new Veiculo('DEF1G23', 'Caminhao', 'baixado');

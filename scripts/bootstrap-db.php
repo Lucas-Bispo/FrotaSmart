@@ -65,10 +65,22 @@ $statements = [
         id INT AUTO_INCREMENT PRIMARY KEY,
         placa VARCHAR(20) NOT NULL,
         modelo VARCHAR(100) NOT NULL,
-        status ENUM('ativo', 'manutencao') NOT NULL DEFAULT 'ativo',
+        renavam VARCHAR(20) DEFAULT NULL,
+        chassi VARCHAR(30) DEFAULT NULL,
+        ano_fabricacao SMALLINT DEFAULT NULL,
+        tipo VARCHAR(50) DEFAULT NULL,
+        combustivel VARCHAR(30) DEFAULT NULL,
+        secretaria_lotada VARCHAR(100) DEFAULT NULL,
+        quilometragem_inicial INT NOT NULL DEFAULT 0,
+        data_aquisicao DATE DEFAULT NULL,
+        documentos_observacoes TEXT DEFAULT NULL,
+        status ENUM('ativo', 'manutencao', 'em_viagem', 'reservado', 'baixado') NOT NULL DEFAULT 'ativo',
+        deleted_at TIMESTAMP NULL DEFAULT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY uk_veiculos_placa (placa)
+        UNIQUE KEY uk_veiculos_placa (placa),
+        UNIQUE KEY uk_veiculos_renavam (renavam),
+        UNIQUE KEY uk_veiculos_chassi (chassi)
     )",
     "CREATE TABLE IF NOT EXISTS manutencoes (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -167,6 +179,46 @@ $statements = [
 try {
     foreach ($statements as $statement) {
         $pdo->exec($statement);
+    }
+
+    if (!table_has_column($pdo, 'veiculos', 'renavam')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN renavam VARCHAR(20) NULL AFTER modelo");
+    }
+    if (!table_has_column($pdo, 'veiculos', 'chassi')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN chassi VARCHAR(30) NULL AFTER renavam");
+    }
+    if (!table_has_column($pdo, 'veiculos', 'ano_fabricacao')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN ano_fabricacao SMALLINT NULL AFTER chassi");
+    }
+    if (!table_has_column($pdo, 'veiculos', 'tipo')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN tipo VARCHAR(50) NULL AFTER ano_fabricacao");
+    }
+    if (!table_has_column($pdo, 'veiculos', 'combustivel')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN combustivel VARCHAR(30) NULL AFTER tipo");
+    }
+    if (!table_has_column($pdo, 'veiculos', 'secretaria_lotada')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN secretaria_lotada VARCHAR(100) NULL AFTER combustivel");
+    }
+    if (!table_has_column($pdo, 'veiculos', 'quilometragem_inicial')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN quilometragem_inicial INT NOT NULL DEFAULT 0 AFTER secretaria_lotada");
+    }
+    if (!table_has_column($pdo, 'veiculos', 'data_aquisicao')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN data_aquisicao DATE NULL AFTER quilometragem_inicial");
+    }
+    if (!table_has_column($pdo, 'veiculos', 'documentos_observacoes')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN documentos_observacoes TEXT NULL AFTER data_aquisicao");
+    }
+    if (!table_has_column($pdo, 'veiculos', 'deleted_at')) {
+        $pdo->exec("ALTER TABLE veiculos ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL AFTER status");
+    }
+    $pdo->exec("UPDATE veiculos SET quilometragem_inicial = COALESCE(quilometragem_inicial, 0)");
+    $pdo->exec("ALTER TABLE veiculos MODIFY quilometragem_inicial INT NOT NULL DEFAULT 0");
+    $pdo->exec("ALTER TABLE veiculos MODIFY status ENUM('ativo', 'manutencao', 'em_viagem', 'reservado', 'baixado') NOT NULL DEFAULT 'ativo'");
+    if (!table_has_index($pdo, 'veiculos', 'uk_veiculos_renavam')) {
+        $pdo->exec("ALTER TABLE veiculos ADD UNIQUE KEY uk_veiculos_renavam (renavam)");
+    }
+    if (!table_has_index($pdo, 'veiculos', 'uk_veiculos_chassi')) {
+        $pdo->exec("ALTER TABLE veiculos ADD UNIQUE KEY uk_veiculos_chassi (chassi)");
     }
 
     if (!table_has_column($pdo, 'motoristas', 'nome')) {

@@ -98,6 +98,10 @@ $resultadoAdd = $controller->processAdd([
     'placa' => 'ABC1D23',
     'modelo' => 'Onibus Escolar',
     'status' => 'disponivel',
+    'tipo' => 'Onibus',
+    'combustivel' => 'diesel',
+    'secretaria_lotada' => 'Educacao',
+    'quilometragem_inicial' => '45200',
 ]);
 
 assertTrue($resultadoAdd['level'] === 'success', 'Cadastro deveria retornar sucesso.');
@@ -107,6 +111,10 @@ $resultadoUpdate = $controller->processUpdate([
     'placa' => 'DEF1G23',
     'modelo' => 'Onibus Escolar Atualizado',
     'status' => 'em_manutencao',
+    'tipo' => 'Micro-onibus',
+    'combustivel' => 'diesel_s10',
+    'secretaria_lotada' => 'Saude',
+    'ano_fabricacao' => '2025',
 ]);
 
 assertTrue($resultadoUpdate['level'] === 'success', 'Atualizacao deveria retornar sucesso.');
