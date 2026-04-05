@@ -180,9 +180,7 @@ final class VeiculoController
 
     private function ensureManagementAccess(): void
     {
-        $allowedRoles = ['admin', 'gerente'];
-
-        if (! in_array($_SESSION['role'] ?? '', $allowedRoles, true)) {
+        if (! user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE)) {
             $this->flashAndRedirect('error', 'Voce nao tem permissao para alterar a frota.');
         }
     }

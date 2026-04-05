@@ -7,7 +7,7 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-if (($_SESSION['role'] ?? '') !== 'admin') {
+if (!user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_USERS_MANAGE)) {
     set_flash('error', 'Acesso negado ao gerenciamento de usuários.');
     header('Location: /dashboard.php');
     exit;
@@ -61,6 +61,7 @@ $errorMessage = pull_flash('error');
             <select id="role" name="role" class="w-full rounded-2xl border border-slate-300 px-4 py-3 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500">
                 <option value="gerente">Gerente</option>
                 <option value="motorista">Motorista</option>
+                <option value="auditor">Auditor</option>
                 <option value="admin">Administrador</option>
             </select>
         </div>

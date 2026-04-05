@@ -21,7 +21,7 @@ $veiculos = [];
 $totalFrota = 0;
 $ativos = 0;
 $manutencao = 0;
-$canManageFleet = in_array($_SESSION['role'] ?? '', ['admin', 'gerente'], true);
+$canManageFleet = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);
 
 try {
     $model = new VeiculoModel();

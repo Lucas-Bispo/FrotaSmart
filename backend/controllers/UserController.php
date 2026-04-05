@@ -6,7 +6,7 @@ require_once __DIR__ . '/../config/security.php';
 secure_session_start();
 require_same_origin_post();
 
-if (!isset($_SESSION['user']) || ($_SESSION['role'] ?? '') !== 'admin') {
+if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_USERS_MANAGE)) {
     set_flash('error', 'Acesso negado. Apenas administradores podem gerenciar usuários.');
     header('Location: /dashboard.php');
     exit;
@@ -32,7 +32,7 @@ class UserController {
             $username = trim((string) ($_POST['username'] ?? ''));
             $password = (string) ($_POST['password'] ?? '');
             $role = (string) ($_POST['role'] ?? '');
-            $validRoles = ['admin', 'gerente', 'motorista'];
+            $validRoles = valid_roles();
 
             if ($username === '' || $password === '' || !in_array($role, $validRoles, true)) {
                 set_flash('error', 'Todos os campos são obrigatórios e o perfil deve ser válido.');

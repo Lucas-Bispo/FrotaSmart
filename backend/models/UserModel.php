@@ -24,8 +24,8 @@ class UserModel {
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
         
-        $valid_roles = ['admin', 'gerente', 'motorista'];
-        if (!in_array($role, $valid_roles)) {
+        $valid_roles = valid_roles();
+        if (!in_array($role, $valid_roles, true)) {
              $role = 'gerente';
         }
         $stmt->execute([$username, $hash, $role]);

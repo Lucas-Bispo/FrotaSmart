@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+
 const FROTASMART_SESSION_IDLE_TIMEOUT = 900;
 const FROTASMART_SESSION_ROTATE_INTERVAL = 300;
 
@@ -222,4 +224,26 @@ function audit_log(string $event, array $context = []): void
 function is_cli_request(): bool
 {
     return PHP_SAPI === 'cli';
+}
+
+function current_user_role(): ?string
+{
+    return isset($_SESSION['role']) && is_string($_SESSION['role'])
+        ? $_SESSION['role']
+        : null;
+}
+
+function user_can(string $permission, ?string $role = null): bool
+{
+    $role ??= current_user_role();
+
+    return \FrotaSmart\Application\Security\Rbac::allows($role, $permission);
+}
+
+/**
+ * @return list<string>
+ */
+function valid_roles(): array
+{
+    return \FrotaSmart\Application\Security\Rbac::validRoles();
 }
