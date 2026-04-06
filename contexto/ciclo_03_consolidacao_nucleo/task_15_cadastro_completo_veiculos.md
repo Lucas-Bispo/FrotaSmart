@@ -28,4 +28,4 @@ Ampliar o cadastro de veiculos sem trocar stack e sem framework, fortalecendo do
 - testes de dominio, service, controller e repositorio PDO validados com sucesso
 
 ## Referencia externa observada
-No `exemplo/sete_ref` apareceu o padrao de frota mais detalhado com previsao de manutencao, custo e estrutura mais forte de veiculo. O FrotaSmart absorve aqui apenas a profundidade funcional, nao a stack.
+Em referencias externas de maturidade funcional apareceu um padrao de frota mais detalhado, com previsao de manutencao, custo e estrutura mais forte de veiculo. O FrotaSmart absorve aqui apenas a profundidade funcional, nao a stack.

@@ -1,11 +1,16 @@
 # Progresso - FrotaSmart
 
 ## Navegacao rapida
-- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Roadmap atual: [roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
+- Roadmap ciclo 01: [roadmap_ciclo_01.md](./ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md)
 - Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
 - Estado atual: [estado_projeto.md](./estado_projeto.md)
 - Regras de negocio: [regras_negocio.md](./regras_negocio.md)
 - Guia Linux: [readme_linux.md](./readme_linux.md)
+
+## Observacao de contexto
+- registros antigos com `C:\\xampp\\php\\php.exe -l` refletem apenas a validacao de sintaxe feita em um momento intermediario da evolucao
+- o ambiente operacional oficial do projeto hoje e o Ubuntu WSL, conforme [readme_wsl_ubuntu_windows.md](./readme_wsl_ubuntu_windows.md) e [task_20_estabilizacao_wsl_validacao_integrada.md](./ciclo_04_estabilidade_governanca/task_20_estabilizacao_wsl_validacao_integrada.md)
 
 ## 2026-03-22
 
@@ -15,7 +20,7 @@
 - Criada a estrutura base de camadas em `src/`
 - Criada a classe inicial `FrotaSmart\Domain\Entities\Veiculo`
 - Criado `scripts/test-autoload.php` para validacao futura
-- Atualizado o backlog em [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Atualizado o backlog em [roadmap_ciclo_01.md](./ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md)
 - Registrado o diagnostico arquitetural em [estado_projeto.md](./estado_projeto.md)
 
 ### Estado atual
@@ -36,8 +41,8 @@
 - Criado o Value Object [Placa](../src/Domain/ValueObjects/Placa.php)
 - Enriquecida a entidade [Veiculo](../src/Domain/Entities/Veiculo.php)
 - Criadas exceptions de dominio para falhas de placa e status
-- Registrada a task em [task_02.md](./tasks/task_02.md)
-- Atualizado o roadmap em [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Registrada a task em [task_02_dominio_inicial_veiculos.md](./ciclo_01_fundacao_arquitetura/task_02_dominio_inicial_veiculos.md)
+- Atualizado o roadmap em [roadmap_ciclo_01.md](./ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md)
 - Criado o teste de dominio em [test-domain.php](../scripts/test-domain.php)
 
 ### Regras agora no dominio
@@ -54,7 +59,7 @@
 - Criado o contrato [VeiculoRepositoryInterface.php](../src/Domain/Repositories/VeiculoRepositoryInterface.php)
 - Definidas operacoes de persistencia, consulta, existencia, listagem e remocao sem acoplamento com `PDO`
 - Adotada [Placa](../src/Domain/ValueObjects/Placa.php) como identidade de consulta do dominio nesta etapa
-- Registrada a task em [task_03.md](./tasks/task_03.md)
+- Registrada a task em [task_03_contrato_repositorio_veiculos.md](./ciclo_01_fundacao_arquitetura/task_03_contrato_repositorio_veiculos.md)
 - Criado o teste de validacao do contrato em [test-repository-contract.php](../scripts/test-repository-contract.php)
 
 ### Proximo passo recomendado
@@ -108,7 +113,7 @@
 - Criada a fabrica de conexao [PdoConnectionFactory.php](../src/Infrastructure/Config/PdoConnectionFactory.php)
 - Implementado o repositorio [PdoVeiculoRepository.php](../src/Infrastructure/Persistence/PdoVeiculoRepository.php)
 - Criado o teste [test-repository-pdo.php](../scripts/test-repository-pdo.php)
-- Atualizada a task em [task_04.md](./tasks/task_04.md)
+- Atualizada a task em [task_04_persistencia_pdo_nova_arquitetura.md](./ciclo_01_fundacao_arquitetura/task_04_persistencia_pdo_nova_arquitetura.md)
 
 ### Resultado tecnico
 - O fluxo novo deixou de depender de `global $pdo`
@@ -127,7 +132,7 @@
 - Criado o service [VeiculoService.php](../src/Application/Services/VeiculoService.php)
 - Criadas exceptions de aplicacao para duplicidade e ausencia de veiculo
 - Criado o teste [test-veiculo-service.php](../scripts/test-veiculo-service.php)
-- Atualizada a task em [task_05.md](./tasks/task_05.md)
+- Atualizada a task em [task_05_service_aplicacao_veiculos.md](./ciclo_01_fundacao_arquitetura/task_05_service_aplicacao_veiculos.md)
 
 ### Resultado tecnico
 - O fluxo de cadastro, atualizacao, consulta, listagem e remocao passou a existir fora da camada HTTP
@@ -148,7 +153,7 @@
 - Atualizado o entrypoint [veiculos.php](../public/veiculos.php) para instanciar e despachar o controller novo
 - Ajustada a dashboard [dashboard.php](../frontend/views/dashboard.php) para enviar placa na remocao e usar status oficiais no cadastro
 - Criado o teste [test-veiculo-controller-flow.php](../scripts/test-veiculo-controller-flow.php)
-- Atualizada a task em [task_06.md](./tasks/task_06.md)
+- Atualizada a task em [task_06_adaptacao_controller_legado_veiculos.md](./ciclo_01_fundacao_arquitetura/task_06_adaptacao_controller_legado_veiculos.md)
 
 ### Resultado tecnico
 - O fluxo de escrita de veiculos nao depende mais diretamente de `VeiculoModel`
@@ -171,7 +176,7 @@
 - Criadas as implementacoes [ErrorLogAuditLogger.php](../src/Infrastructure/Audit/ErrorLogAuditLogger.php) e [RequestAuditContextProvider.php](../src/Infrastructure/Audit/RequestAuditContextProvider.php)
 - Adaptado [VeiculoController.php](../backend/controllers/VeiculoController.php) para registrar auditoria via servico
 - Criado o teste [test-audit-flow.php](../scripts/test-audit-flow.php)
-- Atualizada a task em [task_07.md](./tasks/task_07.md)
+- Atualizada a task em [task_07_auditoria_minima_obrigatoria.md](./ciclo_01_fundacao_arquitetura/task_07_auditoria_minima_obrigatoria.md)
 
 ### Resultado tecnico
 - Criacao, atualizacao e remocao de veiculos agora geram eventos com ator, acao, alvo, IP e data
@@ -196,7 +201,7 @@
 - Adaptados [dashboard.php](../frontend/views/dashboard.php), [user_management.php](../frontend/views/user_management.php) e [sidebar.php](../frontend/includes/sidebar.php) para consumir o RBAC central
 - Atualizado [UserModel.php](../backend/models/UserModel.php) para aceitar os papeis oficiais, incluindo `auditor`
 - Criado o teste [test-rbac-veiculos.php](../scripts/test-rbac-veiculos.php)
-- Atualizada a task em [task_08.md](./tasks/task_08.md)
+- Atualizada a task em [task_08_rbac_alinhado_regras_negocio.md](./ciclo_01_fundacao_arquitetura/task_08_rbac_alinhado_regras_negocio.md)
 
 ### Resultado tecnico
 - O modulo de veiculos passou a usar uma base unica de permissao para leitura e escrita

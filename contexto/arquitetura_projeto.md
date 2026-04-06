@@ -3,7 +3,8 @@
 ## Navegacao rapida
 - Estado atual: [estado_projeto.md](./estado_projeto.md)
 - Regras de negocio: [regras_negocio.md](./regras_negocio.md)
-- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Roadmap atual: [roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
+- Roadmap ciclo 01: [roadmap_ciclo_01.md](./ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md)
 - Progresso: [progresso.md](./progresso.md)
 - Guia Linux: [readme_linux.md](./readme_linux.md)
 
@@ -91,4 +92,3 @@ FrotaSmart/
 - O autoload PSR-4 funciona via Composer local
 - O projeto ja possui `public/` como base de execucao Linux-friendly
 - O proximo grande passo arquitetural e desacoplar persistencia via repositorios concretos
-

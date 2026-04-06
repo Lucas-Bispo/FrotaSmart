@@ -1,16 +1,16 @@
 # Task 07 - Auditoria minima obrigatoria
 
 ## Navegacao rapida
-- Roadmap: [roadmap_tasks.md](./roadmap_tasks.md)
+- Roadmap: [roadmap_ciclo_01.md](./roadmap_ciclo_01.md)
 - Progresso geral: [../progresso.md](../progresso.md)
 - Regras de negocio: [../regras_negocio.md](../regras_negocio.md)
 - Seguranca: [../seguranca.md](../seguranca.md)
-- Task anterior: [task_06.md](./task_06.md)
-- Task seguinte: [task_08.md](./task_08.md)
+- Task anterior: [task_06_adaptacao_controller_legado_veiculos.md](./task_06_adaptacao_controller_legado_veiculos.md)
+- Task seguinte: [task_08_rbac_alinhado_regras_negocio.md](./task_08_rbac_alinhado_regras_negocio.md)
 
 ## Status
 - Estado atual: concluida
-- Dependencia anterior: [task_06.md](./task_06.md)
+- Dependencia anterior: [task_06_adaptacao_controller_legado_veiculos.md](./task_06_adaptacao_controller_legado_veiculos.md)
 
 ## Objetivo
 Iniciar a trilha minima de auditoria para operacoes mutaveis do modulo de veiculos, alinhando implementacao com a regra oficial de rastreabilidade do projeto.

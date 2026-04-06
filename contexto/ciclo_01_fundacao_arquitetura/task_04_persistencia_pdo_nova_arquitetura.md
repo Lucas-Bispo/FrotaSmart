@@ -1,17 +1,17 @@
 # Task 04 - Persistencia PDO na nova arquitetura
 
 ## Navegacao rapida
-- Roadmap: [roadmap_tasks.md](./roadmap_tasks.md)
+- Roadmap: [roadmap_ciclo_01.md](./roadmap_ciclo_01.md)
 - Progresso geral: [../progresso.md](../progresso.md)
 - Arquitetura: [../arquitetura_projeto.md](../arquitetura_projeto.md)
 - Estado atual: [../estado_projeto.md](../estado_projeto.md)
 - Regras de negocio: [../regras_negocio.md](../regras_negocio.md)
-- Task anterior: [task_03.md](./task_03.md)
-- Task seguinte: [task_05.md](./task_05.md)
+- Task anterior: [task_03_contrato_repositorio_veiculos.md](./task_03_contrato_repositorio_veiculos.md)
+- Task seguinte: [task_05_service_aplicacao_veiculos.md](./task_05_service_aplicacao_veiculos.md)
 
 ## Status
 - Estado atual: concluida
-- Dependencia anterior: [task_03.md](./task_03.md)
+- Dependencia anterior: [task_03_contrato_repositorio_veiculos.md](./task_03_contrato_repositorio_veiculos.md)
 
 ## Objetivo
 Implementar o repositorio concreto de veiculos em `src/Infrastructure/Persistence`, usando `PDO` por injecao de dependencia e respeitando o contrato definido no dominio.

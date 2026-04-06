@@ -6,7 +6,7 @@ Fortalecer o nucleo do FrotaSmart para ficar mais aderente a frota municipal rea
 ## Origem deste ciclo
 - Regras de negocio em [regras_negocio.md](../regras_negocio.md)
 - Estado consolidado em [estado_projeto.md](../estado_projeto.md)
-- Referencias observadas em `exemplo/sete_ref`
+- Referencias externas de maturidade funcional observadas durante a fase de consolidacao
 
 ## Tasks do ciclo
 - `Task 15 - Consolidacao completa do cadastro de veiculos` - `concluida`
@@ -22,4 +22,4 @@ Fortalecer o nucleo do FrotaSmart para ficar mais aderente a frota municipal rea
 - documentar cada entrega em `.md` e em commit limpo
 
 ## Nota de produto
-O `SETE` foi usado apenas como referencia de maturidade funcional, especialmente em frota, manutencao, previsao e relatorios. Nao sera trazido Electron, stack pesada nem dependencias fora da proposta do FrotaSmart.
+O `SETE` foi usado apenas como referencia de maturidade funcional, especialmente em frota, manutencao, previsao e relatorios. A consulta local utilizada na epoca nao faz mais parte do repositório, mas o aprendizado de produto segue registrado aqui. Nao sera trazido Electron, stack pesada nem dependencias fora da proposta do FrotaSmart.

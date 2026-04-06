@@ -2,8 +2,8 @@
 
 ## Navegacao rapida
 - Guia Linux: [readme_linux.md](./readme_linux.md)
-- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
-- Task executada: [task_03_1.md](./tasks/task_03_1.md)
+- Roadmap atual: [roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
+- Task executada: [task_03_1_operacao_clean_linux.md](./ciclo_01_fundacao_arquitetura/task_03_1_operacao_clean_linux.md)
 - Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
 
 ## Objetivo
@@ -34,4 +34,3 @@ O projeto possuia raizes no XAMPP que impediam a portabilidade e a automacao.
 - `public/` passou a ser o document root recomendado
 - os scripts operacionais foram limpos de referencias explicitas a XAMPP
 - a migracao arquitetural ainda segue pendente na camada de persistencia e aplicacao
-

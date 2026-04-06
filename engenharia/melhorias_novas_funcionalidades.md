@@ -1,7 +1,7 @@
 # Melhorias e Novas Funcionalidades do FrotaSmart
 
 ## Objetivo deste documento
-Registrar uma analise comparativa entre o estado atual do FrotaSmart e o repositorio de referencia `marcosroriz/sete`, transformando essa comparacao em um backlog de melhorias realistas.
+Registrar uma analise comparativa entre o estado atual do FrotaSmart e referencias externas de maturidade funcional em gestao publica de transporte e frota, transformando essa comparacao em um backlog de melhorias realistas.
 
 Importante:
 - este documento nao recomenda migracao para framework
@@ -20,16 +20,13 @@ Fontes locais consideradas:
 - `backend/controllers/VeiculoController.php`
 - `backend/controllers/UserController.php`
 
-### Repositorio de referencia
-Repositorio analisado:
+### Referencias externas
+Referencia principal observada:
 - `https://github.com/marcosroriz/sete`
 
-Leitura local de referencia em:
-- `exemplo/sete_ref/README.md`
-- `exemplo/sete_ref/src/renderer/dashboard-main.html`
-- `exemplo/sete_ref/src/renderer/modules/rota/rota-sugestao-view.html`
-- `exemplo/sete_ref/src/renderer/modules/custo/custo-parametros-view.html`
-- estrutura de modulos em `exemplo/sete_ref/src/renderer/modules/`
+Observacao:
+- o diretório local `exemplo/sete_ref` foi removido do repositório apos a fase de consulta
+- as conclusoes deste documento preservam apenas o aprendizado funcional extraido naquela analise
 
 ## O que o FrotaSmart ja faz bem
 
@@ -91,82 +88,79 @@ Em vez de ampliar tudo de uma vez, a evolucao mais inteligente e:
 
 ## Prioridade alta
 
-### 1. Cadastro completo de motoristas
-Hoje o sistema fala em perfis e menciona motoristas, mas ainda nao aparece um modulo operacional dedicado.
+### 1. Checklists operacionais com evidencias
+Hoje o FrotaSmart ja cobre veiculos, motoristas, manutencoes, abastecimentos, viagens e relatorios. O proximo salto de valor esta em inspecao operacional e rastreabilidade de saida e retorno.
 
 Sugestao:
-- cadastro de motorista
-- CNH, categoria e validade
-- telefone e contato
-- situacao do motorista: ativo, ferias, afastado, desligado
-- vinculo atual com veiculo
+- checklist de saida e retorno por veiculo
+- anexos fotograficos
+- registro de nao conformidades
+- aceite do responsavel pela operacao
+- funcionamento online/offline como evolucao futura, sem mudar a stack agora
 
 Valor:
-- aproxima o sistema da rotina real da frota
-- prepara o terreno para viagens, escalas e compliance documental
+- melhora rastreabilidade operacional
+- reduz saida de veiculo sem condicao adequada
+- fortalece auditoria e accountability
 
-### 2. Historico de manutencao por veiculo
-Hoje existe status de manutencao, mas falta historico operacional.
+### 2. Gestao documental e vencimentos
+O projeto ja controla CNH de motorista, mas ainda pode evoluir muito em compliance documental.
 
 Sugestao:
-- abrir ordem de servico
-- registrar defeito informado
-- registrar data de entrada e saida
-- registrar fornecedor/oficina
-- registrar custo da manutencao
-- registrar pecas trocadas
-- registrar responsavel pelo apontamento
+- vencimento de licenciamento, seguro, CRLV e contratos
+- alertas por janela de vencimento
+- situacao documental por veiculo
+- painel de pendencias legais por secretaria
 
 Valor:
-- transforma manutencao de status simples em processo auditavel
-- permite acompanhar indisponibilidade e custo por veiculo
+- aproxima o sistema da rotina de controle publico real
+- reduz risco administrativo e operacional
 
-### 3. Soft delete e arquivamento real de veiculos
-Esse ponto ja aparece como risco no proprio contexto do projeto.
+### 3. Dashboard executivo por secretaria e por veiculo
+Esse ponto agora e o proximo gap mais claro do projeto.
 
 Sugestao:
-- substituir exclusao fisica por `ativo/inativo/baixado/arquivado`
-- manter historico para auditoria
-- esconder baixados por padrao da tela principal
+- custo por secretaria
+- disponibilidade por secretaria
+- custo por veiculo
+- top alertas operacionais
+- comparativos por periodo
 
 Valor:
-- evita perda de historico
-- alinha o sistema a uma operacao administrativa mais segura
+- transforma dado operacional em leitura gerencial
+- prepara melhor a camada de transparencia publica
 
-### 4. Dashboard operacional mais forte
-O dashboard atual e limpo e funcional, mas ainda simples.
-
-Inspirado no SETE:
-- atalhos para funcoes frequentes
-- quantidade de veiculos por status oficial
-- motoristas ativos e indisponiveis
-- manutencoes em aberto
-- proximas manutencoes previstas
-- alertas de documentos vencendo
-
-Valor:
-- transforma dashboard em painel de trabalho, nao apenas vitrine
-
-### 5. Modulo de viagens ou rotas operacionais
-O maior salto de valor de negocio para o FrotaSmart seria sair de cadastro puro para operacao.
+### 4. KPIs tecnicos de manutencao
+O modulo de manutencao ja saiu do historico basico e agora vale evoluir para indicadores.
 
 Sugestao:
-- cadastrar rota ou viagem
-- origem e destino
-- motorista responsavel
-- veiculo vinculado
-- data e horario
-- km inicial e final
-- observacoes da operacao
+- `MTBF`
+- `MTTR`
+- tempo medio em manutencao
+- disponibilidade mecanica
+- custo acumulado de manutencao por veiculo
 
 Valor:
-- liga veiculo, motorista e operacao real
-- cria base para custos, relatorios e produtividade
+- qualifica melhor decisao sobre renovacao, oficina e criticidade da frota
+
+### 5. Transparencia publica orientada a dados nao pessoais
+O FrotaSmart ja tem base suficiente para pensar numa saida publica mais forte.
+
+Sugestao:
+- exportacao publica de dados de frota sem dados pessoais
+- inventario de veiculos, situacao e lotacao
+- gastos consolidados por secretaria, periodo e categoria
+- relatorios prontos para portal da transparencia
+- separacao explicita entre visao interna e visao publica
+
+Valor:
+- alinha o projeto com LAI, dados abertos e governanca
+- aumenta o valor institucional do sistema
 
 ## Prioridade media
 
 ### 6. Previsao de manutencao
-O SETE tem uma ideia muito boa aqui: manutencao nao deve ser so reativa.
+Essa frente ja foi iniciada no FrotaSmart e agora deve evoluir, nao mais partir do zero.
 
 Sugestao:
 - proxima revisao por km
@@ -179,7 +173,7 @@ Valor:
 - melhora planejamento da oficina
 
 ### 7. Controle de abastecimento
-Muito aderente ao dominio de frota e com grande retorno.
+Essa frente ja foi iniciada no FrotaSmart e agora pode ganhar profundidade adicional.
 
 Sugestao:
 - data do abastecimento
@@ -195,7 +189,7 @@ Valor:
 - ajuda a detectar anomalias e desperdicio
 
 ### 8. Cadastro de fornecedores e oficinas
-Inspirado no modulo de fornecedor do SETE.
+Essa frente ja existe no FrotaSmart e agora deve evoluir para historico e consolidacao de performance.
 
 Sugestao:
 - oficinas
@@ -208,7 +202,7 @@ Valor:
 - melhora rastreabilidade de custo e manutencao
 
 ### 9. Relatorios especializados
-O SETE mostra bem o valor de relatorios por modulo.
+Essa frente ja existe no FrotaSmart com exportacao inicial e deve ser aprofundada.
 
 Sugestao inicial:
 - relatorio de frota
@@ -310,24 +304,21 @@ O ganho maior vem de adaptar a ideia de produto, nao de copiar a infraestrutura 
 ## Roadmap sugerido sem framework
 
 ### Fase 1 - Consolidacao do nucleo
-- soft delete de veiculos
-- historico de manutencao
-- cadastro de motoristas
-- dashboard operacional melhorado
+- concluida no ciclo 03 com cadastro fortalecido, arquivamento, manutencao preventiva, abastecimento analitico e relatorios operacionais
 
 ### Fase 2 - Operacao real
-- viagens ou rotas operacionais
-- abastecimento
-- fornecedores e oficinas
-- relatorios iniciais
+- concluida em grande parte com viagens, abastecimento, parceiros e relatorios iniciais
 
-### Fase 3 - Gestao e inteligencia
-- previsao de manutencao
-- custos operacionais
-- indicadores gerenciais
-- mapa operacional simples
+### Fase 3 - Governanca e leitura executiva
+- painel executivo por secretaria e por veiculo
+- compliance documental e vencimentos
+- trilha de auditoria expandida
+- transparencia publica orientada a dados nao pessoais
 
 ### Fase 4 - Evolucao avancada
+- custos operacionais aprofundados
+- indicadores gerenciais
+- mapa operacional simples
 - importacao por planilha
 - roteirizacao assistida
 - analises comparativas por periodo
@@ -347,10 +338,10 @@ O melhor aprendizado vindo do SETE e:
 
 ## Recomendacao pratica imediata
 
-Se fosse escolher as proximas 3 entregas com melhor custo-beneficio, eu faria nesta ordem:
+Se fosse escolher as proximas 3 entregas com melhor custo-beneficio hoje, eu faria nesta ordem:
 
-1. modulo de motoristas
-2. historico de manutencao
-3. abastecimento com relatorio simples
+1. painel executivo por secretaria e por veiculo
+2. gestao documental e vencimentos
+3. checklists operacionais com evidencias
 
-Essas tres frentes ja mudariam bastante a maturidade do FrotaSmart sem exigir framework nem reescrita total.
+Essas tres frentes elevam o valor gerencial e institucional do FrotaSmart sem exigir framework nem reescrita total.

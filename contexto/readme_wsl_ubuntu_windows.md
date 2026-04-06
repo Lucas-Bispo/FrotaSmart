@@ -5,7 +5,8 @@
 - Estado atual: [estado_projeto.md](./estado_projeto.md)
 - Progresso: [progresso.md](./progresso.md)
 - Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
-- Roadmap: [tasks/roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Roadmap atual: [ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
+- Roadmap ciclo 01: [ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md](./ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md)
 
 Este guia mostra como executar o FrotaSmart no Windows usando WSL com Ubuntu, sem depender de XAMPP.
 

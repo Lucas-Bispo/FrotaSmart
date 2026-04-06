@@ -1,15 +1,15 @@
 # Task 08 - RBAC alinhado com regras de negocio
 
 ## Navegacao rapida
-- Roadmap: [roadmap_tasks.md](./roadmap_tasks.md)
+- Roadmap: [roadmap_ciclo_01.md](./roadmap_ciclo_01.md)
 - Progresso geral: [../progresso.md](../progresso.md)
 - Regras de negocio: [../regras_negocio.md](../regras_negocio.md)
 - Seguranca: [../seguranca.md](../seguranca.md)
-- Task anterior: [task_07.md](./task_07.md)
+- Task anterior: [task_07_auditoria_minima_obrigatoria.md](./task_07_auditoria_minima_obrigatoria.md)
 
 ## Status
 - Estado atual: concluida
-- Dependencia anterior: [task_07.md](./task_07.md)
+- Dependencia anterior: [task_07_auditoria_minima_obrigatoria.md](./task_07_auditoria_minima_obrigatoria.md)
 
 ## Objetivo
 Alinhar os perfis e as autorizacoes atuais com os papeis oficiais do projeto, reduzindo divergencias entre o legado e as regras de negocio documentadas.

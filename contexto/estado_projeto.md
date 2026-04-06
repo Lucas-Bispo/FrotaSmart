@@ -3,7 +3,8 @@
 ## Navegacao rapida
 - Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
 - Regras de negocio: [regras_negocio.md](./regras_negocio.md)
-- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Roadmap atual: [roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
+- Roadmap ciclo 01: [roadmap_ciclo_01.md](./ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md)
 - Progresso: [progresso.md](./progresso.md)
 - Contexto de transicao: [contexto_transicao.md](./contexto_transicao.md)
 
@@ -48,7 +49,7 @@
 - O Composer foi baixado localmente como `composer.phar`
 
 ## Conclusao de viabilidade
-A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refactor total do projeto.
+A [task_01_fundacao_arquitetura_composer_psr4.md](./ciclo_01_fundacao_arquitetura/task_01_fundacao_arquitetura_composer_psr4.md) era viavel e foi executada como fundacao arquitetural, nao como refactor total do projeto.
 
 ## Estrategia recomendada
 - Criar a nova base em paralelo ao legado
@@ -68,5 +69,5 @@ A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refa
 - Evoluir o modulo de veiculos por migracao incremental a partir do dominio novo
 - Consolidar a migracao de leitura e finalizar o alinhamento de persistencia com soft delete e banco real
 - Preservar a compatibilidade com Linux/WSL e com a publicacao via `public/`
-- Evoluir o ciclo 02 mantendo foco em frota municipal, sem desviar para transporte escolar
-- Executar o ciclo 03 priorizando consolidacao do cadastro de veiculos, soft delete e inteligencia operacional
+- Manter o WSL Ubuntu como ambiente principal e repetivel de desenvolvimento
+- Avancar o ciclo 04 priorizando painel executivo, governanca operacional, compliance e transparencia de dados nao pessoais

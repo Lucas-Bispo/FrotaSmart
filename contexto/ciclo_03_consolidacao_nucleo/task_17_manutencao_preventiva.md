@@ -10,7 +10,7 @@ Evoluir o modulo de manutencoes do historico reativo para a prevencao operaciona
 - indicadores no dashboard
 
 ## Referencia conceitual
-O `sete_ref` reforca o valor de previsao de manutencao, mas a implementacao aqui deve permanecer simples e em PHP puro.
+Referencias externas de maturidade funcional reforcam o valor de previsao de manutencao, mas a implementacao aqui deve permanecer simples e em PHP puro.
 
 ## Entrega realizada em 2026-04-05
 - schema de `manutencoes` expandido com `km_referencia`, `km_proxima_preventiva`, `data_proxima_preventiva`, `recorrencia_dias` e `recorrencia_km`

@@ -2,7 +2,8 @@
 
 ## Navegacao rapida
 - Progresso geral: [progresso.md](./progresso.md)
-- Roadmap: [roadmap_tasks.md](./tasks/roadmap_tasks.md)
+- Roadmap atual: [roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
+- Roadmap ciclo 01: [roadmap_ciclo_01.md](./ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md)
 - Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
 - Estado atual: [estado_projeto.md](./estado_projeto.md)
 
@@ -21,4 +22,3 @@ Nesse topico, liste:
 - manter o foco em compatibilidade com ambientes SysOps e DevOps
 - seguir estrutura de banco compativel com gestao publica, rastreabilidade e logs
 - atualizar o arquivo de indice de progresso apos grandes mudancas
-

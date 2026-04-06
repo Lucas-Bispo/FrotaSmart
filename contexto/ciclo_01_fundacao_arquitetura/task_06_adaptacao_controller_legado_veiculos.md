@@ -1,16 +1,16 @@
 # Task 06 - Adaptacao do controller legado
 
 ## Navegacao rapida
-- Roadmap: [roadmap_tasks.md](./roadmap_tasks.md)
+- Roadmap: [roadmap_ciclo_01.md](./roadmap_ciclo_01.md)
 - Progresso geral: [../progresso.md](../progresso.md)
 - Arquitetura: [../arquitetura_projeto.md](../arquitetura_projeto.md)
 - Estado atual: [../estado_projeto.md](../estado_projeto.md)
-- Task anterior: [task_05.md](./task_05.md)
-- Task seguinte: [task_07.md](./task_07.md)
+- Task anterior: [task_05_service_aplicacao_veiculos.md](./task_05_service_aplicacao_veiculos.md)
+- Task seguinte: [task_07_auditoria_minima_obrigatoria.md](./task_07_auditoria_minima_obrigatoria.md)
 
 ## Status
 - Estado atual: concluida
-- Dependencia anterior: [task_05.md](./task_05.md)
+- Dependencia anterior: [task_05_service_aplicacao_veiculos.md](./task_05_service_aplicacao_veiculos.md)
 
 ## Objetivo
 Adaptar `backend/controllers/VeiculoController.php` para consumir o novo service de aplicacao, reduzindo o acoplamento com model legado e afinando o controller.
