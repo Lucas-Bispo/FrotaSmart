@@ -7,6 +7,21 @@ require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 const FROTASMART_SESSION_IDLE_TIMEOUT = 900;
 const FROTASMART_SESSION_ROTATE_INTERVAL = 300;
 
+function frotasmart_runtime_path(string $suffix = ''): string
+{
+    $base = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'runtime';
+
+    if (! is_dir($base)) {
+        mkdir($base, 0777, true);
+    }
+
+    if ($suffix === '') {
+        return $base;
+    }
+
+    return $base . DIRECTORY_SEPARATOR . ltrim($suffix, DIRECTORY_SEPARATOR);
+}
+
 function apply_security_headers(): void
 {
     if (headers_sent() || is_cli_request()) {
@@ -40,6 +55,12 @@ function secure_session_start(): void
     ini_set('session.cookie_httponly', '1');
     ini_set('session.cookie_secure', $isHttps ? '1' : '0');
     ini_set('session.cookie_samesite', 'Lax');
+
+    $sessionPath = frotasmart_runtime_path('sessions');
+    if (! is_dir($sessionPath)) {
+        mkdir($sessionPath, 0777, true);
+    }
+    session_save_path($sessionPath);
 
     session_set_cookie_params([
         'lifetime' => 0,

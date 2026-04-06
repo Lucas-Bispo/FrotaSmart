@@ -6,6 +6,7 @@
 # Logs e arquivos de sistema
 *.log
 tmp/
+runtime/
 
 # Dependencias PHP
 vendor/
