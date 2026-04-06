@@ -91,10 +91,9 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
         ]);
     }
 
-    public function findByPlaca(Placa $placa): ?Veiculo
+    public function findByPlaca(Placa $placa, bool $includeArchived = false): ?Veiculo
     {
-        $statement = $this->connection->prepare(
-            'SELECT
+        $sql = 'SELECT
                 placa,
                 modelo,
                 status,
@@ -106,11 +105,19 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                 secretaria_lotada,
                 quilometragem_inicial,
                 data_aquisicao,
-                documentos_observacoes
+                documentos_observacoes,
+                deleted_at
              FROM veiculos
-             WHERE placa = :placa
-               AND deleted_at IS NULL
-             LIMIT 1'
+             WHERE placa = :placa';
+
+        if (! $includeArchived) {
+            $sql .= ' AND deleted_at IS NULL';
+        }
+
+        $sql .= ' LIMIT 1';
+
+        $statement = $this->connection->prepare(
+            $sql
         );
         $statement->execute([':placa' => $placa->value()]);
 
@@ -123,11 +130,17 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
         return $this->hydrateVeiculo($row);
     }
 
-    public function existsByPlaca(Placa $placa): bool
+    public function existsByPlaca(Placa $placa, bool $includeArchived = false): bool
     {
-        $statement = $this->connection->prepare(
-            'SELECT 1 FROM veiculos WHERE placa = :placa AND deleted_at IS NULL LIMIT 1'
-        );
+        $sql = 'SELECT 1 FROM veiculos WHERE placa = :placa';
+
+        if (! $includeArchived) {
+            $sql .= ' AND deleted_at IS NULL';
+        }
+
+        $sql .= ' LIMIT 1';
+
+        $statement = $this->connection->prepare($sql);
         $statement->execute([':placa' => $placa->value()]);
 
         return $statement->fetchColumn() !== false;
@@ -148,7 +161,8 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                 secretaria_lotada,
                 quilometragem_inicial,
                 data_aquisicao,
-                documentos_observacoes
+                documentos_observacoes,
+                deleted_at
              FROM veiculos
              WHERE deleted_at IS NULL
              ORDER BY placa ASC'
@@ -163,10 +177,50 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
         return $veiculos;
     }
 
+    public function findArchived(): array
+    {
+        $statement = $this->connection->query(
+            'SELECT
+                placa,
+                modelo,
+                status,
+                renavam,
+                chassi,
+                ano_fabricacao,
+                tipo,
+                combustivel,
+                secretaria_lotada,
+                quilometragem_inicial,
+                data_aquisicao,
+                documentos_observacoes,
+                deleted_at
+             FROM veiculos
+             WHERE deleted_at IS NOT NULL
+             ORDER BY deleted_at DESC, placa ASC'
+        );
+
+        $veiculos = [];
+
+        foreach ($statement->fetchAll() as $row) {
+            $veiculos[] = $this->hydrateVeiculo($row);
+        }
+
+        return $veiculos;
+    }
+
     public function removeByPlaca(Placa $placa): void
     {
         $statement = $this->connection->prepare(
-            'UPDATE veiculos SET deleted_at = CURRENT_TIMESTAMP WHERE placa = :placa'
+            'UPDATE veiculos SET deleted_at = CURRENT_TIMESTAMP WHERE placa = :placa AND deleted_at IS NULL'
+        );
+
+        $statement->execute([':placa' => $placa->value()]);
+    }
+
+    public function restoreByPlaca(Placa $placa): void
+    {
+        $statement = $this->connection->prepare(
+            'UPDATE veiculos SET deleted_at = NULL WHERE placa = :placa AND deleted_at IS NOT NULL'
         );
 
         $statement->execute([':placa' => $placa->value()]);
@@ -191,6 +245,7 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                 'quilometragem_inicial' => $row['quilometragem_inicial'] ?? 0,
                 'data_aquisicao' => $row['data_aquisicao'] ?? null,
                 'documentos_observacoes' => $row['documentos_observacoes'] ?? null,
+                'deleted_at' => $row['deleted_at'] ?? null,
             ]
         );
     }

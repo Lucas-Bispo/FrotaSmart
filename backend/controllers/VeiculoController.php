@@ -57,6 +57,8 @@ final class VeiculoController
             $result = match ($action) {
                 'add_veiculo' => $this->processAdd($_POST),
                 'update_veiculo' => $this->processUpdate($_POST),
+                'archive_veiculo' => $this->processArchive($_POST),
+                'restore_veiculo' => $this->processRestore($_POST),
                 'delete_veiculo' => $this->processDelete($_POST),
                 default => ['level' => 'error', 'message' => 'Acao de veiculo nao suportada.'],
             };
@@ -150,18 +152,27 @@ final class VeiculoController
      */
     public function processDelete(array $input): array
     {
+        return $this->processArchive($input);
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array{level:string,message:string}
+     */
+    public function processArchive(array $input): array
+    {
         $placa = (string) ($input['placa'] ?? '');
         $veiculo = $this->service->buscarPorPlaca($placa);
 
         if ($veiculo === null) {
-            throw new DomainException('Veiculo nao encontrado para remocao.');
+            throw new DomainException('Veiculo nao encontrado para arquivamento.');
         }
 
-        $this->service->remover($placa);
+        $this->service->arquivar($placa);
 
         $this->auditTrail->recordMutation(
-            'veiculo.deleted',
-            'delete',
+            'veiculo.archived',
+            'archive',
             'veiculo',
             $veiculo->placaFormatada(),
             [
@@ -172,7 +183,40 @@ final class VeiculoController
 
         return [
             'level' => 'success',
-            'message' => 'Veiculo excluido com sucesso.',
+            'message' => 'Veiculo arquivado com sucesso.',
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array{level:string,message:string}
+     */
+    public function processRestore(array $input): array
+    {
+        $placa = (string) ($input['placa'] ?? '');
+        $veiculo = $this->service->buscarPorPlaca($placa, true);
+
+        if ($veiculo === null || ! $veiculo->estaArquivado()) {
+            throw new DomainException('Veiculo arquivado nao encontrado para restauracao.');
+        }
+
+        $this->service->restaurar($placa);
+
+        $this->auditTrail->recordMutation(
+            'veiculo.restored',
+            'restore',
+            'veiculo',
+            $veiculo->placaFormatada(),
+            [
+                'placa' => $veiculo->placaFormatada(),
+                'status' => $veiculo->status(),
+                'arquivado_em' => $veiculo->arquivadoEm(),
+            ]
+        );
+
+        return [
+            'level' => 'success',
+            'message' => 'Veiculo restaurado com sucesso.',
         ];
     }
 

@@ -53,26 +53,80 @@ final class InMemoryVeiculoRepository implements VeiculoRepositoryInterface
         $this->items[$veiculo->placaFormatada()] = $veiculo;
     }
 
-    public function findByPlaca(Placa $placa): ?Veiculo
+    public function findByPlaca(Placa $placa, bool $includeArchived = false): ?Veiculo
     {
-        return $this->items[$placa->value()] ?? null;
+        $veiculo = $this->items[$placa->value()] ?? null;
+
+        if ($veiculo === null) {
+            return null;
+        }
+
+        if (! $includeArchived && $veiculo->estaArquivado()) {
+            return null;
+        }
+
+        return $veiculo;
     }
 
-    public function existsByPlaca(Placa $placa): bool
+    public function existsByPlaca(Placa $placa, bool $includeArchived = false): bool
     {
-        return isset($this->items[$placa->value()]);
+        return $this->findByPlaca($placa, $includeArchived) instanceof Veiculo;
     }
 
     public function findAll(): array
     {
-        ksort($this->items);
+        $items = array_filter(
+            $this->items,
+            static fn (Veiculo $veiculo): bool => ! $veiculo->estaArquivado()
+        );
 
-        return array_values($this->items);
+        ksort($items);
+
+        return array_values($items);
+    }
+
+    public function findArchived(): array
+    {
+        $items = array_filter(
+            $this->items,
+            static fn (Veiculo $veiculo): bool => $veiculo->estaArquivado()
+        );
+
+        ksort($items);
+
+        return array_values($items);
     }
 
     public function removeByPlaca(Placa $placa): void
     {
-        unset($this->items[$placa->value()]);
+        $veiculo = $this->items[$placa->value()] ?? null;
+
+        if ($veiculo === null) {
+            return;
+        }
+
+        $this->items[$placa->value()] = new Veiculo(
+            $veiculo->placa(),
+            $veiculo->modelo(),
+            $veiculo->status(),
+            array_merge($veiculo->detalhesCadastro(), ['deleted_at' => '2026-04-05 20:00:00'])
+        );
+    }
+
+    public function restoreByPlaca(Placa $placa): void
+    {
+        $veiculo = $this->items[$placa->value()] ?? null;
+
+        if ($veiculo === null) {
+            return;
+        }
+
+        $this->items[$placa->value()] = new Veiculo(
+            $veiculo->placa(),
+            $veiculo->modelo(),
+            $veiculo->status(),
+            array_merge($veiculo->detalhesCadastro(), ['deleted_at' => null])
+        );
     }
 }
 
@@ -121,13 +175,23 @@ expectException(
     'Atualizacao deveria falhar para placa inexistente.'
 );
 
-$service->remover('XYZ9K88');
+$service->arquivar('XYZ9K88');
 assertTrue($service->buscarPorPlaca('XYZ9K88') === null, 'Remocao deveria excluir o veiculo.');
+assertTrue($service->buscarPorPlaca('XYZ9K88', true)?->estaArquivado() === true, 'Veiculo arquivado deve continuar acessivel no historico.');
+$arquivados = $service->listarArquivados();
+assertTrue(count($arquivados) >= 1, 'Listagem de arquivados deve retornar registros arquivados.');
+assertTrue(
+    array_filter($arquivados, static fn (Veiculo $item): bool => $item->placaFormatada() === 'XYZ9K88') !== [],
+    'Listagem de arquivados deve incluir a placa arquivada.'
+);
+
+$service->restaurar('XYZ9K88');
+assertTrue($service->buscarPorPlaca('XYZ9K88') instanceof Veiculo, 'Restauracao deve devolver o veiculo para a listagem ativa.');
 
 expectException(
-    static fn () => $service->remover('XYZ9K88'),
+    static fn () => $service->restaurar('AAA1B23'),
     VeiculoNotFoundException::class,
-    'Remocao repetida deveria falhar.'
+    'Restauracao deveria falhar para placa inexistente.'
 );
 
 echo "Service de veiculos validado com sucesso." . PHP_EOL;

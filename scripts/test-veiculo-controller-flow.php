@@ -40,24 +40,72 @@ final class InMemoryVeiculoRepositoryForController implements VeiculoRepositoryI
         $this->items[$veiculo->placaFormatada()] = $veiculo;
     }
 
-    public function findByPlaca(Placa $placa): ?Veiculo
+    public function findByPlaca(Placa $placa, bool $includeArchived = false): ?Veiculo
     {
-        return $this->items[$placa->value()] ?? null;
+        $veiculo = $this->items[$placa->value()] ?? null;
+
+        if ($veiculo === null) {
+            return null;
+        }
+
+        if (! $includeArchived && $veiculo->estaArquivado()) {
+            return null;
+        }
+
+        return $veiculo;
     }
 
-    public function existsByPlaca(Placa $placa): bool
+    public function existsByPlaca(Placa $placa, bool $includeArchived = false): bool
     {
-        return isset($this->items[$placa->value()]);
+        return $this->findByPlaca($placa, $includeArchived) instanceof Veiculo;
     }
 
     public function findAll(): array
     {
-        return array_values($this->items);
+        return array_values(array_filter(
+            $this->items,
+            static fn (Veiculo $veiculo): bool => ! $veiculo->estaArquivado()
+        ));
     }
 
     public function removeByPlaca(Placa $placa): void
     {
-        unset($this->items[$placa->value()]);
+        $veiculo = $this->items[$placa->value()] ?? null;
+
+        if ($veiculo === null) {
+            return;
+        }
+
+        $this->items[$placa->value()] = new Veiculo(
+            $veiculo->placa(),
+            $veiculo->modelo(),
+            $veiculo->status(),
+            array_merge($veiculo->detalhesCadastro(), ['deleted_at' => '2026-04-05 20:05:00'])
+        );
+    }
+
+    public function findArchived(): array
+    {
+        return array_values(array_filter(
+            $this->items,
+            static fn (Veiculo $veiculo): bool => $veiculo->estaArquivado()
+        ));
+    }
+
+    public function restoreByPlaca(Placa $placa): void
+    {
+        $veiculo = $this->items[$placa->value()] ?? null;
+
+        if ($veiculo === null) {
+            return;
+        }
+
+        $this->items[$placa->value()] = new Veiculo(
+            $veiculo->placa(),
+            $veiculo->modelo(),
+            $veiculo->status(),
+            array_merge($veiculo->detalhesCadastro(), ['deleted_at' => null])
+        );
     }
 }
 
@@ -119,15 +167,24 @@ $resultadoUpdate = $controller->processUpdate([
 
 assertTrue($resultadoUpdate['level'] === 'success', 'Atualizacao deveria retornar sucesso.');
 
-$resultadoDelete = $controller->processDelete([
+$resultadoDelete = $controller->processArchive([
     'placa' => 'DEF1G23',
 ]);
 
-assertTrue($resultadoDelete['level'] === 'success', 'Remocao deveria retornar sucesso.');
-assertTrue(count($auditLogger->entries) === 3, 'Controller deveria registrar auditoria para tres operacoes.');
+assertTrue($resultadoDelete['level'] === 'success', 'Arquivamento deveria retornar sucesso.');
+
+$resultadoRestore = $controller->processRestore([
+    'placa' => 'DEF1G23',
+]);
+
+assertTrue($resultadoRestore['level'] === 'success', 'Restauracao deveria retornar sucesso.');
+assertTrue(count($auditLogger->entries) === 4, 'Controller deveria registrar auditoria para quatro operacoes.');
 
 $ultimoEvento = $auditLogger->entries[2]->toArray();
-assertTrue($ultimoEvento['event'] === 'veiculo.deleted', 'Remocao deveria gerar evento de exclusao.');
+assertTrue($ultimoEvento['event'] === 'veiculo.archived', 'Arquivamento deveria gerar evento dedicado.');
 assertTrue($ultimoEvento['actor'] === 'gerente_frota', 'Auditoria deveria preservar o ator do contexto.');
+
+$eventoRestauracao = $auditLogger->entries[3]->toArray();
+assertTrue($eventoRestauracao['event'] === 'veiculo.restored', 'Restauracao deveria gerar evento dedicado.');
 
 echo "Fluxo do controller de veiculos validado com sucesso." . PHP_EOL;

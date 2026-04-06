@@ -113,6 +113,14 @@ try {
 
     $repository->removeByPlaca($placa);
     assertTrue(! $repository->existsByPlaca($placa), 'Veiculo removido nao deveria continuar visivel.');
+    assertTrue($repository->existsByPlaca($placa, true), 'Veiculo arquivado deve continuar existindo no historico.');
+    assertTrue(count($repository->findArchived()) >= 1, 'Repositorio deveria listar veiculos arquivados.');
+
+    $veiculoArquivado = $repository->findByPlaca($placa, true);
+    assertTrue($veiculoArquivado instanceof Veiculo && $veiculoArquivado->estaArquivado(), 'Busca expandida deve hidratar veiculo arquivado.');
+
+    $repository->restoreByPlaca($placa);
+    assertTrue($repository->existsByPlaca($placa), 'Veiculo restaurado deve voltar a ficar visivel.');
 
     echo "Repositorio PDO validado com sucesso." . PHP_EOL;
 } catch (Throwable $throwable) {

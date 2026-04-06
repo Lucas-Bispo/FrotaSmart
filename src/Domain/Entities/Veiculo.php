@@ -34,6 +34,7 @@ final class Veiculo
     private int $quilometragemInicial;
     private ?string $dataAquisicao;
     private ?string $documentosObservacoes;
+    private ?string $arquivadoEm;
 
     public function __construct(
         Placa|string $placa,
@@ -57,6 +58,7 @@ final class Veiculo
             1000,
             'Documentos e observacoes'
         );
+        $this->arquivadoEm = $this->normalizeOptionalDateTime($dados['deleted_at'] ?? $dados['arquivado_em'] ?? null);
     }
 
     public function placa(): Placa
@@ -124,6 +126,16 @@ final class Veiculo
         return $this->documentosObservacoes;
     }
 
+    public function arquivadoEm(): ?string
+    {
+        return $this->arquivadoEm;
+    }
+
+    public function estaArquivado(): bool
+    {
+        return $this->arquivadoEm !== null;
+    }
+
     public function reservar(): void
     {
         $this->transitionTo(self::STATUS_RESERVADO, [self::STATUS_DISPONIVEL]);
@@ -188,6 +200,7 @@ final class Veiculo
             'quilometragem_inicial' => $this->quilometragemInicial,
             'data_aquisicao' => $this->dataAquisicao,
             'documentos_observacoes' => $this->documentosObservacoes,
+            'deleted_at' => $this->arquivadoEm,
         ];
     }
 
@@ -331,5 +344,26 @@ final class Veiculo
         }
 
         return $date;
+    }
+
+    private function normalizeOptionalDateTime(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $dateTime = trim((string) $value);
+
+        if ($dateTime === '') {
+            return null;
+        }
+
+        $parsed = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $dateTime);
+
+        if (! $parsed instanceof \DateTimeImmutable || $parsed->format('Y-m-d H:i:s') !== $dateTime) {
+            throw new DomainException('Data de arquivamento invalida.');
+        }
+
+        return $dateTime;
     }
 }

@@ -24,7 +24,7 @@ final class VeiculoService
     {
         $veiculo = new Veiculo($placa, $modelo, $status, $dadosCadastro);
 
-        if ($this->repository->existsByPlaca($veiculo->placa())) {
+        if ($this->repository->existsByPlaca($veiculo->placa(), true)) {
             throw VeiculoAlreadyExistsException::forPlaca($veiculo->placaFormatada());
         }
 
@@ -50,7 +50,7 @@ final class VeiculoService
         $veiculoAtualizado = new Veiculo($novaPlaca, $modelo, $status, $dadosCadastro);
         $placaFoiAlterada = ! $placaAtualVo->equals($veiculoAtualizado->placa());
 
-        if ($placaFoiAlterada && $this->repository->existsByPlaca($veiculoAtualizado->placa())) {
+        if ($placaFoiAlterada && $this->repository->existsByPlaca($veiculoAtualizado->placa(), true)) {
             throw VeiculoAlreadyExistsException::forPlaca($veiculoAtualizado->placaFormatada());
         }
 
@@ -63,9 +63,9 @@ final class VeiculoService
         return $veiculoAtualizado;
     }
 
-    public function buscarPorPlaca(string $placa): ?Veiculo
+    public function buscarPorPlaca(string $placa, bool $includeArchived = false): ?Veiculo
     {
-        return $this->repository->findByPlaca(new Placa($placa));
+        return $this->repository->findByPlaca(new Placa($placa), $includeArchived);
     }
 
     /**
@@ -76,7 +76,15 @@ final class VeiculoService
         return $this->repository->findAll();
     }
 
-    public function remover(string $placa): void
+    /**
+     * @return list<Veiculo>
+     */
+    public function listarArquivados(): array
+    {
+        return $this->repository->findArchived();
+    }
+
+    public function arquivar(string $placa): void
     {
         $placaVo = new Placa($placa);
 
@@ -85,5 +93,22 @@ final class VeiculoService
         }
 
         $this->repository->removeByPlaca($placaVo);
+    }
+
+    public function restaurar(string $placa): void
+    {
+        $placaVo = new Placa($placa);
+        $veiculo = $this->repository->findByPlaca($placaVo, true);
+
+        if ($veiculo === null || ! $veiculo->estaArquivado()) {
+            throw VeiculoNotFoundException::forPlaca($placaVo->value());
+        }
+
+        $this->repository->restoreByPlaca($placaVo);
+    }
+
+    public function remover(string $placa): void
+    {
+        $this->arquivar($placa);
     }
 }
