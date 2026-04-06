@@ -148,6 +148,14 @@ Se o banco estiver corretamente configurado, voce tambem pode rodar:
 
 ```bash
 php scripts/test-repository-pdo.php
+php scripts/test-operacao-frota-guard.php
+php scripts/test-wsl-stack.php
+```
+
+Ou, se preferir pelo Composer:
+
+```bash
+php composer.phar run test:wsl-stack
 ```
 
 ## 9. Subir a aplicacao localmente
@@ -222,5 +230,6 @@ cp .env.example .env
 composer install
 php scripts/bootstrap-db.php
 php scripts/test-domain.php
+php scripts/test-wsl-stack.php
 php -S 0.0.0.0:8000 -t public
 ```

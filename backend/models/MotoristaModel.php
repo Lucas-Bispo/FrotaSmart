@@ -42,6 +42,28 @@ final class MotoristaModel
         return $motorista !== false ? $motorista : null;
     }
 
+    public function countCnhsVencendo(int $days = 30): int
+    {
+        global $pdo;
+
+        $today = new DateTimeImmutable('today');
+        $limit = $today->modify('+' . max(1, $days) . ' days');
+
+        $stmt = $pdo->prepare(
+            'SELECT COUNT(*)
+             FROM motoristas
+             WHERE status = :status
+               AND cnh_vencimento BETWEEN :inicio AND :fim'
+        );
+        $stmt->execute([
+            ':status' => 'ativo',
+            ':inicio' => $today->format('Y-m-d'),
+            ':fim' => $limit->format('Y-m-d'),
+        ]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     /**
      * @param array<string, mixed> $data
      */

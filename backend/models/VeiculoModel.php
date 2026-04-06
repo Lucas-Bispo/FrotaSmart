@@ -6,6 +6,26 @@ require_once __DIR__ . '/../config/db.php';
 
 final class VeiculoModel
 {
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function findById(int $id): ?array
+    {
+        global $pdo;
+
+        $stmt = $pdo->prepare(
+            'SELECT *
+             FROM veiculos
+             WHERE id = ?
+             LIMIT 1'
+        );
+        $stmt->execute([$id]);
+
+        $veiculo = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $veiculo !== false ? $veiculo : null;
+    }
+
     public function addVeiculo(
         string $placa,
         string $modelo,
@@ -60,15 +80,26 @@ final class VeiculoModel
     /**
      * @return list<array<string, mixed>>
      */
-    public function getAllVeiculos(): array
+    public function getAllVeiculos(string $filtro = 'ativos'): array
     {
         global $pdo;
+
+        $where = match ($filtro) {
+            'arquivados' => 'deleted_at IS NOT NULL',
+            'todos' => '1 = 1',
+            default => 'deleted_at IS NULL',
+        };
 
         $stmt = $pdo->query(
             'SELECT *
              FROM veiculos
-             WHERE deleted_at IS NULL
+             WHERE ' . $where . '
              ORDER BY
+                CASE
+                    WHEN deleted_at IS NULL THEN 0
+                    ELSE 1
+                END,
+                deleted_at DESC,
                 CASE
                     WHEN status IN ("ativo", "disponivel", "em_viagem", "reservado") THEN 0
                     WHEN status IN ("manutencao", "em_manutencao") THEN 1
@@ -79,6 +110,15 @@ final class VeiculoModel
         );
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function countArquivados(): int
+    {
+        global $pdo;
+
+        $stmt = $pdo->query('SELECT COUNT(*) FROM veiculos WHERE deleted_at IS NOT NULL');
+
+        return (int) $stmt->fetchColumn();
     }
 
     public function updateVeiculo(
@@ -140,6 +180,16 @@ final class VeiculoModel
         global $pdo;
 
         $stmt = $pdo->prepare('UPDATE veiculos SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL');
+        $stmt->execute([$id]);
+
+        return $stmt->rowCount();
+    }
+
+    public function restoreVeiculo(int $id): int
+    {
+        global $pdo;
+
+        $stmt = $pdo->prepare('UPDATE veiculos SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL');
         $stmt->execute([$id]);
 
         return $stmt->rowCount();

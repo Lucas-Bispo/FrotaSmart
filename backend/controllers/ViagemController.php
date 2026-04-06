@@ -3,16 +3,19 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config/security.php';
+require_once __DIR__ . '/../models/OperacaoFrotaGuard.php';
 require_once __DIR__ . '/../models/ViagemModel.php';
 
 final class ViagemController
 {
     private ViagemModel $model;
+    private OperacaoFrotaGuard $guard;
 
     public function __construct()
     {
         secure_session_start();
         $this->model = new ViagemModel();
+        $this->guard = new OperacaoFrotaGuard();
     }
 
     public function handle(): void
@@ -44,6 +47,7 @@ final class ViagemController
     private function create(): void
     {
         $payload = $this->validatedPayload();
+        $warnings = $this->assertOperationalRules($payload, 'viagem.created_blocked');
         $id = $this->model->create($payload);
 
         audit_log('viagem.created', [
@@ -54,7 +58,7 @@ final class ViagemController
             'status' => $payload['status'],
         ]);
 
-        $this->flashAndRedirect('success', 'Viagem registrada com sucesso.');
+        $this->flashAndRedirect('success', $this->buildSuccessMessage('Viagem registrada com sucesso.', $warnings));
     }
 
     private function update(): void
@@ -65,6 +69,7 @@ final class ViagemController
         }
 
         $payload = $this->validatedPayload();
+        $warnings = $this->assertOperationalRules($payload, 'viagem.updated_blocked');
         $this->model->update($id, $payload);
 
         audit_log('viagem.updated', [
@@ -75,7 +80,7 @@ final class ViagemController
             'status' => $payload['status'],
         ]);
 
-        $this->flashAndRedirect('success', 'Viagem atualizada com sucesso.');
+        $this->flashAndRedirect('success', $this->buildSuccessMessage('Viagem atualizada com sucesso.', $warnings));
     }
 
     private function validatedPayload(): array
@@ -149,6 +154,44 @@ final class ViagemController
             'status' => $status,
             'observacoes' => $observacoes !== '' ? $observacoes : null,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return list<string>
+     */
+    private function assertOperationalRules(array $payload, string $auditEvent): array
+    {
+        $analysis = $this->guard->analyzeTrip(
+            (int) $payload['veiculo_id'],
+            (int) $payload['motorista_id'],
+            (string) $payload['data_saida'],
+            (int) $payload['km_saida']
+        );
+
+        if ($analysis['blocked'] !== []) {
+            audit_log($auditEvent, [
+                'veiculo_id' => $payload['veiculo_id'],
+                'motorista_id' => $payload['motorista_id'],
+                'blocked_reasons' => $analysis['blocked'],
+            ]);
+
+            $this->flashAndRedirect('error', implode(' ', $analysis['blocked']));
+        }
+
+        return $analysis['warnings'];
+    }
+
+    /**
+     * @param list<string> $warnings
+     */
+    private function buildSuccessMessage(string $base, array $warnings): string
+    {
+        if ($warnings === []) {
+            return $base;
+        }
+
+        return $base . ' Alertas: ' . implode(' ', array_slice($warnings, 0, 3));
     }
 
     private function isValidDateTime(string $value): bool

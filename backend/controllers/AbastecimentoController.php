@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../models/AbastecimentoModel.php';
+require_once __DIR__ . '/../models/OperacaoFrotaGuard.php';
 
 final class AbastecimentoController
 {
     private AbastecimentoModel $model;
+    private OperacaoFrotaGuard $guard;
 
     public function __construct()
     {
         secure_session_start();
         $this->model = new AbastecimentoModel();
+        $this->guard = new OperacaoFrotaGuard();
     }
 
     public function handle(): void
@@ -44,6 +47,7 @@ final class AbastecimentoController
     private function create(): void
     {
         $payload = $this->validatedPayload();
+        $warnings = $this->assertOperationalRules($payload, 'abastecimento.created_blocked');
         $id = $this->model->create($payload);
 
         audit_log('abastecimento.created', [
@@ -54,7 +58,7 @@ final class AbastecimentoController
             'valor_total' => $payload['valor_total'],
         ]);
 
-        $this->flashAndRedirect('success', 'Abastecimento registrado com sucesso.');
+        $this->flashAndRedirect('success', $this->buildSuccessMessage('Abastecimento registrado com sucesso.', $warnings));
     }
 
     private function update(): void
@@ -65,6 +69,7 @@ final class AbastecimentoController
         }
 
         $payload = $this->validatedPayload();
+        $warnings = $this->assertOperationalRules($payload, 'abastecimento.updated_blocked');
         $this->model->update($id, $payload);
 
         audit_log('abastecimento.updated', [
@@ -75,7 +80,7 @@ final class AbastecimentoController
             'valor_total' => $payload['valor_total'],
         ]);
 
-        $this->flashAndRedirect('success', 'Abastecimento atualizado com sucesso.');
+        $this->flashAndRedirect('success', $this->buildSuccessMessage('Abastecimento atualizado com sucesso.', $warnings));
     }
 
     private function validatedPayload(): array
@@ -138,6 +143,44 @@ final class AbastecimentoController
             'km_atual' => $kmAtualNormalizado,
             'observacoes' => $observacoes !== '' ? $observacoes : null,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return list<string>
+     */
+    private function assertOperationalRules(array $payload, string $auditEvent): array
+    {
+        $analysis = $this->guard->analyzeFuel(
+            (int) $payload['veiculo_id'],
+            (int) $payload['motorista_id'],
+            (string) $payload['data_abastecimento'],
+            (int) $payload['km_atual']
+        );
+
+        if ($analysis['blocked'] !== []) {
+            audit_log($auditEvent, [
+                'veiculo_id' => $payload['veiculo_id'],
+                'motorista_id' => $payload['motorista_id'],
+                'blocked_reasons' => $analysis['blocked'],
+            ]);
+
+            $this->flashAndRedirect('error', implode(' ', $analysis['blocked']));
+        }
+
+        return $analysis['warnings'];
+    }
+
+    /**
+     * @param list<string> $warnings
+     */
+    private function buildSuccessMessage(string $base, array $warnings): string
+    {
+        if ($warnings === []) {
+            return $base;
+        }
+
+        return $base . ' Alertas: ' . implode(' ', array_slice($warnings, 0, 3));
     }
 
     private function isValidDate(string $date): bool
