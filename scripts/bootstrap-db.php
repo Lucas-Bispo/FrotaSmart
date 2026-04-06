@@ -276,6 +276,21 @@ try {
     if (!table_has_column($pdo, 'manutencoes', 'observacoes')) {
         $pdo->exec("ALTER TABLE manutencoes ADD COLUMN observacoes TEXT NULL AFTER descricao");
     }
+    if (!table_has_column($pdo, 'manutencoes', 'km_referencia')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN km_referencia INT NULL AFTER data_conclusao");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'km_proxima_preventiva')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN km_proxima_preventiva INT NULL AFTER km_referencia");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'data_proxima_preventiva')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN data_proxima_preventiva DATE NULL AFTER km_proxima_preventiva");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'recorrencia_dias')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN recorrencia_dias INT NULL AFTER data_proxima_preventiva");
+    }
+    if (!table_has_column($pdo, 'manutencoes', 'recorrencia_km')) {
+        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN recorrencia_km INT NULL AFTER recorrencia_dias");
+    }
 
     if (table_has_column($pdo, 'manutencoes', 'data')) {
         $pdo->exec("UPDATE manutencoes SET data_abertura = COALESCE(data_abertura, data)");

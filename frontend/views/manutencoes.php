@@ -20,6 +20,7 @@ $parceiroModel = new ParceiroOperacionalModel();
 $veiculoModel = new VeiculoModel();
 
 $manutencoes = $manutencaoModel->getAll();
+$alertasPreventivos = $manutencaoModel->getPreventiveAlerts();
 $parceirosOficina = $parceiroModel->getActiveByTipos(['oficina', 'fornecedor_pecas', 'prestador_servico']);
 $veiculos = $veiculoModel->getAllVeiculos();
 $canManage = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);
@@ -31,6 +32,8 @@ $editingManutencao = $editingId > 0 && $canManage ? $manutencaoModel->findById($
 $abertas = 0;
 $concluidas = 0;
 $emAndamento = 0;
+$preventivasVencidas = 0;
+$preventivasProximas = 0;
 
 foreach ($manutencoes as $manutencao) {
     if (($manutencao['status'] ?? '') === 'aberta') {
@@ -41,6 +44,15 @@ foreach ($manutencoes as $manutencao) {
     }
     if (($manutencao['status'] ?? '') === 'concluida') {
         $concluidas++;
+    }
+}
+
+foreach ($alertasPreventivos as $alertaPreventivo) {
+    if (($alertaPreventivo['preventiva_alerta_status'] ?? '') === 'vencida') {
+        $preventivasVencidas++;
+    }
+    if (($alertaPreventivo['preventiva_alerta_status'] ?? '') === 'proxima') {
+        $preventivasProximas++;
     }
 }
 
@@ -70,7 +82,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 <?php endif; ?>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 mb-10">
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <p class="text-sm font-medium text-slate-500 uppercase">Abertas</p>
         <p class="text-3xl font-bold text-amber-600 mt-2"><?php echo $abertas; ?></p>
@@ -83,15 +95,43 @@ require_once __DIR__ . '/../includes/header.php';
         <p class="text-sm font-medium text-slate-500 uppercase">Concluidas</p>
         <p class="text-3xl font-bold text-emerald-600 mt-2"><?php echo $concluidas; ?></p>
     </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Preventivas vencidas</p>
+        <p class="text-3xl font-bold text-rose-600 mt-2"><?php echo $preventivasVencidas; ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Preventivas proximas</p>
+        <p class="text-3xl font-bold text-amber-600 mt-2"><?php echo $preventivasProximas; ?></p>
+    </div>
 </div>
 
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
     <div class="xl:col-span-1">
+        <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-sm border border-slate-800 mb-8">
+            <h2 class="text-lg font-semibold mb-2">Painel preventivo</h2>
+            <p class="text-sm text-slate-300 mb-4">Leitura rapida do que ja venceu ou esta proximo por km e por data.</p>
+
+            <?php if ($alertasPreventivos === []): ?>
+                <div class="rounded-2xl border border-emerald-700 bg-emerald-500/10 px-4 py-3 text-emerald-200 text-sm">
+                    Nenhuma preventiva critica no momento.
+                </div>
+            <?php else: ?>
+                <div class="space-y-3">
+                    <?php foreach (array_slice($alertasPreventivos, 0, 5) as $alerta): ?>
+                        <div class="rounded-2xl border px-4 py-3 text-sm <?php echo ($alerta['preventiva_alerta_status'] ?? '') === 'vencida' ? 'border-rose-700 bg-rose-500/10 text-rose-100' : 'border-amber-700 bg-amber-500/10 text-amber-100'; ?>">
+                            <div class="font-semibold"><?php echo htmlspecialchars((string) $alerta['placa'] . ' - ' . (string) $alerta['modelo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                            <div class="text-xs mt-1"><?php echo htmlspecialchars((string) ($alerta['preventiva_alerta_resumo'] ?? 'Sem resumo'), ENT_QUOTES, 'UTF-8'); ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <h2 class="text-lg font-semibold mb-2 text-slate-700">
                 <?php echo $editingManutencao ? 'Editar manutencao' : 'Nova manutencao'; ?>
             </h2>
-            <p class="text-sm text-slate-500 mb-5">Cada registro preserva historico, custos e situacao da intervencao no veiculo.</p>
+            <p class="text-sm text-slate-500 mb-5">Cada registro preserva historico, custos, situacao da intervencao e planejamento preventivo futuro.</p>
 
             <?php if ($canManage): ?>
                 <form method="POST" action="/manutencoes.php" class="space-y-4">
@@ -144,6 +184,40 @@ require_once __DIR__ . '/../includes/header.php';
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-1">Data de conclusao</label>
                             <input type="date" name="data_conclusao" value="<?php echo htmlspecialchars((string) ($editingManutencao['data_conclusao'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-700">Plano preventivo</h3>
+                            <p class="text-xs text-slate-500 mt-1">Use para programar proxima revisao por km, por data ou por recorrencia.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">KM de referencia</label>
+                                <input type="number" name="km_referencia" min="0" value="<?php echo htmlspecialchars((string) ($editingManutencao['km_referencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Proxima preventiva por km</label>
+                                <input type="number" name="km_proxima_preventiva" min="0" value="<?php echo htmlspecialchars((string) ($editingManutencao['km_proxima_preventiva'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Proxima preventiva por data</label>
+                                <input type="date" name="data_proxima_preventiva" value="<?php echo htmlspecialchars((string) ($editingManutencao['data_proxima_preventiva'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Recorrencia em dias</label>
+                                <input type="number" name="recorrencia_dias" min="0" value="<?php echo htmlspecialchars((string) ($editingManutencao['recorrencia_dias'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Recorrencia em km</label>
+                            <input type="number" name="recorrencia_km" min="0" value="<?php echo htmlspecialchars((string) ($editingManutencao['recorrencia_km'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
                     </div>
 
@@ -215,6 +289,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Tipo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Plano preventivo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Fornecedor</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Custos</th>
@@ -224,7 +299,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <tbody class="divide-y divide-slate-200">
                         <?php if (empty($manutencoes)): ?>
                             <tr>
-                                <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">Nenhuma manutencao registrada ate o momento.</td>
+                                <td colspan="7" class="px-6 py-8 text-center text-sm text-slate-500">Nenhuma manutencao registrada ate o momento.</td>
                             </tr>
                         <?php endif; ?>
 
@@ -235,6 +310,12 @@ require_once __DIR__ . '/../includes/header.php';
                                 'em_andamento' => 'bg-blue-100 text-blue-800',
                                 'concluida' => 'bg-emerald-100 text-emerald-800',
                                 default => 'bg-slate-200 text-slate-700',
+                            };
+                            $preventivaBadgeClass = match ((string) ($manutencao['preventiva_alerta_status'] ?? 'sem_plano')) {
+                                'vencida' => 'bg-rose-100 text-rose-800',
+                                'proxima' => 'bg-amber-100 text-amber-800',
+                                'em_dia' => 'bg-emerald-100 text-emerald-800',
+                                default => 'bg-slate-100 text-slate-600',
                             };
                             ?>
                             <tr class="hover:bg-slate-50 transition align-top">
@@ -251,6 +332,17 @@ require_once __DIR__ . '/../includes/header.php';
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-slate-800"><?php echo htmlspecialchars(ucfirst((string) $manutencao['tipo']), ENT_QUOTES, 'UTF-8'); ?></div>
                                     <div class="text-xs text-slate-500 mt-1 max-w-xs"><?php echo htmlspecialchars((string) $manutencao['descricao'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-700">
+                                    <?php if (($manutencao['tipo'] ?? '') === 'preventiva'): ?>
+                                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $preventivaBadgeClass; ?>">
+                                            <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', (string) ($manutencao['preventiva_alerta_status'] ?? 'sem_plano'))), ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                        <div class="text-xs text-slate-500 mt-2 max-w-xs"><?php echo htmlspecialchars((string) ($manutencao['preventiva_alerta_resumo'] ?? 'Sem resumo'), ENT_QUOTES, 'UTF-8'); ?></div>
+                                        <div class="text-xs text-slate-400 mt-1">KM atual: <?php echo number_format((float) ($manutencao['km_atual_veiculo'] ?? 0), 0, ',', '.'); ?></div>
+                                    <?php else: ?>
+                                        <span class="text-xs text-slate-400">Nao se aplica</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-slate-700">
                                     <div><?php echo htmlspecialchars((string) ($manutencao['parceiro_nome'] ?? $manutencao['fornecedor'] ?? 'Nao informado'), ENT_QUOTES, 'UTF-8'); ?></div>

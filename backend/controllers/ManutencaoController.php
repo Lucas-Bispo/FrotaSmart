@@ -89,6 +89,11 @@ final class ManutencaoController
         $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
         $custoEstimado = trim((string) ($_POST['custo_estimado'] ?? '0'));
         $custoFinal = trim((string) ($_POST['custo_final'] ?? '0'));
+        $kmReferencia = trim((string) ($_POST['km_referencia'] ?? ''));
+        $kmProximaPreventiva = trim((string) ($_POST['km_proxima_preventiva'] ?? ''));
+        $dataProximaPreventiva = trim((string) ($_POST['data_proxima_preventiva'] ?? ''));
+        $recorrenciaDias = trim((string) ($_POST['recorrencia_dias'] ?? ''));
+        $recorrenciaKm = trim((string) ($_POST['recorrencia_km'] ?? ''));
 
         if ($veiculoId <= 0) {
             $this->flashAndRedirect('error', 'Selecione um veiculo valido.');
@@ -108,6 +113,25 @@ final class ManutencaoController
         if ($descricao === '') {
             $this->flashAndRedirect('error', 'Descreva o motivo ou defeito da manutencao.');
         }
+        if ($dataProximaPreventiva !== '' && !$this->isValidDate($dataProximaPreventiva)) {
+            $this->flashAndRedirect('error', 'Informe uma data valida para a proxima preventiva.');
+        }
+
+        $kmReferenciaNormalizado = $this->normalizeOptionalInteger($kmReferencia);
+        $kmProximaNormalizado = $this->normalizeOptionalInteger($kmProximaPreventiva);
+        $recorrenciaDiasNormalizada = $this->normalizeOptionalInteger($recorrenciaDias);
+        $recorrenciaKmNormalizada = $this->normalizeOptionalInteger($recorrenciaKm);
+
+        if ($tipo === 'preventiva') {
+            $temPlanoPreventivo = $kmProximaNormalizado !== null
+                || $dataProximaPreventiva !== ''
+                || $recorrenciaDiasNormalizada !== null
+                || $recorrenciaKmNormalizada !== null;
+
+            if (! $temPlanoPreventivo) {
+                $this->flashAndRedirect('error', 'Preventivas exigem ao menos uma regra por km, data ou recorrencia.');
+            }
+        }
 
         return [
             'veiculo_id' => $veiculoId,
@@ -115,6 +139,11 @@ final class ManutencaoController
             'status' => $status,
             'data_abertura' => $dataAbertura,
             'data_conclusao' => $dataConclusao !== '' ? $dataConclusao : null,
+            'km_referencia' => $kmReferenciaNormalizado,
+            'km_proxima_preventiva' => $kmProximaNormalizado,
+            'data_proxima_preventiva' => $dataProximaPreventiva !== '' ? $dataProximaPreventiva : null,
+            'recorrencia_dias' => $recorrenciaDiasNormalizada,
+            'recorrencia_km' => $recorrenciaKmNormalizada,
             'parceiro_id' => $parceiroId > 0 ? $parceiroId : null,
             'fornecedor' => $fornecedor !== '' ? $fornecedor : null,
             'custo_estimado' => $this->normalizeDecimal($custoEstimado),
@@ -138,6 +167,19 @@ final class ManutencaoController
         }
 
         return (float) $normalized;
+    }
+
+    private function normalizeOptionalInteger(string $value): ?int
+    {
+        if ($value === '') {
+            return null;
+        }
+
+        if (!ctype_digit($value)) {
+            $this->flashAndRedirect('error', 'Campos de km e recorrencia devem conter apenas numeros inteiros.');
+        }
+
+        return (int) $value;
     }
 
     private function assertCanManage(): void
