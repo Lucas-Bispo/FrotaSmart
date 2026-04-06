@@ -26,6 +26,8 @@ $filtroInicio = trim((string) ($_GET['data_inicio'] ?? ''));
 $filtroFim = trim((string) ($_GET['data_fim'] ?? ''));
 
 $abastecimentos = $abastecimentoModel->getAll($filtroVeiculoId, $filtroInicio !== '' ? $filtroInicio : null, $filtroFim !== '' ? $filtroFim : null);
+$consumoResumo = $abastecimentoModel->getConsumptionSummary($filtroInicio !== '' ? $filtroInicio : null, $filtroFim !== '' ? $filtroFim : null);
+$rankingEficiencia = $abastecimentoModel->getVehicleEfficiencyRanking(5, $filtroInicio !== '' ? $filtroInicio : null, $filtroFim !== '' ? $filtroFim : null);
 $parceirosPosto = $parceiroModel->getActiveByTipos(['posto_combustivel', 'prestador_servico']);
 $veiculos = $veiculoModel->getAllVeiculos();
 $motoristas = $motoristaModel->getAllMotoristas();
@@ -51,6 +53,7 @@ foreach ($abastecimentos as $abastecimento) {
 
 $ticketMedio = $totalRegistros > 0 ? $totalValor / $totalRegistros : 0.0;
 $consumoMedioPreparado = $totalLitros > 0 && $maiorKm > 0;
+$consumoMedioReal = (float) ($consumoResumo['media_consumo_km_l'] ?? 0.0);
 
 $pageTitle = 'Abastecimentos';
 require_once __DIR__ . '/../includes/header.php';
@@ -78,7 +81,7 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 <?php endif; ?>
 
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-6 mb-10">
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <p class="text-sm font-medium text-slate-500 uppercase">Registros filtrados</p>
         <p class="text-3xl font-bold text-slate-800 mt-2"><?php echo $totalRegistros; ?></p>
@@ -94,6 +97,14 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <p class="text-sm font-medium text-slate-500 uppercase">Ticket medio</p>
         <p class="text-3xl font-bold text-amber-600 mt-2">R$ <?php echo number_format($ticketMedio, 2, ',', '.'); ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Consumo medio</p>
+        <p class="text-3xl font-bold text-cyan-700 mt-2"><?php echo $consumoMedioReal > 0 ? number_format($consumoMedioReal, 2, ',', '.') . ' km/L' : '--'; ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Alertas de anomalia</p>
+        <p class="text-3xl font-bold text-rose-600 mt-2"><?php echo (int) ($consumoResumo['total_alertas'] ?? 0); ?></p>
     </div>
 </div>
 
@@ -215,16 +226,64 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-sm border border-slate-800">
             <h2 class="text-lg font-semibold mb-3">Leitura gerencial</h2>
-            <p class="text-sm text-slate-300">O modulo ja deixa pronta a base para cruzar abastecimento, km e motorista em dashboards futuros.</p>
+            <p class="text-sm text-slate-300">A tela agora cruza km, litros e valor para apoiar leitura automatica de eficiencia e suspeitas.</p>
             <ul class="mt-4 space-y-2 text-sm text-slate-200">
-                <li>Consumo medio: <?php echo $consumoMedioPreparado ? 'dados ja capturados para calculo futuro' : 'aguardando mais historico de km'; ?></li>
+                <li>Consumo medio: <?php echo $consumoMedioReal > 0 ? number_format($consumoMedioReal, 2, ',', '.') . ' km/L' : ($consumoMedioPreparado ? 'aguardando intervalos validos de km' : 'aguardando mais historico de km'); ?></li>
                 <li>Gasto por secretaria: preparado via vinculo com motorista e secretaria</li>
-                <li>Deteccao de anomalias: pronta para evoluir com comparacao entre abastecimentos</li>
+                <li>Deteccao de anomalias: <?php echo (int) ($consumoResumo['total_alertas'] ?? 0); ?> registro(s) com atencao automatica</li>
             </ul>
         </div>
     </div>
 
     <div class="xl:col-span-2 space-y-8">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-semibold text-slate-700">Alertas de abastecimento</h2>
+                <p class="text-sm text-slate-500 mt-1 mb-4">Leitura automatica por variacao de km, litros, valor e consumo.</p>
+
+                <?php if (($consumoResumo['top_alertas'] ?? []) === []): ?>
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700 text-sm">
+                        Nenhuma anomalia relevante foi identificada no filtro atual.
+                    </div>
+                <?php else: ?>
+                    <div class="space-y-3">
+                        <?php foreach ($consumoResumo['top_alertas'] as $alerta): ?>
+                            <div class="rounded-2xl border px-4 py-3 text-sm <?php echo ($alerta['anomalia_status'] ?? '') === 'critico' ? 'border-rose-200 bg-rose-50 text-rose-800' : 'border-amber-200 bg-amber-50 text-amber-800'; ?>">
+                                <div class="font-semibold"><?php echo htmlspecialchars((string) $alerta['placa'] . ' - ' . (string) $alerta['data_abastecimento'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                <div class="mt-1 text-xs"><?php echo htmlspecialchars((string) ($alerta['anomalia_resumo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-semibold text-slate-700">Ranking de eficiencia</h2>
+                <p class="text-sm text-slate-500 mt-1 mb-4">Melhores medias de consumo calculadas com base nos intervalos validos de km.</p>
+
+                <?php if ($rankingEficiencia === []): ?>
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-600 text-sm">
+                        Ainda nao ha dados suficientes para formar ranking de consumo.
+                    </div>
+                <?php else: ?>
+                    <div class="space-y-3">
+                        <?php foreach ($rankingEficiencia as $item): ?>
+                            <div class="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <div>
+                                    <div class="text-sm font-semibold text-slate-800"><?php echo htmlspecialchars((string) $item['placa'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $item['modelo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-bold text-cyan-700"><?php echo number_format((float) $item['media_consumo_km_l'], 2, ',', '.'); ?> km/L</div>
+                                    <div class="text-xs text-slate-500"><?php echo (int) $item['leituras']; ?> leitura(s)</div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4">
                 <div>
@@ -261,6 +320,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Motorista</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Abastecimento</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Consumo e alerta</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Custos</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Acoes</th>
                         </tr>
@@ -268,7 +328,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <tbody class="divide-y divide-slate-200">
                         <?php if (empty($abastecimentos)): ?>
                             <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-sm text-slate-500">Nenhum abastecimento encontrado para os filtros informados.</td>
+                                <td colspan="6" class="px-6 py-8 text-center text-sm text-slate-500">Nenhum abastecimento encontrado para os filtros informados.</td>
                             </tr>
                         <?php endif; ?>
 
@@ -291,8 +351,28 @@ require_once __DIR__ . '/../includes/header.php';
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-slate-700">
+                                    <?php if (($abastecimento['consumo_km_l'] ?? null) !== null): ?>
+                                        <div><?php echo number_format((float) $abastecimento['consumo_km_l'], 2, ',', '.'); ?> km/L</div>
+                                        <div class="text-xs text-slate-500">Percurso: <?php echo number_format((float) ($abastecimento['km_percorrido_desde_anterior'] ?? 0), 0, ',', '.'); ?> km</div>
+                                    <?php else: ?>
+                                        <div class="text-xs text-slate-400">Aguardando abastecimento anterior valido</div>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($abastecimento['anomalia_resumo'])): ?>
+                                        <div class="mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold <?php echo ($abastecimento['anomalia_status'] ?? '') === 'critico' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'; ?>">
+                                            <?php echo htmlspecialchars(ucfirst((string) $abastecimento['anomalia_status']), ENT_QUOTES, 'UTF-8'); ?>
+                                        </div>
+                                        <div class="text-xs text-slate-500 mt-1 max-w-xs"><?php echo htmlspecialchars((string) $abastecimento['anomalia_resumo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <?php else: ?>
+                                        <div class="mt-2 text-xs text-emerald-600">Sem anomalia relevante</div>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-700">
                                     <div><?php echo number_format((float) $abastecimento['litros'], 2, ',', '.'); ?> L</div>
                                     <div>R$ <?php echo number_format((float) $abastecimento['valor_total'], 2, ',', '.'); ?></div>
+                                    <?php if (($abastecimento['custo_por_litro'] ?? null) !== null): ?>
+                                        <div class="text-xs text-slate-500 mt-1">R$ <?php echo number_format((float) $abastecimento['custo_por_litro'], 2, ',', '.'); ?>/L</div>
+                                    <?php endif; ?>
                                     <?php if (!empty($abastecimento['observacoes'])): ?>
                                         <div class="text-xs text-slate-500 mt-1 max-w-xs"><?php echo htmlspecialchars((string) $abastecimento['observacoes'], ENT_QUOTES, 'UTF-8'); ?></div>
                                     <?php endif; ?>

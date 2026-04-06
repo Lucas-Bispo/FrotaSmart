@@ -43,7 +43,7 @@ final class AbastecimentoModel
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->enrichRowsWithAnalytics($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function findById(int $id): ?array
@@ -62,7 +62,19 @@ final class AbastecimentoModel
         $stmt->execute([':id' => $id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $result !== false ? $result : null;
+        if ($result === false) {
+            return null;
+        }
+
+        $rows = $this->getAll((int) $result['veiculo_id']);
+
+        foreach ($rows as $row) {
+            if ((int) ($row['id'] ?? 0) === $id) {
+                return $row;
+            }
+        }
+
+        return $result;
     }
 
     public function create(array $data): int
@@ -160,7 +172,7 @@ final class AbastecimentoModel
              LIMIT ' . $limit
         );
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->enrichRowsWithAnalytics($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function totalValorPeriodo(?string $dataInicio = null, ?string $dataFim = null): float
@@ -190,5 +202,225 @@ final class AbastecimentoModel
         $stmt->execute($params);
 
         return (float) $stmt->fetchColumn();
+    }
+
+    public function getConsumptionSummary(?string $dataInicio = null, ?string $dataFim = null): array
+    {
+        $rows = $this->getAll(null, $dataInicio, $dataFim);
+        $alertas = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => ($row['anomalia_status'] ?? 'normal') !== 'normal'
+        ));
+        $consumos = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => ($row['consumo_km_l'] ?? null) !== null
+        ));
+
+        $mediaConsumo = 0.0;
+        if ($consumos !== []) {
+            $mediaConsumo = array_sum(array_column($consumos, 'consumo_km_l')) / count($consumos);
+        }
+
+        return [
+            'media_consumo_km_l' => round($mediaConsumo, 2),
+            'total_alertas' => count($alertas),
+            'alertas_criticos' => count(array_filter($alertas, static fn (array $row): bool => ($row['anomalia_status'] ?? '') === 'critico')),
+            'alertas_atencao' => count(array_filter($alertas, static fn (array $row): bool => ($row['anomalia_status'] ?? '') === 'atencao')),
+            'top_alertas' => array_slice($alertas, 0, 5),
+        ];
+    }
+
+    public function getVehicleEfficiencyRanking(int $limit = 5, ?string $dataInicio = null, ?string $dataFim = null): array
+    {
+        $rows = $this->getAll(null, $dataInicio, $dataFim);
+        $grouped = [];
+
+        foreach ($rows as $row) {
+            if (($row['consumo_km_l'] ?? null) === null) {
+                continue;
+            }
+
+            $key = (string) $row['veiculo_id'];
+            if (! isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'veiculo_id' => (int) $row['veiculo_id'],
+                    'placa' => $row['placa'],
+                    'modelo' => $row['modelo'],
+                    'secretaria' => $row['secretaria'],
+                    'leituras' => 0,
+                    'media_consumo_km_l' => 0.0,
+                ];
+            }
+
+            $grouped[$key]['leituras']++;
+            $grouped[$key]['media_consumo_km_l'] += (float) $row['consumo_km_l'];
+        }
+
+        foreach ($grouped as &$item) {
+            if ($item['leituras'] > 0) {
+                $item['media_consumo_km_l'] = round($item['media_consumo_km_l'] / $item['leituras'], 2);
+            }
+        }
+        unset($item);
+
+        usort($grouped, static fn (array $a, array $b): int => $b['media_consumo_km_l'] <=> $a['media_consumo_km_l']);
+
+        return array_slice($grouped, 0, max(1, $limit));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
+    private function enrichRowsWithAnalytics(array $rows): array
+    {
+        if ($rows === []) {
+            return [];
+        }
+
+        $ordered = array_reverse($rows);
+        $previousByVehicle = [];
+        $vehicleConsumptions = [];
+        $enrichedOrdered = [];
+
+        foreach ($ordered as $row) {
+            $veiculoId = (int) ($row['veiculo_id'] ?? 0);
+            $kmAtual = (int) ($row['km_atual'] ?? 0);
+            $litros = (float) ($row['litros'] ?? 0);
+            $valorTotal = (float) ($row['valor_total'] ?? 0);
+            $anterior = $previousByVehicle[$veiculoId] ?? null;
+
+            $row['consumo_km_l'] = null;
+            $row['km_percorrido_desde_anterior'] = null;
+            $row['variacao_litros_percentual'] = null;
+            $row['variacao_valor_percentual'] = null;
+            $row['variacao_consumo_percentual'] = null;
+            $row['custo_por_litro'] = $litros > 0 ? round($valorTotal / $litros, 2) : null;
+            $row['custo_por_km'] = null;
+            $row['anomalia_status'] = 'normal';
+            $row['anomalia_resumo'] = null;
+
+            if (is_array($anterior)) {
+                $kmAnterior = (int) ($anterior['km_atual'] ?? 0);
+                $litrosAnterior = (float) ($anterior['litros'] ?? 0);
+                $valorAnterior = (float) ($anterior['valor_total'] ?? 0);
+                $kmPercorrido = $kmAtual - $kmAnterior;
+
+                if ($kmPercorrido > 0) {
+                    $consumo = $litros > 0 ? $kmPercorrido / $litros : null;
+                    $row['km_percorrido_desde_anterior'] = $kmPercorrido;
+                    $row['consumo_km_l'] = $consumo !== null ? round($consumo, 2) : null;
+                    $row['custo_por_km'] = $valorTotal > 0 ? round($valorTotal / $kmPercorrido, 2) : null;
+
+                    if ($row['consumo_km_l'] !== null) {
+                        $vehicleConsumptions[$veiculoId] ??= [];
+                        $vehicleConsumptions[$veiculoId][] = $row['consumo_km_l'];
+                    }
+                }
+
+                $row['variacao_litros_percentual'] = $this->percentageVariation($litrosAnterior, $litros);
+                $row['variacao_valor_percentual'] = $this->percentageVariation($valorAnterior, $valorTotal);
+
+                if (($anterior['consumo_km_l'] ?? null) !== null && $row['consumo_km_l'] !== null) {
+                    $row['variacao_consumo_percentual'] = $this->percentageVariation((float) $anterior['consumo_km_l'], (float) $row['consumo_km_l']);
+                }
+            }
+
+            $previousByVehicle[$veiculoId] = $row;
+            $enrichedOrdered[] = $row;
+        }
+
+        $consumptionAverages = [];
+        foreach ($vehicleConsumptions as $veiculoId => $consumos) {
+            if ($consumos === []) {
+                continue;
+            }
+
+            $consumptionAverages[$veiculoId] = array_sum($consumos) / count($consumos);
+        }
+
+        foreach ($enrichedOrdered as &$row) {
+            $veiculoId = (int) ($row['veiculo_id'] ?? 0);
+            $mediaVeiculo = $consumptionAverages[$veiculoId] ?? null;
+            $row['media_consumo_veiculo_km_l'] = $mediaVeiculo !== null ? round($mediaVeiculo, 2) : null;
+
+            [$status, $resumo] = $this->detectAnomaly($row, $mediaVeiculo);
+            $row['anomalia_status'] = $status;
+            $row['anomalia_resumo'] = $resumo;
+        }
+        unset($row);
+
+        return array_reverse($enrichedOrdered);
+    }
+
+    private function percentageVariation(float $base, float $current): ?float
+    {
+        if ($base <= 0) {
+            return null;
+        }
+
+        return round((($current - $base) / $base) * 100, 2);
+    }
+
+    /**
+     * @return array{0:string,1:?string}
+     */
+    private function detectAnomaly(array $row, ?float $mediaVeiculo): array
+    {
+        $motivos = [];
+        $critical = false;
+        $atention = false;
+
+        $kmPercorrido = $row['km_percorrido_desde_anterior'] ?? null;
+        $litros = (float) ($row['litros'] ?? 0);
+        $custoPorLitro = $row['custo_por_litro'] ?? null;
+        $variacaoLitros = $row['variacao_litros_percentual'] ?? null;
+        $variacaoValor = $row['variacao_valor_percentual'] ?? null;
+        $consumo = $row['consumo_km_l'] ?? null;
+
+        if ($kmPercorrido !== null && $kmPercorrido <= 0) {
+            $critical = true;
+            $motivos[] = 'KM nao avancou desde o ultimo abastecimento.';
+        }
+
+        if ($kmPercorrido !== null && $litros > 0 && $kmPercorrido < 20 && $litros >= 20) {
+            $critical = true;
+            $motivos[] = 'Litros altos para distancia muito curta.';
+        }
+
+        if ($variacaoLitros !== null && $variacaoLitros >= 35) {
+            $atention = true;
+            $motivos[] = 'Litros subiram ' . number_format($variacaoLitros, 2, ',', '.') . '% frente ao abastecimento anterior.';
+        }
+
+        if ($variacaoValor !== null && $variacaoValor >= 35) {
+            $atention = true;
+            $motivos[] = 'Valor total subiu ' . number_format($variacaoValor, 2, ',', '.') . '% frente ao abastecimento anterior.';
+        }
+
+        if ($custoPorLitro !== null && $custoPorLitro >= 9.5) {
+            $atention = true;
+            $motivos[] = 'Custo por litro acima da faixa esperada.';
+        }
+
+        if ($mediaVeiculo !== null && $consumo !== null && $mediaVeiculo > 0) {
+            if ($consumo <= ($mediaVeiculo * 0.6)) {
+                $critical = true;
+                $motivos[] = 'Consumo caiu muito abaixo da media historica do veiculo.';
+            } elseif ($consumo <= ($mediaVeiculo * 0.8)) {
+                $atention = true;
+                $motivos[] = 'Consumo abaixo da media historica do veiculo.';
+            }
+        }
+
+        if ($critical) {
+            return ['critico', implode(' ', $motivos)];
+        }
+
+        if ($atention) {
+            return ['atencao', implode(' ', $motivos)];
+        }
+
+        return ['normal', null];
     }
 }

@@ -21,12 +21,18 @@ require_once __DIR__ . '/../includes/header.php';
 $successMessage = pull_flash('success');
 $errorMessage = pull_flash('error');
 $veiculos = [];
+$veiculosAtivos = [];
 $motoristas = [];
 $manutencoesRecentes = [];
 $abastecimentosRecentes = [];
 $abastecimentoModel = null;
 $canManageFleet = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);
 $canManageUsers = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_USERS_MANAGE);
+$filtroFrota = (string) ($_GET['frota'] ?? 'ativos');
+
+if (! in_array($filtroFrota, ['ativos', 'arquivados', 'todos'], true)) {
+    $filtroFrota = 'ativos';
+}
 
 $today = new DateTimeImmutable('today');
 $alertLimit = $today->modify('+30 days');
@@ -36,11 +42,16 @@ $periodoFim = $today->modify('last day of this month')->format('Y-m-d');
 $totalFrota = 0;
 $veiculosOperacao = 0;
 $veiculosManutencao = 0;
+$veiculosArquivados = 0;
 $motoristasAtivos = 0;
 $cnhsVencendo = 0;
 $manutencoesAbertas = 0;
+$preventivasVencidas = 0;
+$preventivasProximas = 0;
 $abastecimentosUltimos7Dias = 0;
 $custoOperacionalPeriodo = 0.0;
+$consumoMedioPeriodo = 0.0;
+$alertasAbastecimento = 0;
 $secretariasMotoristas = [];
 $gastoPorSecretaria = [];
 $alertasOperacionais = [];
@@ -51,19 +62,26 @@ try {
     $manutencaoModel = new ManutencaoModel();
     $abastecimentoModel = new AbastecimentoModel();
 
-    $veiculos = $veiculoModel->getAllVeiculos();
+    $veiculosAtivos = $veiculoModel->getAllVeiculos();
+    $veiculos = $veiculoModel->getAllVeiculos($filtroFrota);
     $motoristas = $motoristaModel->getAllMotoristas();
     $manutencoesRecentes = $manutencaoModel->getRecent(5);
     $abastecimentosRecentes = $abastecimentoModel->getRecent(5);
-    $totalFrota = count($veiculos);
+    $totalFrota = count($veiculosAtivos);
+    $veiculosArquivados = $veiculoModel->countArquivados();
     $manutencoesAbertas = $manutencaoModel->countAbertas();
+    $preventivasVencidas = $manutencaoModel->countPreventivasVencidas();
+    $preventivasProximas = $manutencaoModel->countPreventivasProximas();
     $custoOperacionalPeriodo = $abastecimentoModel->totalValorPeriodo($periodoInicio, $periodoFim);
+    $consumoResumoPeriodo = $abastecimentoModel->getConsumptionSummary($periodoInicio, $periodoFim);
+    $consumoMedioPeriodo = (float) ($consumoResumoPeriodo['media_consumo_km_l'] ?? 0.0);
+    $alertasAbastecimento = (int) ($consumoResumoPeriodo['total_alertas'] ?? 0);
 } catch (Exception $e) {
     error_log('Erro ao carregar dashboard: ' . $e->getMessage());
     $errorMessage = 'Nao foi possivel carregar os dados do dashboard no momento.';
 }
 
-foreach ($veiculos as $v) {
+foreach ($veiculosAtivos as $v) {
     $status = strtolower((string) ($v['status'] ?? ''));
 
     if (in_array($status, ['ativo', 'disponivel', 'em_viagem', 'reservado'], true)) {
@@ -118,8 +136,20 @@ if ($veiculosManutencao > 0) {
 if ($manutencoesAbertas > 0) {
     $alertasOperacionais[] = $manutencoesAbertas . ' manutencao(oes) seguem abertas ou em andamento.';
 }
+if ($preventivasVencidas > 0) {
+    $alertasOperacionais[] = $preventivasVencidas . ' preventiva(s) estao vencidas e pedem acao imediata.';
+}
+if ($preventivasProximas > 0) {
+    $alertasOperacionais[] = $preventivasProximas . ' preventiva(s) entram em janela de atencao nos proximos dias ou kms.';
+}
+if ($alertasAbastecimento > 0) {
+    $alertasOperacionais[] = $alertasAbastecimento . ' abastecimento(s) apresentam anomalias de consumo ou custo no periodo.';
+}
 if ($cnhsVencendo > 0) {
     $alertasOperacionais[] = $cnhsVencendo . ' CNH(s) vencem nos proximos 30 dias.';
+}
+if ($veiculosArquivados > 0) {
+    $alertasOperacionais[] = $veiculosArquivados . ' veiculo(s) seguem arquivados e disponiveis para consulta ou restauracao.';
 }
 
 /**
@@ -146,6 +176,15 @@ function dashboard_vehicle_status_badge(string $status): string
         'reservado' => 'bg-purple-100 text-purple-800',
         'baixado' => 'bg-slate-300 text-slate-700',
         default => 'bg-slate-200 text-slate-700',
+    };
+}
+
+function dashboard_vehicle_filter_label(string $filtro): string
+{
+    return match ($filtro) {
+        'arquivados' => 'somente arquivados',
+        'todos' => 'ativos e arquivados',
+        default => 'somente ativos',
     };
 }
 ?>
@@ -215,7 +254,7 @@ function dashboard_vehicle_status_badge(string $status): string
     </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-8 gap-6 mb-10">
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <p class="text-sm font-medium text-slate-500 uppercase">Manutencoes abertas</p>
         <p class="text-3xl font-bold text-amber-600 mt-2"><?php echo $manutencoesAbertas; ?></p>
@@ -231,6 +270,22 @@ function dashboard_vehicle_status_badge(string $status): string
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <p class="text-sm font-medium text-slate-500 uppercase">CNHs vencendo</p>
         <p class="text-3xl font-bold text-rose-600 mt-2"><?php echo $cnhsVencendo; ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Prev. vencidas</p>
+        <p class="text-3xl font-bold text-rose-700 mt-2"><?php echo $preventivasVencidas; ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Prev. proximas</p>
+        <p class="text-3xl font-bold text-amber-600 mt-2"><?php echo $preventivasProximas; ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Consumo medio</p>
+        <p class="text-3xl font-bold text-cyan-700 mt-2"><?php echo $consumoMedioPeriodo > 0 ? number_format($consumoMedioPeriodo, 2, ',', '.') : '--'; ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Arquivados</p>
+        <p class="text-3xl font-bold text-slate-700 mt-2"><?php echo $veiculosArquivados; ?></p>
     </div>
 </div>
 
@@ -505,7 +560,17 @@ function dashboard_vehicle_status_badge(string $status): string
 
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-6 border-b border-slate-200 bg-slate-50">
-                <h2 class="text-lg font-semibold text-slate-700">Frota atualizada</h2>
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-700">Frota atualizada</h2>
+                        <p class="text-sm text-slate-500">Consulta <?php echo htmlspecialchars(dashboard_vehicle_filter_label($filtroFrota), ENT_QUOTES, 'UTF-8'); ?> com historico de arquivamento.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 text-sm">
+                        <a href="/dashboard.php?frota=ativos" class="rounded-full px-3 py-1.5 <?php echo $filtroFrota === 'ativos' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'; ?>">Ativos</a>
+                        <a href="/dashboard.php?frota=arquivados" class="rounded-full px-3 py-1.5 <?php echo $filtroFrota === 'arquivados' ? 'bg-slate-700 text-white' : 'bg-white text-slate-600 border border-slate-200'; ?>">Arquivados</a>
+                        <a href="/dashboard.php?frota=todos" class="rounded-full px-3 py-1.5 <?php echo $filtroFrota === 'todos' ? 'bg-cyan-700 text-white' : 'bg-white text-slate-600 border border-slate-200'; ?>">Todos</a>
+                    </div>
+                </div>
             </div>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-slate-200">
@@ -514,17 +579,19 @@ function dashboard_vehicle_status_badge(string $status): string
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Lotacao</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Historico</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Acoes</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
                         <?php if (empty($veiculos)): ?>
                             <tr>
-                                <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">Nenhum veiculo cadastrado ate o momento.</td>
+                                <td colspan="5" class="px-6 py-8 text-center text-sm text-slate-500">Nenhum veiculo encontrado para o filtro selecionado.</td>
                             </tr>
                         <?php endif; ?>
 
                         <?php foreach ($veiculos as $v): ?>
+                            <?php $veiculoArquivado = ! empty($v['deleted_at']); ?>
                             <tr class="hover:bg-slate-50 transition">
                                 <td class="px-6 py-4">
                                     <div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars($v['placa'], ENT_QUOTES, 'UTF-8'); ?></div>
@@ -533,7 +600,7 @@ function dashboard_vehicle_status_badge(string $status): string
                                 <td class="px-6 py-4 text-sm text-slate-700">
                                     <div><?php echo htmlspecialchars((string) ($v['secretaria_lotada'] ?: 'Nao informada'), ENT_QUOTES, 'UTF-8'); ?></div>
                                     <div class="text-xs text-slate-500">
-                                        <?php echo htmlspecialchars((string) (($v['tipo'] ?: 'Tipo n/i') . ' • ' . ($v['combustivel'] ?: 'Combustivel n/i')), ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php echo htmlspecialchars((string) (($v['tipo'] ?: 'Tipo n/i') . ' - ' . ($v['combustivel'] ?: 'Combustivel n/i')), ENT_QUOTES, 'UTF-8'); ?>
                                     </div>
                                     <div class="text-xs text-slate-400">Km inicial: <?php echo (int) ($v['quilometragem_inicial'] ?? 0); ?></div>
                                 </td>
@@ -542,13 +609,24 @@ function dashboard_vehicle_status_badge(string $status): string
                                         <?php echo htmlspecialchars(dashboard_vehicle_status_label((string) $v['status']), ENT_QUOTES, 'UTF-8'); ?>
                                     </span>
                                 </td>
+                                <td class="px-6 py-4 text-sm text-slate-700">
+                                    <?php if ($veiculoArquivado): ?>
+                                        <div class="font-medium text-slate-900">Arquivado</div>
+                                        <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $v['deleted_at'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <?php else: ?>
+                                        <div class="font-medium text-emerald-700">Ativo</div>
+                                        <div class="text-xs text-slate-500">Disponivel para operacao</div>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="px-6 py-4 text-right text-sm font-medium">
                                     <?php if ($canManageFleet): ?>
                                         <form method="POST" action="/veiculos.php" class="inline-flex">
                                             <?php echo csrf_input(); ?>
-                                            <input type="hidden" name="action" value="delete_veiculo">
+                                            <input type="hidden" name="action" value="<?php echo $veiculoArquivado ? 'restore_veiculo' : 'archive_veiculo'; ?>">
                                             <input type="hidden" name="placa" value="<?php echo htmlspecialchars($v['placa'], ENT_QUOTES, 'UTF-8'); ?>">
-                                            <button type="submit" class="text-red-600 hover:text-red-800" onclick="return confirm('Tem certeza que deseja excluir este veiculo?');">Excluir</button>
+                                            <button type="submit" class="<?php echo $veiculoArquivado ? 'text-emerald-600 hover:text-emerald-800' : 'text-amber-600 hover:text-amber-800'; ?>" onclick="return confirm('<?php echo $veiculoArquivado ? 'Tem certeza que deseja restaurar este veiculo?' : 'Tem certeza que deseja arquivar este veiculo?'; ?>');">
+                                                <?php echo $veiculoArquivado ? 'Restaurar' : 'Arquivar'; ?>
+                                            </button>
                                         </form>
                                     <?php else: ?>
                                         <span class="text-slate-400">Somente leitura</span>

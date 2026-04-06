@@ -59,7 +59,19 @@ if ($created === null || $created['posto'] !== 'Posto Central') {
     throw new RuntimeException('Abastecimento nao foi criado corretamente.');
 }
 
-$abastecimentoModel->update($abastecimentoId, [
+$segundoAbastecimentoId = $abastecimentoModel->create([
+    'veiculo_id' => $veiculoId,
+    'motorista_id' => $motoristaId,
+    'data_abastecimento' => '2026-04-06',
+    'posto' => 'Posto Central Norte',
+    'tipo_combustivel' => 'diesel_s10',
+    'litros' => 50.00,
+    'valor_total' => 320.00,
+    'km_atual' => 125980,
+    'observacoes' => 'Segundo abastecimento para medir consumo',
+]);
+
+$abastecimentoModel->update($segundoAbastecimentoId, [
     'veiculo_id' => $veiculoId,
     'motorista_id' => $motoristaId,
     'data_abastecimento' => '2026-04-06',
@@ -71,17 +83,31 @@ $abastecimentoModel->update($abastecimentoId, [
     'observacoes' => 'Ajuste de registro apos conferencia',
 ]);
 
-$updated = $abastecimentoModel->findById($abastecimentoId);
+$updated = $abastecimentoModel->findById($segundoAbastecimentoId);
 if ($updated === null || $updated['km_atual'] !== 125980 || $updated['posto'] !== 'Posto Central Norte') {
     throw new RuntimeException('Abastecimento nao foi atualizado corretamente.');
 }
+if (($updated['consumo_km_l'] ?? null) === null || (float) $updated['consumo_km_l'] <= 0) {
+    throw new RuntimeException('Abastecimento deveria calcular consumo medio por km/L.');
+}
 
 $historico = $abastecimentoModel->getAll($veiculoId, '2026-04-01', '2026-04-30');
-if (count($historico) !== 1) {
+if (count($historico) !== 2) {
     throw new RuntimeException('Historico filtrado de abastecimentos nao retornou o volume esperado.');
 }
 
+$resumo = $abastecimentoModel->getConsumptionSummary('2026-04-01', '2026-04-30');
+if (($resumo['media_consumo_km_l'] ?? 0) <= 0) {
+    throw new RuntimeException('Resumo deveria consolidar consumo medio positivo.');
+}
+
+$ranking = $abastecimentoModel->getVehicleEfficiencyRanking(5, '2026-04-01', '2026-04-30');
+if (count($ranking) < 1) {
+    throw new RuntimeException('Ranking de eficiencia deveria trazer ao menos um veiculo.');
+}
+
 $pdo->prepare('DELETE FROM abastecimentos WHERE id = ?')->execute([$abastecimentoId]);
+$pdo->prepare('DELETE FROM abastecimentos WHERE id = ?')->execute([$segundoAbastecimentoId]);
 $pdo->prepare('DELETE FROM motoristas WHERE id = ?')->execute([$motoristaId]);
 $pdo->prepare('DELETE FROM veiculos WHERE id = ?')->execute([$veiculoId]);
 
