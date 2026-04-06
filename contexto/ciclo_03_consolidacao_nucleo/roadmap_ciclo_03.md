@@ -10,10 +10,10 @@ Fortalecer o nucleo do FrotaSmart para ficar mais aderente a frota municipal rea
 
 ## Tasks do ciclo
 - `Task 15 - Consolidacao completa do cadastro de veiculos` - `concluida`
-- `Task 16 - Soft delete, arquivamento e historico forte de veiculos` - `pendente`
-- `Task 17 - Manutencao preventiva por km e por data` - `pendente`
-- `Task 18 - Consumo medio e alertas de abastecimento` - `pendente`
-- `Task 19 - Relatorios operacionais com exportacao` - `pendente`
+- `Task 16 - Soft delete, arquivamento e historico forte de veiculos` - `concluida`
+- `Task 17 - Manutencao preventiva por km e por data` - `concluida`
+- `Task 18 - Consumo medio e alertas de abastecimento` - `concluida`
+- `Task 19 - Relatorios operacionais com exportacao` - `concluida`
 
 ## Diretrizes
 - manter MVC simples com evolucao incremental da arquitetura em `src/`

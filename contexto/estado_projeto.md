@@ -26,7 +26,10 @@
 - O modulo inicial de viagens agora conecta secretaria, motorista e veiculo no uso administrativo da frota
 - O modulo inicial de parceiros operacionais agora centraliza oficinas, postos e fornecedores com vinculo real nas operacoes
 - O backlog do ciclo 03 foi aberto para consolidar o nucleo do sistema, com foco em veiculos, prevencao e relatorios
+- O ciclo 03 foi concluido com cadastro completo, arquivamento, manutencao preventiva, inteligencia de abastecimento e relatorios CSV
+- O ambiente WSL Ubuntu voltou a validar bootstrap e testes integrados diretamente no Linux, sem depender do PHP do Windows
 - O projeto ja possui `public/` como document root recomendado para Linux/WSL
+- O ciclo 04 ja comecou a reagir com bloqueios e alertas automaticos no fluxo de viagens e abastecimentos
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
@@ -38,6 +41,7 @@
 - O dashboard ainda e uma view legacy, mas agora usa dados reais dos modulos operacionais do ciclo
 - O modulo de viagens reutiliza schema legado compatibilizado, sem exigir cadastro formal de secretaria nesta fase
 - manutencoes e abastecimentos continuam compativeis com texto livre, mas agora aceitam vinculo estruturado com parceiro cadastrado
+- viagens e abastecimentos agora contam com um guard operacional central para CNH, preventiva e estado do veiculo
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
@@ -57,6 +61,7 @@ A `task_01` era viavel e foi executada como fundacao arquitetural, nao como refa
 - A leitura do dashboard ainda depende de `VeiculoModel`, mesmo com a escrita ja migrada
 - O ciclo 02 planejado foi concluido e o proximo passo natural e consolidar backlog do ciclo seguinte
 - O cadastro de veiculos ainda precisava de dados mais aderentes a frota municipal real
+- o painel executivo por secretaria ainda e o gap funcional mais visivel do ciclo 04
 
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento

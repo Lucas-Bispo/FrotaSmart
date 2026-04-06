@@ -406,3 +406,172 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 16`: soft delete, arquivamento e historico forte de veiculos
+
+## 2026-04-05 - Task 16
+
+### Soft delete, arquivamento e historico forte de veiculos
+- Evoluido o contrato [VeiculoRepositoryInterface.php](../src/Domain/Repositories/VeiculoRepositoryInterface.php) com consulta expandida, listagem de arquivados e restauracao
+- Enriquecida a entidade [Veiculo.php](../src/Domain/Entities/Veiculo.php) com `arquivadoEm()` e `estaArquivado()`
+- Adaptados [VeiculoService.php](../src/Application/Services/VeiculoService.php), [PdoVeiculoRepository.php](../src/Infrastructure/Persistence/PdoVeiculoRepository.php) e [VeiculoController.php](../backend/controllers/VeiculoController.php) para arquivar e restaurar
+- Atualizado o legado [VeiculoModel.php](../backend/models/VeiculoModel.php) com filtros `ativos`, `arquivados` e `todos`
+- Atualizada a view [dashboard.php](../frontend/views/dashboard.php) com leitura de historico, contador de arquivados e acao de restauracao
+- Atualizados os testes [test-veiculo-service.php](../scripts/test-veiculo-service.php), [test-veiculo-controller-flow.php](../scripts/test-veiculo-controller-flow.php), [test-repository-pdo.php](../scripts/test-repository-pdo.php) e [test-repository-contract.php](../scripts/test-repository-contract.php)
+
+### Resultado tecnico
+- arquivamento e restauracao passaram a ser operacoes explicitas e auditaveis
+- placas arquivadas continuam protegidas contra reaproveitamento silencioso
+- a consulta operacional consegue separar frota ativa do historico arquivado
+
+### Validacao realizada
+- revisao local das assinaturas e dos fluxos alterados
+- tentativa de executar `php -l` e scripts de teste bloqueada porque `php` nao esta disponivel no `PATH` do PowerShell atual
+- tentativa de validar pelo `wsl` tambem bloqueada por `E_ACCESSDENIED` neste ambiente
+
+### Proximo passo recomendado
+- Executar a `Task 17`: manutencao preventiva por km e por data
+
+## 2026-04-05 - Task 17
+
+### Manutencao preventiva por km e por data
+- Expandido o bootstrap [bootstrap-db.php](../scripts/bootstrap-db.php) com campos de plano preventivo na tabela `manutencoes`
+- Evoluido [ManutencaoModel.php](../backend/models/ManutencaoModel.php) para calcular previsao por data e por km, km atual do veiculo e alertas preventivos
+- Atualizado [ManutencaoController.php](../backend/controllers/ManutencaoController.php) com validacao de regras preventivas
+- Atualizadas as views [manutencoes.php](../frontend/views/manutencoes.php) e [dashboard.php](../frontend/views/dashboard.php) com contadores e alertas de preventivas vencidas e proximas
+- Atualizado o teste [test-manutencao-model.php](../scripts/test-manutencao-model.php) para cobrir a leitura preventiva
+- Atualizada a task em [task_17_manutencao_preventiva.md](./ciclo_03_consolidacao_nucleo/task_17_manutencao_preventiva.md)
+
+### Resultado tecnico
+- o sistema agora suporta plano preventivo por data, por km e por recorrencia
+- o dashboard e a tela de manutencoes conseguem destacar itens vencidos e proximos
+- o km operacional passa a alimentar a leitura preventiva sem exigir nova stack
+
+### Validacao realizada
+- `C:\xampp\php\php.exe -l backend/models/ManutencaoModel.php`
+- `C:\xampp\php\php.exe -l backend/controllers/ManutencaoController.php`
+- `C:\xampp\php\php.exe -l frontend/views/manutencoes.php`
+- `C:\xampp\php\php.exe -l frontend/views/dashboard.php`
+- `C:\xampp\php\php.exe -l scripts/bootstrap-db.php`
+- `C:\xampp\php\php.exe -l scripts/test-manutencao-model.php`
+- tentativa de executar `scripts/bootstrap-db.php` e `scripts/test-manutencao-model.php` bloqueada por acesso negado ao MySQL (`SQLSTATE[HY000] [1045]`)
+
+### Proximo passo recomendado
+- Executar a `Task 18`: consumo medio e alertas de abastecimento
+
+## 2026-04-05 - Task 18
+
+### Consumo medio e alertas de abastecimento
+- Evoluido [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) com calculo de consumo por km/L, custo por litro, custo por km, ranking de eficiencia e leitura automatica de anomalias
+- Atualizadas as views [abastecimentos.php](../frontend/views/abastecimentos.php) e [dashboard.php](../frontend/views/dashboard.php) com indicadores de consumo e alertas de suspeita
+- Atualizado o teste [test-abastecimento-model.php](../scripts/test-abastecimento-model.php) para cobrir resumo consolidado e ranking
+- Atualizada a task em [task_18_consumo_alertas_abastecimento.md](./ciclo_03_consolidacao_nucleo/task_18_consumo_alertas_abastecimento.md)
+
+### Resultado tecnico
+- cada abastecimento agora pode ser comparado com o anterior para medir variacao de litros, valor e consumo
+- o sistema consegue sinalizar registros de atencao e criticos por comportamento fora do padrao
+- a leitura de eficiencia por veiculo ficou pronta para consolidacao em relatorios
+
+### Validacao realizada
+- `C:\xampp\php\php.exe -l backend/models/AbastecimentoModel.php`
+- `C:\xampp\php\php.exe -l frontend/views/abastecimentos.php`
+- `C:\xampp\php\php.exe -l frontend/views/dashboard.php`
+- `C:\xampp\php\php.exe -l scripts/test-abastecimento-model.php`
+- tentativa de executar `scripts/test-abastecimento-model.php` bloqueada por acesso negado ao MySQL (`SQLSTATE[HY000] [1045]`)
+
+### Proximo passo recomendado
+- Executar a `Task 19`: relatorios operacionais com exportacao
+
+## 2026-04-05 - Task 19
+
+### Relatorios operacionais com exportacao
+- Criado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para consolidar abastecimentos, manutencoes, viagens e disponibilidade
+- Criada a pagina [relatorios.php](../frontend/views/relatorios.php) com filtros por periodo, secretaria, veiculo e status
+- Criada a rota publica [relatorios.php](../public/relatorios.php) com exportacao inicial em CSV
+- Integrado o acesso ao modulo pelo menu em [sidebar.php](../frontend/includes/sidebar.php)
+- Atualizada a task em [task_19_relatorios_operacionais.md](./ciclo_03_consolidacao_nucleo/task_19_relatorios_operacionais.md)
+
+### Resultado tecnico
+- o sistema passou a ter uma camada unica de consulta gerencial para operacao e transparencia
+- a exportacao CSV fecha o ciclo 03 com uma saida simples e reutilizavel
+- a modelagem ficou pronta para evoluir depois para PDF e relatorios mais formais
+
+### Validacao realizada
+- `C:\xampp\php\php.exe -l backend/models/RelatorioOperacionalModel.php`
+- `C:\xampp\php\php.exe -l frontend/views/relatorios.php`
+- `C:\xampp\php\php.exe -l public/relatorios.php`
+- `C:\xampp\php\php.exe -l frontend/includes/sidebar.php`
+
+### Fechamento do ciclo
+- ciclo 03 concluido com cadastro consolidado, arquivamento, manutencao preventiva, leitura de abastecimento e relatorios operacionais
+
+## 2026-04-05 - Estabilizacao WSL apos ciclo 03
+
+### Validacao real no Ubuntu WSL
+- confirmada a conexao do projeto no Linux com `DB_HOST=127.0.0.1`, `DB_NAME=frota_smart`, `DB_USER=frota_user`
+- executado com sucesso `php scripts/bootstrap-db.php` no Ubuntu WSL
+- executado com sucesso `php scripts/test-repository-pdo.php` no Ubuntu WSL
+- executado com sucesso `php scripts/test-manutencao-model.php` no Ubuntu WSL
+- corrigido [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) para que `findById()` preserve a leitura analitica baseada no historico do veiculo
+- executado com sucesso `php scripts/test-abastecimento-model.php` no Ubuntu WSL
+
+### Resultado tecnico
+- o bloqueio de validacao integrada deixou de ser um problema estrutural do projeto
+- o caminho principal de desenvolvimento ficou confirmado no Ubuntu WSL, alinhado com os guias do repositorio
+- a base agora esta pronta para um ciclo 04 mais orientado a governanca, automacao e uso continuo
+
+## 2026-04-05 - Ciclo 04 proposto
+
+### Novo roadmap sugerido
+- criado [roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
+
+### Direcao recomendada
+- estabilizar completamente o fluxo Linux/WSL como ambiente padrao
+- reforcar regras automaticas de bloqueio e alerta
+- subir o nivel do painel executivo e da auditoria
+
+## 2026-04-05 - Task 20
+
+### Estabilizacao definitiva do ambiente WSL e validacao integrada
+- Ajustado [security.php](../backend/config/security.php) para salvar sessoes em `runtime/sessions`, sem depender de configuracao externa do PHP
+- Simplificado [db.php](../backend/config/db.php) para reaproveitar `EnvLoader` e reduzir duplicacao de bootstrap de ambiente
+- Criado [test-wsl-stack.php](../scripts/test-wsl-stack.php) como health check unico do ambiente Linux/WSL
+- Adicionado o script Composer `test:wsl-stack` em [composer.json](../composer.json)
+- Atualizado o guia [readme_wsl_ubuntu_windows.md](./readme_wsl_ubuntu_windows.md) com o novo fluxo de validacao integrada
+- Atualizada a task em [task_20_estabilizacao_wsl_validacao_integrada.md](./ciclo_04_estabilidade_governanca/task_20_estabilizacao_wsl_validacao_integrada.md)
+
+### Validacao realizada
+- `php scripts/test-wsl-stack.php` executado com sucesso no Ubuntu WSL
+- validacoes internas do health check:
+- conexao PDO
+- `bootstrap-db.php`
+- `test-repository-pdo.php`
+- `test-manutencao-model.php`
+- `test-abastecimento-model.php`
+
+### Proximo passo recomendado
+- Executar a `Task 21`: regras operacionais automaticas de bloqueio e alerta
+
+## 2026-04-05 - Task 21
+
+### Regras operacionais automaticas de bloqueio e alerta
+- Criado o guard [OperacaoFrotaGuard.php](../backend/models/OperacaoFrotaGuard.php) para avaliar bloqueios e alertas de viagem e abastecimento
+- Evoluido [VeiculoModel.php](../backend/models/VeiculoModel.php) com `findById()` para leitura pontual de estado operacional
+- Evoluido [ManutencaoModel.php](../backend/models/ManutencaoModel.php) com avaliacao preventiva por veiculo, data e km de referencia
+- Adaptados [ViagemController.php](../backend/controllers/ViagemController.php) e [AbastecimentoController.php](../backend/controllers/AbastecimentoController.php) para barrar operacoes criticas e devolver avisos no flash de sucesso
+- Criado o teste [test-operacao-frota-guard.php](../scripts/test-operacao-frota-guard.php)
+- Atualizados [test-wsl-stack.php](../scripts/test-wsl-stack.php) e [composer.json](../composer.json) para incluir a nova validacao
+- Atualizada a task em [task_21_regras_operacionais_bloqueio_alerta.md](./ciclo_04_estabilidade_governanca/task_21_regras_operacionais_bloqueio_alerta.md)
+
+### Resultado tecnico
+- viagens agora podem ser bloqueadas automaticamente por veiculo arquivado, em manutencao, baixado, em viagem, CNH vencida ou preventiva vencida
+- abastecimentos agora ganham alertas operacionais em casos de preventiva vencida ou proxima, CNH proxima do vencimento e situacao de manutencao do veiculo
+- a leitura das regras saiu do dashboard passivo e passou a agir direto no fluxo de registro
+
+### Validacao realizada
+- `C:\xampp\php\php.exe -l backend/models/OperacaoFrotaGuard.php`
+- `C:\xampp\php\php.exe -l backend/models/ManutencaoModel.php`
+- `C:\xampp\php\php.exe -l backend/controllers/ViagemController.php`
+- `C:\xampp\php\php.exe -l backend/controllers/AbastecimentoController.php`
+- `C:\xampp\php\php.exe -l scripts/test-operacao-frota-guard.php`
+
+### Proximo passo recomendado
+- Executar a `Task 22`: painel executivo por secretaria e por veiculo
