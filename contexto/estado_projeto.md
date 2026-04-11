@@ -9,7 +9,7 @@
 - Contexto de transicao: [contexto_transicao.md](./contexto_transicao.md)
 
 ## Data de referencia
-2026-04-05
+2026-04-11
 
 ## Leitura rapida
 - O FrotaSmart hoje esta organizado em `backend/` e `frontend/`
@@ -31,6 +31,7 @@
 - O ambiente WSL Ubuntu voltou a validar bootstrap e testes integrados diretamente no Linux, sem depender do PHP do Windows
 - O projeto ja possui `public/` como document root recomendado para Linux/WSL
 - O ciclo 04 ja comecou a reagir com bloqueios e alertas automaticos no fluxo de viagens e abastecimentos
+- O dashboard agora tambem entrega leitura executiva por secretaria e por veiculo no proprio painel principal
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
@@ -40,6 +41,7 @@
 - Os modulos de motoristas e manutencoes ainda usam models legados, mas ja estao integrados ao fluxo principal da aplicacao
 - O modulo de abastecimentos segue o mesmo padrao incremental dos modulos operacionais do ciclo 02
 - O dashboard ainda e uma view legacy, mas agora usa dados reais dos modulos operacionais do ciclo
+- O dashboard tambem passou a consumir consolidacoes executivas do `RelatorioOperacionalModel` para leitura por secretaria e por veiculo
 - O modulo de viagens reutiliza schema legado compatibilizado, sem exigir cadastro formal de secretaria nesta fase
 - manutencoes e abastecimentos continuam compativeis com texto livre, mas agora aceitam vinculo estruturado com parceiro cadastrado
 - viagens e abastecimentos agora contam com um guard operacional central para CNH, preventiva e estado do veiculo
@@ -62,7 +64,7 @@ A [task_01_fundacao_arquitetura_composer_psr4.md](./ciclo_01_fundacao_arquitetur
 - A leitura do dashboard ainda depende de `VeiculoModel`, mesmo com a escrita ja migrada
 - O ciclo 02 planejado foi concluido e o proximo passo natural e consolidar backlog do ciclo seguinte
 - O cadastro de veiculos ainda precisava de dados mais aderentes a frota municipal real
-- o painel executivo por secretaria ainda e o gap funcional mais visivel do ciclo 04
+- a trilha executiva ja existe, mas a camada de auditoria expandida ainda e o gap funcional mais visivel do ciclo 04
 
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento
@@ -70,4 +72,4 @@ A [task_01_fundacao_arquitetura_composer_psr4.md](./ciclo_01_fundacao_arquitetur
 - Consolidar a migracao de leitura e finalizar o alinhamento de persistencia com soft delete e banco real
 - Preservar a compatibilidade com Linux/WSL e com a publicacao via `public/`
 - Manter o WSL Ubuntu como ambiente principal e repetivel de desenvolvimento
-- Avancar o ciclo 04 priorizando painel executivo, governanca operacional, compliance e transparencia de dados nao pessoais
+- Avancar o ciclo 04 priorizando auditoria expandida, governanca operacional, compliance e transparencia de dados nao pessoais

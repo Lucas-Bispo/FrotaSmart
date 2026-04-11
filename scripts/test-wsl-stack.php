@@ -56,6 +56,7 @@ $commands = [
     'manutencao' => 'php scripts/test-manutencao-model.php',
     'operacao_guard' => 'php scripts/test-operacao-frota-guard.php',
     'abastecimento' => 'php scripts/test-abastecimento-model.php',
+    'relatorio_executivo' => 'php scripts/test-relatorio-executivo.php',
 ];
 
 foreach ($commands as $label => $command) {

@@ -580,3 +580,29 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 22`: painel executivo por secretaria e por veiculo
+
+## 2026-04-11 - Task 22
+
+### Painel executivo por secretaria e por veiculo
+- Evoluido [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) com agregacoes executivas por secretaria e por veiculo
+- Enriquecidos [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) e [ManutencaoModel.php](../backend/models/ManutencaoModel.php) com dados adicionais de lotacao para consolidacao
+- Atualizada a view [dashboard.php](../frontend/views/dashboard.php) com cards executivos, leitura por secretaria e ranking por veiculo
+- Criado o teste [test-relatorio-executivo.php](../scripts/test-relatorio-executivo.php)
+- Atualizados [test-wsl-stack.php](../scripts/test-wsl-stack.php) e [composer.json](../composer.json) para incluir a nova validacao
+- Atualizada a task em [task_22_painel_executivo_secretaria_veiculo.md](./ciclo_04_estabilidade_governanca/task_22_painel_executivo_secretaria_veiculo.md)
+
+### Resultado tecnico
+- o dashboard passou a cruzar custo, disponibilidade, viagens, abastecimentos e preventivas por secretaria
+- a leitura por veiculo agora destaca os itens mais sensiveis do periodo, em vez de depender apenas da consulta transacional
+- o ciclo 04 ganhou uma camada executiva reaproveitavel para auditoria e exportacao futura
+
+### Validacao realizada
+- `C:\xampp\php\php.exe -l backend/models/AbastecimentoModel.php`
+- `C:\xampp\php\php.exe -l backend/models/ManutencaoModel.php`
+- `C:\xampp\php\php.exe -l backend/models/RelatorioOperacionalModel.php`
+- `C:\xampp\php\php.exe -l frontend/views/dashboard.php`
+- `C:\xampp\php\php.exe -l scripts/test-relatorio-executivo.php`
+- tentativa de executar `C:\xampp\php\php.exe scripts/test-relatorio-executivo.php` bloqueada por acesso negado ao MySQL (`SQLSTATE[HY000] [1045]`)
+
+### Proximo passo recomendado
+- Executar a `Task 23`: auditoria expandida e trilha de exportacao

@@ -17,6 +17,7 @@
     "test:manutencao-model": "php scripts/test-manutencao-model.php",
     "test:operacao-guard": "php scripts/test-operacao-frota-guard.php",
     "test:abastecimento-model": "php scripts/test-abastecimento-model.php",
+    "test:executive-panel": "php scripts/test-relatorio-executivo.php",
     "test:viagem-model": "php scripts/test-viagem-model.php",
     "test:parceiro-model": "php scripts/test-parceiro-operacional-model.php",
     "test:audit-flow": "php scripts/test-audit-flow.php",

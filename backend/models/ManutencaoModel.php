@@ -11,7 +11,7 @@ final class ManutencaoModel
         global $pdo;
 
         $stmt = $pdo->query(
-            'SELECT m.*, v.placa, v.modelo, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
+            'SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
              LEFT JOIN parceiros_operacionais p ON p.id = m.parceiro_id
@@ -26,7 +26,7 @@ final class ManutencaoModel
         global $pdo;
 
         $stmt = $pdo->prepare(
-            'SELECT m.*, v.placa, v.modelo, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
+            'SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
              LEFT JOIN parceiros_operacionais p ON p.id = m.parceiro_id
@@ -51,7 +51,7 @@ final class ManutencaoModel
 
         $limit = max(1, $limit);
         $stmt = $pdo->query(
-            'SELECT m.*, v.placa, v.modelo, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
+            'SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
              LEFT JOIN parceiros_operacionais p ON p.id = m.parceiro_id
@@ -227,7 +227,7 @@ final class ManutencaoModel
         global $pdo;
 
         $stmt = $pdo->query(
-            "SELECT m.*, v.placa, v.modelo, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
+            "SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
              LEFT JOIN parceiros_operacionais p ON p.id = m.parceiro_id
@@ -254,7 +254,7 @@ final class ManutencaoModel
         global $pdo;
 
         $stmt = $pdo->prepare(
-            "SELECT m.*, v.placa, v.modelo, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
+            "SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
              LEFT JOIN parceiros_operacionais p ON p.id = m.parceiro_id

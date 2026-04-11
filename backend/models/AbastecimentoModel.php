@@ -28,7 +28,7 @@ final class AbastecimentoModel
             $params[':data_fim'] = $dataFim;
         }
 
-        $sql = 'SELECT a.*, v.placa, v.modelo, m.nome AS motorista_nome, m.secretaria, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
+        $sql = 'SELECT a.*, v.placa, v.modelo, v.secretaria_lotada AS veiculo_secretaria_lotada, m.nome AS motorista_nome, m.secretaria, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
                 FROM abastecimentos a
                 INNER JOIN veiculos v ON v.id = a.veiculo_id
                 INNER JOIN motoristas m ON m.id = a.motorista_id
@@ -51,7 +51,7 @@ final class AbastecimentoModel
         global $pdo;
 
         $stmt = $pdo->prepare(
-            'SELECT a.*, v.placa, v.modelo, m.nome AS motorista_nome, m.secretaria, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
+            'SELECT a.*, v.placa, v.modelo, v.secretaria_lotada AS veiculo_secretaria_lotada, m.nome AS motorista_nome, m.secretaria, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM abastecimentos a
              INNER JOIN veiculos v ON v.id = a.veiculo_id
              INNER JOIN motoristas m ON m.id = a.motorista_id
@@ -163,7 +163,7 @@ final class AbastecimentoModel
 
         $limit = max(1, $limit);
         $stmt = $pdo->query(
-            'SELECT a.*, v.placa, v.modelo, m.nome AS motorista_nome, m.secretaria, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
+            'SELECT a.*, v.placa, v.modelo, v.secretaria_lotada AS veiculo_secretaria_lotada, m.nome AS motorista_nome, m.secretaria, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM abastecimentos a
              INNER JOIN veiculos v ON v.id = a.veiculo_id
              INNER JOIN motoristas m ON m.id = a.motorista_id

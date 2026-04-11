@@ -14,6 +14,7 @@ require_once __DIR__ . '/../../backend/models/VeiculoModel.php';
 require_once __DIR__ . '/../../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../../backend/models/ManutencaoModel.php';
 require_once __DIR__ . '/../../backend/models/AbastecimentoModel.php';
+require_once __DIR__ . '/../../backend/models/RelatorioOperacionalModel.php';
 
 $pageTitle = 'Dashboard';
 require_once __DIR__ . '/../includes/header.php';
@@ -25,6 +26,8 @@ $veiculosAtivos = [];
 $motoristas = [];
 $manutencoesRecentes = [];
 $abastecimentosRecentes = [];
+$painelSecretarias = [];
+$painelVeiculos = [];
 $abastecimentoModel = null;
 $canManageFleet = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);
 $canManageUsers = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_USERS_MANAGE);
@@ -52,8 +55,6 @@ $abastecimentosUltimos7Dias = 0;
 $custoOperacionalPeriodo = 0.0;
 $consumoMedioPeriodo = 0.0;
 $alertasAbastecimento = 0;
-$secretariasMotoristas = [];
-$gastoPorSecretaria = [];
 $alertasOperacionais = [];
 
 try {
@@ -61,6 +62,7 @@ try {
     $motoristaModel = new MotoristaModel();
     $manutencaoModel = new ManutencaoModel();
     $abastecimentoModel = new AbastecimentoModel();
+    $relatorioModel = new RelatorioOperacionalModel();
 
     $veiculosAtivos = $veiculoModel->getAllVeiculos();
     $veiculos = $veiculoModel->getAllVeiculos($filtroFrota);
@@ -76,6 +78,8 @@ try {
     $consumoResumoPeriodo = $abastecimentoModel->getConsumptionSummary($periodoInicio, $periodoFim);
     $consumoMedioPeriodo = (float) ($consumoResumoPeriodo['media_consumo_km_l'] ?? 0.0);
     $alertasAbastecimento = (int) ($consumoResumoPeriodo['total_alertas'] ?? 0);
+    $painelSecretarias = $relatorioModel->getExecutiveSummaryBySecretaria($periodoInicio, $periodoFim);
+    $painelVeiculos = $relatorioModel->getExecutiveSummaryByVeiculo($periodoInicio, $periodoFim, 8);
 } catch (Exception $e) {
     error_log('Erro ao carregar dashboard: ' . $e->getMessage());
     $errorMessage = 'Nao foi possivel carregar os dados do dashboard no momento.';
@@ -98,12 +102,6 @@ foreach ($motoristas as $motorista) {
         $motoristasAtivos++;
     }
 
-    $secretaria = trim((string) ($motorista['secretaria'] ?? 'Secretaria nao informada'));
-    if (!isset($secretariasMotoristas[$secretaria])) {
-        $secretariasMotoristas[$secretaria] = 0;
-    }
-    $secretariasMotoristas[$secretaria]++;
-
     $vencimento = DateTimeImmutable::createFromFormat('Y-m-d', (string) ($motorista['cnh_vencimento'] ?? ''));
     if ($vencimento instanceof DateTimeImmutable && $vencimento >= $today && $vencimento <= $alertLimit) {
         $cnhsVencendo++;
@@ -116,19 +114,6 @@ foreach ($abastecimentosRecentes as $abastecimento) {
         $abastecimentosUltimos7Dias++;
     }
 }
-
-if ($abastecimentoModel instanceof AbastecimentoModel) {
-    foreach ($abastecimentoModel->getAll(null, $periodoInicio, $periodoFim) as $abastecimento) {
-        $secretaria = trim((string) ($abastecimento['secretaria'] ?? 'Secretaria nao informada'));
-        if (!isset($gastoPorSecretaria[$secretaria])) {
-            $gastoPorSecretaria[$secretaria] = 0.0;
-        }
-        $gastoPorSecretaria[$secretaria] += (float) ($abastecimento['valor_total'] ?? 0);
-    }
-}
-
-arsort($secretariasMotoristas);
-arsort($gastoPorSecretaria);
 
 if ($veiculosManutencao > 0) {
     $alertasOperacionais[] = $veiculosManutencao . ' veiculo(s) estao em manutencao neste momento.';
@@ -187,6 +172,30 @@ function dashboard_vehicle_filter_label(string $filtro): string
         default => 'somente ativos',
     };
 }
+
+function dashboard_executive_alert_badge(string $status): string
+{
+    return match ($status) {
+        'vencida' => 'bg-rose-100 text-rose-800',
+        'proxima' => 'bg-amber-100 text-amber-800',
+        'em_dia' => 'bg-emerald-100 text-emerald-800',
+        default => 'bg-slate-100 text-slate-700',
+    };
+}
+
+function dashboard_executive_alert_label(string $status): string
+{
+    return match ($status) {
+        'vencida' => 'Preventiva vencida',
+        'proxima' => 'Preventiva proxima',
+        'em_dia' => 'Preventiva em dia',
+        default => 'Sem plano',
+    };
+}
+
+$secretariasMonitoradas = count($painelSecretarias);
+$topSecretaria = $painelSecretarias[0] ?? null;
+$topVeiculoExecutivo = $painelVeiculos[0] ?? null;
 ?>
 <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-8">
     <div>
@@ -286,6 +295,34 @@ function dashboard_vehicle_filter_label(string $filtro): string
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <p class="text-sm font-medium text-slate-500 uppercase">Arquivados</p>
         <p class="text-3xl font-bold text-slate-700 mt-2"><?php echo $veiculosArquivados; ?></p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Secretarias monitoradas</p>
+        <p class="text-3xl font-bold text-slate-800 mt-2"><?php echo $secretariasMonitoradas; ?></p>
+        <p class="text-xs text-slate-500 mt-2">Consolidacao de frota, viagens, custo e alertas no periodo.</p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Secretaria com maior custo</p>
+        <?php if (is_array($topSecretaria)): ?>
+            <p class="text-xl font-bold text-slate-800 mt-2"><?php echo htmlspecialchars((string) $topSecretaria['secretaria'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="text-sm text-slate-600 mt-1">R$ <?php echo number_format((float) ($topSecretaria['custo_total_periodo'] ?? 0), 2, ',', '.'); ?> no periodo</p>
+        <?php else: ?>
+            <p class="text-xl font-bold text-slate-800 mt-2">--</p>
+            <p class="text-sm text-slate-500 mt-1">Sem custo consolidado ate o momento.</p>
+        <?php endif; ?>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Veiculo mais sensivel</p>
+        <?php if (is_array($topVeiculoExecutivo)): ?>
+            <p class="text-xl font-bold text-slate-800 mt-2"><?php echo htmlspecialchars((string) $topVeiculoExecutivo['placa'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="text-sm text-slate-600 mt-1"><?php echo (int) ($topVeiculoExecutivo['total_alertas'] ?? 0); ?> alerta(s) e R$ <?php echo number_format((float) ($topVeiculoExecutivo['custo_total_periodo'] ?? 0), 2, ',', '.'); ?></p>
+        <?php else: ?>
+            <p class="text-xl font-bold text-slate-800 mt-2">--</p>
+            <p class="text-sm text-slate-500 mt-1">Sem consolidacao por veiculo no periodo.</p>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -428,44 +465,113 @@ function dashboard_vehicle_filter_label(string $filtro): string
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h2 class="text-lg font-semibold mb-2 text-slate-700">Segmentacao por secretaria</h2>
-            <p class="text-sm text-slate-500 mb-5">Visao inicial para apoiar futuras leituras gerenciais por orgao.</p>
+            <h2 class="text-lg font-semibold mb-2 text-slate-700">Painel executivo por secretaria</h2>
+            <p class="text-sm text-slate-500 mb-5">Leitura consolidada de disponibilidade, uso, custo e risco por orgao no periodo atual.</p>
 
-            <div class="space-y-4">
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-700 mb-2">Motoristas por secretaria</h3>
-                    <div class="space-y-2">
-                        <?php if ($secretariasMotoristas === []): ?>
-                            <p class="text-sm text-slate-500">Sem motoristas suficientes para consolidacao.</p>
-                        <?php endif; ?>
-                        <?php foreach (array_slice($secretariasMotoristas, 0, 4, true) as $secretaria => $total): ?>
-                            <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                                <span class="text-sm text-slate-700"><?php echo htmlspecialchars((string) $secretaria, ENT_QUOTES, 'UTF-8'); ?></span>
-                                <span class="text-sm font-bold text-slate-900"><?php echo (int) $total; ?></span>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
+            <div class="space-y-3">
+                <?php if ($painelSecretarias === []): ?>
+                    <p class="text-sm text-slate-500">Ainda nao ha massa suficiente para o painel executivo por secretaria.</p>
+                <?php endif; ?>
 
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-700 mb-2">Gasto do mes por secretaria</h3>
-                    <div class="space-y-2">
-                        <?php if ($gastoPorSecretaria === []): ?>
-                            <p class="text-sm text-slate-500">Ainda nao ha gasto consolidado no periodo atual.</p>
-                        <?php endif; ?>
-                        <?php foreach (array_slice($gastoPorSecretaria, 0, 4, true) as $secretaria => $valor): ?>
-                            <div class="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
-                                <span class="text-sm text-slate-700"><?php echo htmlspecialchars((string) $secretaria, ENT_QUOTES, 'UTF-8'); ?></span>
-                                <span class="text-sm font-bold text-slate-900">R$ <?php echo number_format((float) $valor, 2, ',', '.'); ?></span>
+                <?php foreach (array_slice($painelSecretarias, 0, 6) as $secretariaResumo): ?>
+                    <div class="rounded-2xl border border-slate-200 p-4">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="text-sm font-semibold text-slate-800"><?php echo htmlspecialchars((string) $secretariaResumo['secretaria'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                <p class="text-xs text-slate-500 mt-1">
+                                    Frota ativa: <?php echo (int) $secretariaResumo['frota_ativa']; ?> |
+                                    Em operacao: <?php echo (int) $secretariaResumo['frota_operacao']; ?> |
+                                    Motoristas ativos: <?php echo (int) $secretariaResumo['motoristas_ativos']; ?>
+                                </p>
                             </div>
-                        <?php endforeach; ?>
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-slate-900">R$ <?php echo number_format((float) $secretariaResumo['custo_total_periodo'], 2, ',', '.'); ?></p>
+                                <p class="text-xs text-slate-500">custo total</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mt-4 text-sm">
+                            <div class="rounded-xl bg-slate-50 px-3 py-2">
+                                <span class="block text-slate-500 text-xs">Viagens / KM</span>
+                                <span class="font-semibold text-slate-800"><?php echo (int) $secretariaResumo['viagens_periodo']; ?> / <?php echo number_format((float) $secretariaResumo['km_viagens_periodo'], 0, ',', '.'); ?></span>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 px-3 py-2">
+                                <span class="block text-slate-500 text-xs">Disponibilidade</span>
+                                <span class="font-semibold text-slate-800"><?php echo $secretariaResumo['disponibilidade_percentual'] !== null ? number_format((float) $secretariaResumo['disponibilidade_percentual'], 1, ',', '.') . '%' : '--'; ?></span>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 px-3 py-2">
+                                <span class="block text-slate-500 text-xs">Abastecimento</span>
+                                <span class="font-semibold text-slate-800"><?php echo (int) $secretariaResumo['abastecimentos_periodo']; ?> registro(s)</span>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 px-3 py-2">
+                                <span class="block text-slate-500 text-xs">Alertas</span>
+                                <span class="font-semibold <?php echo ((int) $secretariaResumo['alertas_total'] > 0) ? 'text-amber-700' : 'text-emerald-700'; ?>"><?php echo (int) $secretariaResumo['alertas_total']; ?> alerta(s)</span>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
 
     <div class="xl:col-span-2 space-y-8">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 bg-slate-50">
+                <h2 class="text-lg font-semibold text-slate-700">Painel executivo por veiculo</h2>
+                <p class="text-sm text-slate-500 mt-1">Veiculos mais sensiveis no periodo, combinando custo, uso e alertas operacionais.</p>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Uso no periodo</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Custos</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Alertas</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-200">
+                        <?php if ($painelVeiculos === []): ?>
+                            <tr>
+                                <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">Ainda nao ha leitura executiva suficiente por veiculo.</td>
+                            </tr>
+                        <?php endif; ?>
+
+                        <?php foreach ($painelVeiculos as $veiculoResumo): ?>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars((string) $veiculoResumo['placa'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $veiculoResumo['modelo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-400 mt-1"><?php echo htmlspecialchars((string) $veiculoResumo['secretaria_lotada'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-700">
+                                    <div><?php echo (int) $veiculoResumo['viagens_periodo']; ?> viagem(ns)</div>
+                                    <div class="text-xs text-slate-500"><?php echo number_format((float) $veiculoResumo['km_viagens_periodo'], 0, ',', '.'); ?> km</div>
+                                    <div class="text-xs text-slate-500"><?php echo (int) $veiculoResumo['abastecimentos_periodo']; ?> abastecimento(s)</div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-700">
+                                    <div>R$ <?php echo number_format((float) $veiculoResumo['custo_total_periodo'], 2, ',', '.'); ?></div>
+                                    <div class="text-xs text-slate-500">Abast.: R$ <?php echo number_format((float) $veiculoResumo['gasto_abastecimento_periodo'], 2, ',', '.'); ?></div>
+                                    <div class="text-xs text-slate-500">Manut.: R$ <?php echo number_format((float) $veiculoResumo['custo_manutencao_periodo'], 2, ',', '.'); ?></div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-700">
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo dashboard_executive_alert_badge((string) $veiculoResumo['preventiva_status']); ?>">
+                                            <?php echo htmlspecialchars(dashboard_executive_alert_label((string) $veiculoResumo['preventiva_status']), ENT_QUOTES, 'UTF-8'); ?>
+                                        </span>
+                                        <?php if (! empty($veiculoResumo['deleted_at'])): ?>
+                                            <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-200 text-slate-700">Arquivado</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="text-xs text-slate-500 mt-2"><?php echo (int) $veiculoResumo['total_alertas']; ?> alerta(s) consolidados</div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $veiculoResumo['preventiva_resumo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="p-6 border-b border-slate-200 bg-slate-50">
                 <h2 class="text-lg font-semibold text-slate-700">Ultimos abastecimentos</h2>
