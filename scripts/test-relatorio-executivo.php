@@ -163,7 +163,7 @@ $viagemModel->create([
     'data_retorno' => '2026-04-09 10:00:00',
     'km_saida' => 10120,
     'km_chegada' => 10180,
-    'status' => 'finalizada',
+    'status' => 'concluida',
     'observacoes' => 'Viagem de teste para saude',
 ]);
 
@@ -179,7 +179,7 @@ $viagemModel->create([
     'data_retorno' => '2026-04-10 08:30:00',
     'km_saida' => 20020,
     'km_chegada' => 20100,
-    'status' => 'finalizada',
+    'status' => 'concluida',
     'observacoes' => 'Viagem de teste para educacao',
 ]);
 
