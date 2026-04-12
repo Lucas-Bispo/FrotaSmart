@@ -7,12 +7,12 @@
 - Arquitetura: [arquitetura_projeto.md](./arquitetura_projeto.md)
 
 ## Objetivo
-Eliminar o legado de acoplamento com Windows/XAMPP e padronizar o FrotaSmart para um ambiente de desenvolvimento e deploy profissional em Linux/WSL.
+Eliminar o legado de acoplamento com Windows e padronizar o FrotaSmart para um ambiente de desenvolvimento e deploy profissional em Linux/WSL.
 
 ## 1. Diagnostico de debito tecnico
-O projeto possuia raizes no XAMPP que impediam a portabilidade e a automacao.
+O projeto possuia raizes no ambiente Windows legado que impediam a portabilidade e a automacao.
 
-- Hardcoding: referencias explicitas a `C:\xampp\...` e `.exe`
+- Hardcoding: referencias explicitas a caminhos absolutos locais e binarios do Windows
 - Arquitetura de entrada: ausencia inicial de `public/`
 - Gestao de dependencias: `composer.lock` ausente e uso incompleto do autoload PSR-4
 - Instanciacao do banco: uso de `global $pdo` em controllers e models
@@ -24,7 +24,7 @@ O projeto possuia raizes no XAMPP que impediam a portabilidade e a automacao.
 - padronizar o uso de `php -S 0.0.0.0:8000 -t public`
 
 ## 3. Checklist de definicao de pronto
-- `grep -r "xampp" .` nao retornar resultado nos scripts operacionais
+- nao existir referencia a caminhos absolutos locais ou binarios do Windows nos scripts operacionais
 - `.env` ser a fonte de verdade para banco
 - existir um guia Linux com `composer install`, `php scripts/bootstrap-db.php` e `php -S`
 - `composer.json` gerir o carregamento de classes via PSR-4
@@ -32,5 +32,5 @@ O projeto possuia raizes no XAMPP que impediam a portabilidade e a automacao.
 ## Resultado observado
 - O guia [readme_linux.md](./readme_linux.md) foi criado
 - `public/` passou a ser o document root recomendado
-- os scripts operacionais foram limpos de referencias explicitas a XAMPP
+- os scripts operacionais foram limpos de referencias explicitas a caminhos locais do Windows
 - a migracao arquitetural ainda segue pendente na camada de persistencia e aplicacao

@@ -9,7 +9,7 @@
 - Guia Linux: [readme_linux.md](./readme_linux.md)
 
 ## Observacao de contexto
-- registros antigos com `C:\\xampp\\php\\php.exe -l` refletem apenas a validacao de sintaxe feita em um momento intermediario da evolucao
+- registros antigos de validacao presa ao PHP do Windows refletem apenas um momento intermediario da evolucao
 - o ambiente operacional oficial do projeto hoje e o Ubuntu WSL, conforme [readme_wsl_ubuntu_windows.md](./readme_wsl_ubuntu_windows.md) e [task_20_estabilizacao_wsl_validacao_integrada.md](./ciclo_04_estabilidade_governanca/task_20_estabilizacao_wsl_validacao_integrada.md)
 
 ## 2026-03-22
@@ -71,10 +71,10 @@
 - Criado o guia [readme_linux.md](./readme_linux.md) com fluxo de execucao em Linux e WSL
 - Criada a pasta [public](../public/index.php) como document root recomendado para servidor embutido e deploy Linux
 - Ajustadas views e controllers legados para navegar por entrypoints publicos
-- Removidas referencias explicitas a XAMPP dos scripts operacionais
+- Removidas referencias explicitas ao ambiente legado do Windows nos scripts operacionais
 
 ### Por que isso foi feito
-- reduzir acoplamento com Windows
+- reduzir acoplamento com ambiente local especifico
 - evitar exposicao da raiz do projeto em servidor web
 - preparar a aplicacao para Ubuntu, WSL e deploy mais profissional
 
@@ -451,12 +451,12 @@
 - o km operacional passa a alimentar a leitura preventiva sem exigir nova stack
 
 ### Validacao realizada
-- `C:\xampp\php\php.exe -l backend/models/ManutencaoModel.php`
-- `C:\xampp\php\php.exe -l backend/controllers/ManutencaoController.php`
-- `C:\xampp\php\php.exe -l frontend/views/manutencoes.php`
-- `C:\xampp\php\php.exe -l frontend/views/dashboard.php`
-- `C:\xampp\php\php.exe -l scripts/bootstrap-db.php`
-- `C:\xampp\php\php.exe -l scripts/test-manutencao-model.php`
+- `php -l backend/models/ManutencaoModel.php`
+- `php -l backend/controllers/ManutencaoController.php`
+- `php -l frontend/views/manutencoes.php`
+- `php -l frontend/views/dashboard.php`
+- `php -l scripts/bootstrap-db.php`
+- `php -l scripts/test-manutencao-model.php`
 - tentativa de executar `scripts/bootstrap-db.php` e `scripts/test-manutencao-model.php` bloqueada por acesso negado ao MySQL (`SQLSTATE[HY000] [1045]`)
 
 ### Proximo passo recomendado
@@ -476,10 +476,10 @@
 - a leitura de eficiencia por veiculo ficou pronta para consolidacao em relatorios
 
 ### Validacao realizada
-- `C:\xampp\php\php.exe -l backend/models/AbastecimentoModel.php`
-- `C:\xampp\php\php.exe -l frontend/views/abastecimentos.php`
-- `C:\xampp\php\php.exe -l frontend/views/dashboard.php`
-- `C:\xampp\php\php.exe -l scripts/test-abastecimento-model.php`
+- `php -l backend/models/AbastecimentoModel.php`
+- `php -l frontend/views/abastecimentos.php`
+- `php -l frontend/views/dashboard.php`
+- `php -l scripts/test-abastecimento-model.php`
 - tentativa de executar `scripts/test-abastecimento-model.php` bloqueada por acesso negado ao MySQL (`SQLSTATE[HY000] [1045]`)
 
 ### Proximo passo recomendado
@@ -500,10 +500,10 @@
 - a modelagem ficou pronta para evoluir depois para PDF e relatorios mais formais
 
 ### Validacao realizada
-- `C:\xampp\php\php.exe -l backend/models/RelatorioOperacionalModel.php`
-- `C:\xampp\php\php.exe -l frontend/views/relatorios.php`
-- `C:\xampp\php\php.exe -l public/relatorios.php`
-- `C:\xampp\php\php.exe -l frontend/includes/sidebar.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php -l frontend/views/relatorios.php`
+- `php -l public/relatorios.php`
+- `php -l frontend/includes/sidebar.php`
 
 ### Fechamento do ciclo
 - ciclo 03 concluido com cadastro consolidado, arquivamento, manutencao preventiva, leitura de abastecimento e relatorios operacionais
@@ -572,11 +572,11 @@
 - a leitura das regras saiu do dashboard passivo e passou a agir direto no fluxo de registro
 
 ### Validacao realizada
-- `C:\xampp\php\php.exe -l backend/models/OperacaoFrotaGuard.php`
-- `C:\xampp\php\php.exe -l backend/models/ManutencaoModel.php`
-- `C:\xampp\php\php.exe -l backend/controllers/ViagemController.php`
-- `C:\xampp\php\php.exe -l backend/controllers/AbastecimentoController.php`
-- `C:\xampp\php\php.exe -l scripts/test-operacao-frota-guard.php`
+- `php -l backend/models/OperacaoFrotaGuard.php`
+- `php -l backend/models/ManutencaoModel.php`
+- `php -l backend/controllers/ViagemController.php`
+- `php -l backend/controllers/AbastecimentoController.php`
+- `php -l scripts/test-operacao-frota-guard.php`
 
 ### Proximo passo recomendado
 - Executar a `Task 22`: painel executivo por secretaria e por veiculo
@@ -597,12 +597,12 @@
 - o ciclo 04 ganhou uma camada executiva reaproveitavel para auditoria e exportacao futura
 
 ### Validacao realizada
-- `C:\xampp\php\php.exe -l backend/models/AbastecimentoModel.php`
-- `C:\xampp\php\php.exe -l backend/models/ManutencaoModel.php`
-- `C:\xampp\php\php.exe -l backend/models/RelatorioOperacionalModel.php`
-- `C:\xampp\php\php.exe -l frontend/views/dashboard.php`
-- `C:\xampp\php\php.exe -l scripts/test-relatorio-executivo.php`
-- tentativa de executar `C:\xampp\php\php.exe scripts/test-relatorio-executivo.php` bloqueada por acesso negado ao MySQL (`SQLSTATE[HY000] [1045]`)
+- `php -l backend/models/AbastecimentoModel.php`
+- `php -l backend/models/ManutencaoModel.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php -l frontend/views/dashboard.php`
+- `php -l scripts/test-relatorio-executivo.php`
+- tentativa de executar `php scripts/test-relatorio-executivo.php` bloqueada por acesso negado ao MySQL (`SQLSTATE[HY000] [1045]`)
 
 ### Proximo passo recomendado
 - Executar a `Task 23`: auditoria expandida e trilha de exportacao

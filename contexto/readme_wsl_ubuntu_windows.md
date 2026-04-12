@@ -1,4 +1,4 @@
-# FrotaSmart no WSL Ubuntu no Windows
+# FrotaSmart no Ubuntu WSL
 
 ## Links uteis
 - Guia Linux geral: [readme_linux.md](./readme_linux.md)
@@ -8,7 +8,7 @@
 - Roadmap atual: [ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
 - Roadmap ciclo 01: [ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md](./ciclo_01_fundacao_arquitetura/roadmap_ciclo_01.md)
 
-Este guia mostra como executar o FrotaSmart no Windows usando WSL com Ubuntu, sem depender de XAMPP.
+Este guia mostra como executar o FrotaSmart localmente no Ubuntu WSL, com o mesmo desenho operacional pensado para deploy futuro em Linux Ubuntu na nuvem.
 
 ## Cenario esperado
 - Windows 10 ou 11
@@ -81,7 +81,7 @@ Edite o arquivo:
 nano .env
 ```
 
-Exemplo para banco rodando no proprio Windows:
+Exemplo recomendado para banco local acessivel pelo proprio Ubuntu WSL:
 
 ```env
 DB_HOST=127.0.0.1
@@ -95,10 +95,10 @@ ADMIN_DEFAULT_PASS=uma_senha_forte
 
 ## 5. Garantir acesso ao MySQL ou MariaDB
 Voce pode usar:
-- MySQL rodando no Windows
-- MariaDB/MySQL rodando dentro do proprio Ubuntu no WSL
+- MySQL rodando dentro do proprio Ubuntu no WSL
+- MySQL acessivel por TCP no host local, desde que o `.env` permaneça apontando para um endpoint Linux/WSL compativel
 
-Para testar conexao com banco no Windows:
+Para testar conexao com banco local:
 
 ```bash
 mysql -h 127.0.0.1 -P 3306 -u root -p
@@ -156,7 +156,7 @@ php scripts/test-wsl-stack.php
 Ou, se preferir pelo Composer:
 
 ```bash
-php composer.phar run test:wsl-stack
+composer run test:wsl-stack
 ```
 
 ## 9. Subir a aplicacao localmente
@@ -166,7 +166,7 @@ A partir da raiz do projeto:
 php -S 0.0.0.0:8000 -t public
 ```
 
-Depois abra no navegador do Windows:
+Depois abra no navegador:
 
 ```text
 http://localhost:8000/login.php
@@ -202,7 +202,7 @@ sudo apt install -y composer
 ### Erro de conexao com banco
 - confira `DB_HOST`, `DB_PORT`, `DB_USER` e `DB_PASS` no `.env`
 - teste com `mysql -h 127.0.0.1 -P 3306 -u usuario -p`
-- se o banco estiver no Windows, confirme que ele aceita conexoes TCP
+- confirme que o banco esta aceitando conexoes TCP em `127.0.0.1:3306`
 
 ### `Access denied for user`
 As credenciais do `.env` nao batem com o MySQL configurado. Ajuste usuario e senha antes de rodar `bootstrap-db.php` ou `test-repository-pdo.php`.
@@ -221,7 +221,7 @@ http://localhost:8080/login.php
 ```
 
 ### Lentidao ao trabalhar em `/mnt/c/...`
-No WSL isso pode acontecer. Para desenvolvimento local simples funciona bem, mas se quiser mais desempenho depois podemos mover o projeto para dentro do filesystem Linux e sincronizar com Git.
+No WSL isso pode acontecer. Para desenvolvimento local simples funciona bem, mas, para ficar mais proximo do ambiente final em Ubuntu, o ideal depois e mover o projeto para dentro do filesystem Linux e sincronizar via Git.
 
 ## Fluxo resumido
 

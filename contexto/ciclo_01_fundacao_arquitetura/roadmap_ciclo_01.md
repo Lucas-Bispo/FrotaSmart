@@ -35,7 +35,7 @@ Cada task precisa ser executavel, ter criterio de aceite e respeitar a arquitetu
 
 ### Task 03.1 - Operacao Clean Linux
 - Status: concluida
-- Objetivo: preparar o projeto para execucao padronizada em Linux Ubuntu e WSL sem XAMPP
+- Objetivo: preparar o projeto para execucao padronizada em Linux Ubuntu e WSL sem dependencias legadas de Windows
 - Documento detalhado: [task_03_1_operacao_clean_linux.md](./task_03_1_operacao_clean_linux.md)
 
 ### Task 04 - Persistencia PDO na nova arquitetura

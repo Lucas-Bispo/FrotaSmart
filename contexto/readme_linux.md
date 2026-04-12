@@ -11,7 +11,7 @@
 - Hardening Apache: [apache_hardening.md](./docs/apache_hardening.md)
 - Revisao de seguranca: [security_review.md](./docs/security_review.md)
 
-Este projeto deve ser executado com PHP 8.2+ e MySQL ou MariaDB em ambiente Linux ou WSL, sem depender de XAMPP.
+Este projeto deve ser executado com PHP 8.2+ e MySQL ou MariaDB em ambiente Linux ou Ubuntu WSL, seguindo o mesmo caminho operacional previsto para deploy em nuvem.
 
 ## Requisitos
 - PHP 8.2 ou superior
