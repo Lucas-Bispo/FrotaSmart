@@ -8,6 +8,8 @@ require_once __DIR__ . '/../models/OperacaoFrotaGuard.php';
 
 final class AbastecimentoController
 {
+    private const ALLOWED_FUEL_TYPES = ['gasolina', 'etanol', 'diesel', 'diesel_s10', 'gnv', 'flex'];
+
     private AbastecimentoModel $model;
     private OperacaoFrotaGuard $guard;
 
@@ -85,64 +87,99 @@ final class AbastecimentoController
 
     private function validatedPayload(): array
     {
-        $veiculoId = (int) ($_POST['veiculo_id'] ?? 0);
-        $motoristaId = (int) ($_POST['motorista_id'] ?? 0);
-        $parceiroId = (int) ($_POST['parceiro_id'] ?? 0);
-        $dataAbastecimento = (string) ($_POST['data_abastecimento'] ?? '');
-        $posto = trim((string) ($_POST['posto'] ?? ''));
-        $tipoCombustivel = (string) ($_POST['tipo_combustivel'] ?? '');
-        $litros = trim((string) ($_POST['litros'] ?? '0'));
-        $valorTotal = trim((string) ($_POST['valor_total'] ?? '0'));
-        $kmAtual = trim((string) ($_POST['km_atual'] ?? '0'));
-        $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
+        $payload = $this->collectPayload();
+        $this->assertRequiredSelections($payload);
+        $this->assertDateAndSupplier($payload);
+        $this->assertFuelType($payload);
+        $this->assertNumericValues($payload);
 
-        if ($veiculoId <= 0) {
+        return [
+            'veiculo_id' => $payload['veiculo_id'],
+            'motorista_id' => $payload['motorista_id'],
+            'parceiro_id' => $this->nullablePositiveInteger((int) $payload['parceiro_id']),
+            'data_abastecimento' => $payload['data_abastecimento'],
+            'posto' => $payload['posto'],
+            'tipo_combustivel' => $payload['tipo_combustivel'],
+            'litros' => $payload['litros'],
+            'valor_total' => $payload['valor_total'],
+            'km_atual' => $payload['km_atual'],
+            'observacoes' => $this->nullableText((string) $payload['observacoes']),
+        ];
+    }
+
+    /**
+     * @return array<string, int|string|float>
+     */
+    private function collectPayload(): array
+    {
+        return [
+            'veiculo_id' => (int) ($_POST['veiculo_id'] ?? 0),
+            'motorista_id' => (int) ($_POST['motorista_id'] ?? 0),
+            'parceiro_id' => (int) ($_POST['parceiro_id'] ?? 0),
+            'data_abastecimento' => (string) ($_POST['data_abastecimento'] ?? ''),
+            'posto' => trim((string) ($_POST['posto'] ?? '')),
+            'tipo_combustivel' => (string) ($_POST['tipo_combustivel'] ?? ''),
+            'litros' => $this->normalizeDecimal(trim((string) ($_POST['litros'] ?? '0'))),
+            'valor_total' => $this->normalizeDecimal(trim((string) ($_POST['valor_total'] ?? '0'))),
+            'km_atual' => $this->normalizeInteger(trim((string) ($_POST['km_atual'] ?? '0'))),
+            'observacoes' => trim((string) ($_POST['observacoes'] ?? '')),
+        ];
+    }
+
+    /**
+     * @param array<string, int|string|float> $payload
+     */
+    private function assertRequiredSelections(array $payload): void
+    {
+        if ((int) $payload['veiculo_id'] <= 0) {
             $this->flashAndRedirect('error', 'Selecione um veiculo valido.');
         }
 
-        if ($motoristaId <= 0) {
+        if ((int) $payload['motorista_id'] <= 0) {
             $this->flashAndRedirect('error', 'Selecione um motorista valido.');
         }
+    }
 
-        if (!$this->isValidDate($dataAbastecimento)) {
+    /**
+     * @param array<string, int|string|float> $payload
+     */
+    private function assertDateAndSupplier(array $payload): void
+    {
+        if (! $this->isValidDate((string) $payload['data_abastecimento'])) {
             $this->flashAndRedirect('error', 'Informe uma data valida para o abastecimento.');
         }
 
-        if ($posto === '') {
+        if (trim((string) $payload['posto']) === '') {
             $this->flashAndRedirect('error', 'Informe o posto ou fornecedor.');
         }
+    }
 
-        if (!in_array($tipoCombustivel, ['gasolina', 'etanol', 'diesel', 'diesel_s10', 'gnv', 'flex'], true)) {
+    /**
+     * @param array<string, int|string|float> $payload
+     */
+    private function assertFuelType(array $payload): void
+    {
+        if (! in_array((string) $payload['tipo_combustivel'], self::ALLOWED_FUEL_TYPES, true)) {
             $this->flashAndRedirect('error', 'Informe um tipo de combustivel valido.');
         }
+    }
 
-        $litrosNormalizados = $this->normalizeDecimal($litros);
-        if ($litrosNormalizados <= 0) {
+    /**
+     * @param array<string, int|string|float> $payload
+     */
+    private function assertNumericValues(array $payload): void
+    {
+        if ((float) $payload['litros'] <= 0) {
             $this->flashAndRedirect('error', 'Informe uma quantidade valida de litros.');
         }
 
-        $valorTotalNormalizado = $this->normalizeDecimal($valorTotal);
-        if ($valorTotalNormalizado <= 0) {
+        if ((float) $payload['valor_total'] <= 0) {
             $this->flashAndRedirect('error', 'Informe um valor total valido.');
         }
 
-        $kmAtualNormalizado = $this->normalizeInteger($kmAtual);
-        if ($kmAtualNormalizado <= 0) {
+        if ((int) $payload['km_atual'] <= 0) {
             $this->flashAndRedirect('error', 'Informe um km atual valido para o veiculo.');
         }
-
-        return [
-            'veiculo_id' => $veiculoId,
-            'motorista_id' => $motoristaId,
-            'parceiro_id' => $parceiroId > 0 ? $parceiroId : null,
-            'data_abastecimento' => $dataAbastecimento,
-            'posto' => $posto,
-            'tipo_combustivel' => $tipoCombustivel,
-            'litros' => $litrosNormalizados,
-            'valor_total' => $valorTotalNormalizado,
-            'km_atual' => $kmAtualNormalizado,
-            'observacoes' => $observacoes !== '' ? $observacoes : null,
-        ];
     }
 
     /**
@@ -207,9 +244,19 @@ final class AbastecimentoController
         return $digits === '' ? 0 : (int) $digits;
     }
 
+    private function nullableText(string $value): ?string
+    {
+        return $value !== '' ? $value : null;
+    }
+
+    private function nullablePositiveInteger(int $value): ?int
+    {
+        return $value > 0 ? $value : null;
+    }
+
     private function assertCanManage(): void
     {
-        if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE)) {
+        if (! isset($_SESSION['user']) || ! user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE)) {
             set_flash('error', 'Acesso negado ao modulo de abastecimento.');
             header('Location: /dashboard.php');
             exit;

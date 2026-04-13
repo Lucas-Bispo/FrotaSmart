@@ -664,12 +664,21 @@
 - Refatorado [ViagemController.php](../backend/controllers/ViagemController.php) para reduzir complexidade em `validatedPayload()`
 - Extraidas validacoes para metodos pequenos e nomeados, como `assertRequiredSelections()`, `assertRequiredTextFields()`, `assertDateFields()`, `assertKilometers()` e `assertStatus()`
 - Padronizado o uso de constante para status aceitos e helper para campos textuais opcionais
+- Refatorados [ManutencaoController.php](../backend/controllers/ManutencaoController.php) e [AbastecimentoController.php](../backend/controllers/AbastecimentoController.php) seguindo o mesmo padrao
+- As validacoes agora foram separadas em blocos menores e sem concentrar toda a regra de entrada em um unico metodo grande
 
 ### Validacao realizada
 - `php -l backend/controllers/ViagemController.php`
 - `php -l public/viagens.php`
 - `php -l frontend/views/viagens.php`
-- observacao: o projeto ainda nao possui teste automatizado especifico para o controller de viagens
+- `php -l backend/controllers/ManutencaoController.php`
+- `php -l backend/controllers/AbastecimentoController.php`
+- `php -l public/manutencoes.php`
+- `php -l public/abastecimentos.php`
+- `php -l frontend/views/manutencoes.php`
+- `php -l frontend/views/abastecimentos.php`
+- `php scripts/test-wsl-stack.php` executado com sucesso no Ubuntu WSL apos a rodada de refatoracao
+- observacao: o projeto ainda nao possui testes automatizados especificos para esses controllers
 
 ### Proximo passo recomendado
-- aplicar o mesmo padrao nos controllers de manutencao e abastecimento, que tambem concentram validacao extensa
+- aplicar o mesmo padrao em views grandes e revisar contratos que ainda dependem de booleanos e `null`

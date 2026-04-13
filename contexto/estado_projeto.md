@@ -37,6 +37,7 @@
 - O modulo de relatorios ja aceita `PDO` explicito nos entrypoints principais, reduzindo dependencia de estado global
 - O FrotaSmart agora possui uma camada dedicada de read model para relatorios em `src/Infrastructure/ReadModels`
 - O projeto agora possui um guia formal de Clean Code em `engenharia/padrao_clean_code_frotasmart.md`
+- Os controllers operacionais principais ja comecaram a migrar para validacoes menores e mais nomeadas
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
@@ -55,6 +56,7 @@
 - `backend/models/RelatorioOperacionalModel.php` foi ajustado para receber conexao explicita, embora ainda concentre consultas legadas
 - parte importante das consultas do `RelatorioOperacionalModel` ja foi extraida para `RelatorioOperacionalQueryService`
 - `ViagemController` iniciou uma rodada de reducao de complexidade com extracao de validacoes em metodos menores
+- `ManutencaoController` e `AbastecimentoController` seguiram a mesma direcao para reduzir complexidade local
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`
