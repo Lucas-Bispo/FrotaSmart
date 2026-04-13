@@ -41,6 +41,7 @@
 - O modulo de veiculos agora tambem usa contratos mais explicitos para separar leitura ativa de leitura historica
 - O dashboard principal iniciou um fracionamento de view com helpers puros para cards, alertas e sumarizacao operacional
 - O modulo de relatorios agora tambem iniciou fracionamento de view com helpers para labels, cards, cabecalhos e renderizacao de linhas
+- O modulo de relatorios ja avancou para um segundo recorte de view, movendo tambem filtros, exportacao e abas para helpers dedicados
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
@@ -63,6 +64,7 @@
 - `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita
 - `dashboard.php` agora reaproveita `dashboard_view_helpers.php` para organizar parte da camada de apresentacao em funcoes puras e estruturas declarativas
 - `relatorios.php` agora reaproveita `relatorios_view_helpers.php` para reduzir condicionais de apresentacao e centralizar variacoes por tipo de relatorio
+- `relatorios.php` tambem passou a reaproveitar helpers para campos de filtro, tabs de navegacao e query de exportacao
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`

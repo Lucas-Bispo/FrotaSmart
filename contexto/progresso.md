@@ -759,3 +759,25 @@
 
 ### Proximo passo recomendado
 - continuar a `Task 24` reduzindo blocos residuais grandes em views e simplificando composicoes ainda concentradas no modulo de relatorios
+
+## 2026-04-13 - Clean Code em relatorios, etapa 2
+
+### Fracionamento do formulario e da navegacao
+- Evoluido [relatorios_view_helpers.php](../frontend/views/helpers/relatorios_view_helpers.php) com funcoes para montagem dos campos de filtro, opcoes, tabs de navegacao e query de exportacao
+- Simplificada [relatorios.php](../frontend/views/relatorios.php) para consumir esses helpers e reduzir ainda mais a montagem condicional na view principal
+- Mantido o comportamento funcional dos filtros operacionais e da aba de auditoria
+
+### Resultado tecnico
+- o modulo de relatorios passou a concentrar em um helper nao apenas labels e linhas, mas tambem os principais pontos de variacao do formulario
+- a view principal ficou mais proxima de uma composicao declarativa e menos dependente de detalhes de rendering
+- o recorte prepara o proximo passo de deslocar composicoes residuais e possiveis normalizacoes para camadas ainda mais pequenas
+
+### Validacao realizada
+- `php -l frontend/views/helpers/relatorios_view_helpers.php`
+- `php -l frontend/views/relatorios.php`
+- `php scripts/test-auditoria-relatorio.php`
+- `php scripts/test-relatorio-executivo.php`
+- `php scripts/test-wsl-stack.php`
+
+### Proximo passo recomendado
+- continuar a `Task 24` deslocando composicoes residuais do modulo de relatorios e revisando agregacoes ainda concentradas no model legado

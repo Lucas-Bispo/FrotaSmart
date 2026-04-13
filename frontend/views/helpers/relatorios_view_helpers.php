@@ -69,6 +69,152 @@ function relatorios_table_headers(string $report): array
     };
 }
 
+/**
+ * @param array<string, string> $filters
+ * @param list<string> $secretarias
+ * @param list<array<string, mixed>> $veiculos
+ * @param array<string, string> $statusOptions
+ * @param list<string> $auditTargetTypes
+ */
+function relatorios_filter_fields_markup(
+    string $report,
+    array $filters,
+    array $secretarias,
+    array $veiculos,
+    array $statusOptions,
+    array $auditTargetTypes
+): string {
+    if ($report === 'auditoria') {
+        return relatorios_auditoria_filter_fields_markup($filters, $statusOptions, $auditTargetTypes);
+    }
+
+    return relatorios_operational_filter_fields_markup($filters, $secretarias, $veiculos, $statusOptions);
+}
+
+/**
+ * @param array<string, string> $filters
+ * @param array<string, string> $statusOptions
+ * @param list<string> $auditTargetTypes
+ */
+function relatorios_auditoria_filter_fields_markup(array $filters, array $statusOptions, array $auditTargetTypes): string
+{
+    $targetOptions = '<option value="">Todos os modulos</option>';
+
+    foreach ($auditTargetTypes as $targetType) {
+        $selected = $filters['tipo_alvo'] === $targetType ? 'selected' : '';
+        $targetOptions .= sprintf(
+            '<option value="%s" %s>%s</option>',
+            htmlspecialchars($targetType, ENT_QUOTES, 'UTF-8'),
+            $selected,
+            htmlspecialchars(ucfirst($targetType), ENT_QUOTES, 'UTF-8')
+        );
+    }
+
+    return sprintf(
+        '<input type="text" name="ator" value="%s" placeholder="Ator ou usuario" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+        <input type="text" name="evento" value="%s" placeholder="Evento, ex: relatorio.exported" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+        <select name="tipo_alvo" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">%s</select>
+        <select name="status" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">%s</select>',
+        htmlspecialchars($filters['ator'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($filters['evento'], ENT_QUOTES, 'UTF-8'),
+        $targetOptions,
+        relatorios_options_markup($statusOptions, $filters['status'], 'Todas as acoes')
+    );
+}
+
+/**
+ * @param array<string, string> $filters
+ * @param list<string> $secretarias
+ * @param list<array<string, mixed>> $veiculos
+ * @param array<string, string> $statusOptions
+ */
+function relatorios_operational_filter_fields_markup(
+    array $filters,
+    array $secretarias,
+    array $veiculos,
+    array $statusOptions
+): string {
+    $secretariaOptions = '<option value="">Todas as secretarias</option>';
+    foreach ($secretarias as $secretaria) {
+        $selected = $filters['secretaria'] === $secretaria ? 'selected' : '';
+        $secretariaOptions .= sprintf(
+            '<option value="%s" %s>%s</option>',
+            htmlspecialchars($secretaria, ENT_QUOTES, 'UTF-8'),
+            $selected,
+            htmlspecialchars($secretaria, ENT_QUOTES, 'UTF-8')
+        );
+    }
+
+    $veiculoOptions = '<option value="">Todos os veiculos</option>';
+    foreach ($veiculos as $veiculo) {
+        $selected = $filters['veiculo_id'] === (string) $veiculo['id'] ? 'selected' : '';
+        $label = (string) $veiculo['placa'] . ' - ' . (string) $veiculo['modelo'];
+        $veiculoOptions .= sprintf(
+            '<option value="%d" %s>%s</option>',
+            (int) $veiculo['id'],
+            $selected,
+            htmlspecialchars($label, ENT_QUOTES, 'UTF-8')
+        );
+    }
+
+    return sprintf(
+        '<select name="secretaria" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">%s</select>
+        <select name="veiculo_id" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">%s</select>
+        <select name="status" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">%s</select>',
+        $secretariaOptions,
+        $veiculoOptions,
+        relatorios_options_markup($statusOptions, $filters['status'], 'Todos os status')
+    );
+}
+
+/**
+ * @param array<string, string> $options
+ */
+function relatorios_options_markup(array $options, string $selectedValue, string $defaultLabel): string
+{
+    $markup = sprintf('<option value="">%s</option>', htmlspecialchars($defaultLabel, ENT_QUOTES, 'UTF-8'));
+
+    foreach ($options as $value => $label) {
+        $selected = $selectedValue === $value ? 'selected' : '';
+        $markup .= sprintf(
+            '<option value="%s" %s>%s</option>',
+            htmlspecialchars($value, ENT_QUOTES, 'UTF-8'),
+            $selected,
+            htmlspecialchars($label, ENT_QUOTES, 'UTF-8')
+        );
+    }
+
+    return $markup;
+}
+
+/**
+ * @param array<string, string> $filters
+ */
+function relatorios_export_query(array $filters, string $report): string
+{
+    return http_build_query(array_merge($filters, ['relatorio' => $report, 'export' => 'csv']));
+}
+
+/**
+ * @param array<string, string> $filters
+ * @param array<string, string> $reportLabels
+ * @return list<array{label:string,href:string,is_active:bool}>
+ */
+function relatorios_tabs(string $currentReport, array $filters, array $reportLabels): array
+{
+    $tabs = [];
+
+    foreach ($reportLabels as $reportKey => $reportLabel) {
+        $tabs[] = [
+            'label' => $reportLabel,
+            'href' => '/relatorios.php?' . http_build_query(array_merge($filters, ['relatorio' => $reportKey])),
+            'is_active' => $currentReport === $reportKey,
+        ];
+    }
+
+    return $tabs;
+}
+
 function relatorios_row_markup(string $report, array $row): string
 {
     return match ($report) {

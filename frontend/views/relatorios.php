@@ -66,6 +66,16 @@ $rows = match ($report) {
 $statusOptions = relatorios_status_options($report);
 $summaryCards = relatorios_summary_cards($report, $summary, $auditSummary);
 $tableHeaders = relatorios_table_headers($report);
+$filterFieldsMarkup = relatorios_filter_fields_markup(
+    $report,
+    $filters,
+    $secretarias,
+    $veiculos,
+    $statusOptions,
+    $auditTargetTypes
+);
+$tabs = relatorios_tabs($report, $filters, $reportLabels);
+$exportQuery = relatorios_export_query($filters, $report);
 
 $pageTitle = 'Relatorios';
 require_once __DIR__ . '/../includes/header.php';
@@ -96,58 +106,12 @@ require_once __DIR__ . '/../includes/header.php';
             <input type="hidden" name="relatorio" value="<?php echo htmlspecialchars($report, ENT_QUOTES, 'UTF-8'); ?>">
             <input type="date" name="data_inicio" value="<?php echo htmlspecialchars($filters['data_inicio'], ENT_QUOTES, 'UTF-8'); ?>" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
             <input type="date" name="data_fim" value="<?php echo htmlspecialchars($filters['data_fim'], ENT_QUOTES, 'UTF-8'); ?>" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-            <?php if ($report === 'auditoria'): ?>
-                <input type="text" name="ator" value="<?php echo htmlspecialchars($filters['ator'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ator ou usuario" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                <input type="text" name="evento" value="<?php echo htmlspecialchars($filters['evento'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="Evento, ex: relatorio.exported" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                <select name="tipo_alvo" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Todos os modulos</option>
-                    <?php foreach ($auditTargetTypes as $targetType): ?>
-                        <option value="<?php echo htmlspecialchars($targetType, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['tipo_alvo'] === $targetType ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars(ucfirst($targetType), ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            <?php else: ?>
-                <select name="secretaria" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Todas as secretarias</option>
-                    <?php foreach ($secretarias as $secretaria): ?>
-                        <option value="<?php echo htmlspecialchars($secretaria, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['secretaria'] === $secretaria ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($secretaria, ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <select name="veiculo_id" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Todos os veiculos</option>
-                    <?php foreach ($veiculos as $veiculo): ?>
-                        <option value="<?php echo (int) $veiculo['id']; ?>" <?php echo $filters['veiculo_id'] === (string) $veiculo['id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars((string) $veiculo['placa'] . ' - ' . (string) $veiculo['modelo'], ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <select name="status" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Todos os status</option>
-                    <?php foreach ($statusOptions as $statusValue => $statusLabel): ?>
-                        <option value="<?php echo htmlspecialchars($statusValue, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['status'] === $statusValue ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($statusLabel, ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            <?php endif; ?>
-            <?php if ($report === 'auditoria'): ?>
-                <select name="status" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="">Todas as acoes</option>
-                    <?php foreach ($statusOptions as $statusValue => $statusLabel): ?>
-                        <option value="<?php echo htmlspecialchars($statusValue, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['status'] === $statusValue ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($statusLabel, ENT_QUOTES, 'UTF-8'); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            <?php endif; ?>
+            <?php echo $filterFieldsMarkup; ?>
             <button type="submit" class="rounded-xl bg-slate-900 px-4 py-3 text-white hover:bg-slate-800">Aplicar filtros</button>
         </form>
 
         <div class="flex flex-wrap gap-3">
-            <a href="/relatorios.php?<?php echo htmlspecialchars(http_build_query(array_merge($filters, ['relatorio' => $report, 'export' => 'csv'])), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-xl bg-emerald-600 px-4 py-3 text-white hover:bg-emerald-700">
+            <a href="/relatorios.php?<?php echo htmlspecialchars($exportQuery, ENT_QUOTES, 'UTF-8'); ?>" class="rounded-xl bg-emerald-600 px-4 py-3 text-white hover:bg-emerald-700">
                 Exportar CSV
             </a>
             <a href="/relatorios.php?relatorio=<?php echo htmlspecialchars($report, ENT_QUOTES, 'UTF-8'); ?>" class="rounded-xl border border-slate-300 px-4 py-3 text-slate-700 hover:bg-slate-50">
@@ -158,9 +122,9 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <div class="flex flex-wrap gap-3 mb-8">
-    <?php foreach ($reportLabels as $reportKey => $reportLabel): ?>
-        <a href="/relatorios.php?<?php echo htmlspecialchars(http_build_query(array_merge($filters, ['relatorio' => $reportKey])), ENT_QUOTES, 'UTF-8'); ?>" class="rounded-full px-4 py-2 text-sm <?php echo $report === $reportKey ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-700'; ?>">
-            <?php echo htmlspecialchars($reportLabel, ENT_QUOTES, 'UTF-8'); ?>
+    <?php foreach ($tabs as $tab): ?>
+        <a href="<?php echo htmlspecialchars($tab['href'], ENT_QUOTES, 'UTF-8'); ?>" class="rounded-full px-4 py-2 text-sm <?php echo $tab['is_active'] ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-700'; ?>">
+            <?php echo htmlspecialchars($tab['label'], ENT_QUOTES, 'UTF-8'); ?>
         </a>
     <?php endforeach; ?>
 </div>
