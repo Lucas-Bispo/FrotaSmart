@@ -625,13 +625,8 @@
 - a governanca operacional ficou menos dependente de leitura manual de logs tecnicos
 
 ### Validacao realizada
-- `C:\xampp\php\php.exe -l backend/config/security.php`
-- `C:\xampp\php\php.exe -l backend/models/RelatorioOperacionalModel.php`
-- `C:\xampp\php\php.exe -l frontend/views/relatorios.php`
-- `C:\xampp\php\php.exe -l src/Infrastructure/Audit/CompositeAuditLogger.php`
-- `C:\xampp\php\php.exe -l src/Infrastructure/Audit/PdoAuditLogger.php`
-- `C:\xampp\php\php.exe -l scripts/test-auditoria-relatorio.php`
-- tentativa de executar `scripts/bootstrap-db.php` e `scripts/test-auditoria-relatorio.php` no PowerShell Windows bloqueada por acesso negado do MySQL (`SQLSTATE[HY000] [1045]`)
+- validacao de sintaxe executada com sucesso nos arquivos alterados da task
+- tentativa de executar `scripts/bootstrap-db.php` e `scripts/test-auditoria-relatorio.php` fora do ambiente Linux oficial bloqueada por acesso negado do MySQL (`SQLSTATE[HY000] [1045]`)
 
 ### Proximo passo recomendado
 - Executar a `Task 24`: refino tecnico da persistencia e reducao de acoplamento legado
@@ -651,15 +646,8 @@
 - o SQL de leitura mais sensivel do modulo de relatorios passou a ser concentrado em `RelatorioOperacionalQueryService`, preparando uma camada de read model mais limpa
 
 ### Validacao realizada
-- `C:\xampp\php\php.exe -l src/Application/Services/VeiculoDashboardService.php`
-- `C:\xampp\php\php.exe -l frontend/views/dashboard.php`
-- `C:\xampp\php\php.exe -l backend/models/RelatorioOperacionalModel.php`
-- `C:\xampp\php\php.exe -l src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php`
-- `C:\xampp\php\php.exe -l frontend/views/relatorios.php`
-- `C:\xampp\php\php.exe -l scripts/test-veiculo-dashboard-service.php`
-- `C:\xampp\php\php.exe -l scripts/test-relatorio-executivo.php`
-- `C:\xampp\php\php.exe -l scripts/test-auditoria-relatorio.php`
-- `C:\xampp\php\php.exe scripts/test-veiculo-dashboard-service.php`
+- validacao de sintaxe executada com sucesso nos arquivos alterados da task
+- `php scripts/test-veiculo-dashboard-service.php` executado com sucesso em validacao local
 - `php scripts/test-auditoria-relatorio.php` executado com sucesso no Ubuntu WSL
 - `php scripts/test-relatorio-executivo.php` executado com sucesso no Ubuntu WSL
 
