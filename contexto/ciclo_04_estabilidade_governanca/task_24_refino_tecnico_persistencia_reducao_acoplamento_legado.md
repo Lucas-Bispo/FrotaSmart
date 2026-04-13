@@ -10,12 +10,15 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - criado o teste [test-veiculo-dashboard-service.php](../../scripts/test-veiculo-dashboard-service.php) para validar ordenacao, filtros e contagem de arquivados
 - evoluido [RelatorioOperacionalModel.php](../../backend/models/RelatorioOperacionalModel.php) para receber `PDO` explicitamente, reduzindo a dependencia direta de `global $pdo`
 - atualizados [relatorios.php](../../frontend/views/relatorios.php), [dashboard.php](../../frontend/views/dashboard.php), [test-auditoria-relatorio.php](../../scripts/test-auditoria-relatorio.php) e [test-relatorio-executivo.php](../../scripts/test-relatorio-executivo.php) para instanciar o model com a fabrica nova
+- criada a camada [RelatorioOperacionalQueryService.php](../../src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php) para concentrar consultas SQL de secretarias, veiculos, relatórios transacionais, auditoria e agregacoes executivas iniciais
+- simplificado [RelatorioOperacionalModel.php](../../backend/models/RelatorioOperacionalModel.php) para atuar mais como fachada de composicao e pos-processamento
 
 ## Resultado tecnico desta etapa
 - a leitura central da frota no dashboard deixou de depender do model legado de veiculos
 - o modulo de veiculos agora usa a espinha nova tanto na escrita quanto na principal leitura operacional
 - o legado `VeiculoModel` permanece apenas como compatibilidade para outros pontos ainda nao migrados
 - o modulo de relatorios passou a aceitar conexao explicita e deixou de depender implicitamente do estado global para os seus entrypoints principais
+- a leitura SQL mais critica de relatorios saiu do model legado e passou a viver em uma camada dedicada de read model dentro de `src/Infrastructure`
 
 ## Validacao esperada
 - `php -l src/Application/Services/VeiculoDashboardService.php`
@@ -23,10 +26,11 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - `php -l scripts/test-veiculo-dashboard-service.php`
 - `php scripts/test-veiculo-dashboard-service.php`
 - `php -l backend/models/RelatorioOperacionalModel.php`
+- `php -l src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php`
 - `php -l frontend/views/relatorios.php`
 - `php scripts/test-auditoria-relatorio.php`
 - `php scripts/test-relatorio-executivo.php`
 
 ## Proximo recorte recomendado dentro da task
-- aplicar a mesma estrategia para consultas de relatorios e leituras pontuais ainda dependentes de `global $pdo`
-- avaliar extracao de uma camada de query/read model para `RelatorioOperacionalModel`
+- continuar deslocando agregacoes e regras de montagem ainda presas ao `RelatorioOperacionalModel`
+- avaliar se `AbastecimentoModel` e `ManutencaoModel` tambem devem ganhar portas de leitura mais explicitas para compor os relatorios

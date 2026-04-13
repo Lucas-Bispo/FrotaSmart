@@ -35,6 +35,7 @@
 - A auditoria agora tambem possui persistencia em banco e leitura exportavel no modulo de relatorios
 - A listagem principal da frota no dashboard agora sai de `VeiculoDashboardService` em `src/`, reutilizando o repositorio PDO novo
 - O modulo de relatorios ja aceita `PDO` explicito nos entrypoints principais, reduzindo dependencia de estado global
+- O FrotaSmart agora possui uma camada dedicada de read model para relatorios em `src/Infrastructure/ReadModels`
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
@@ -51,6 +52,7 @@
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
 - `backend/config/security.php` passou a centralizar a emissao de auditoria estruturada para log e banco
 - `backend/models/RelatorioOperacionalModel.php` foi ajustado para receber conexao explicita, embora ainda concentre consultas legadas
+- parte importante das consultas do `RelatorioOperacionalModel` ja foi extraida para `RelatorioOperacionalQueryService`
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`
@@ -66,7 +68,7 @@ A [task_01_fundacao_arquitetura_composer_psr4.md](./ciclo_01_fundacao_arquitetur
 ## Riscos atuais
 - O legado ainda depende de `global $pdo` e `require_once`
 - O CRUD legado de veiculos ainda faz `DELETE` fisico, enquanto a regra de negocio pede soft delete
-- outras leituras legadas ainda dependem de `global $pdo`, com destaque para `RelatorioOperacionalModel`
+- outras leituras legadas ainda dependem de `global $pdo`, mas o nucleo de relatorios ja comecou a migrar para uma camada dedicada
 - O ciclo 02 planejado foi concluido e o proximo passo natural e consolidar backlog do ciclo seguinte
 - O cadastro de veiculos ainda precisava de dados mais aderentes a frota municipal real
 - a trilha de auditoria foi fortalecida, mas a persistencia geral ainda mistura models legados, `global $pdo` e servicos novos

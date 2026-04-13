@@ -648,11 +648,13 @@
 - a principal leitura de frota da pagina inicial passou a usar a mesma espinha de persistencia moderna aplicada na escrita
 - a reducao de acoplamento deixou de ser apenas conceitual e passou a remover uma dependencia concreta de `global $pdo` no fluxo mais visivel do sistema
 - o modulo de relatorios agora tambem aceita conexao explicita nos entrypoints principais, reduzindo a dependencia de `global $pdo`
+- o SQL de leitura mais sensivel do modulo de relatorios passou a ser concentrado em `RelatorioOperacionalQueryService`, preparando uma camada de read model mais limpa
 
 ### Validacao realizada
 - `C:\xampp\php\php.exe -l src/Application/Services/VeiculoDashboardService.php`
 - `C:\xampp\php\php.exe -l frontend/views/dashboard.php`
 - `C:\xampp\php\php.exe -l backend/models/RelatorioOperacionalModel.php`
+- `C:\xampp\php\php.exe -l src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php`
 - `C:\xampp\php\php.exe -l frontend/views/relatorios.php`
 - `C:\xampp\php\php.exe -l scripts/test-veiculo-dashboard-service.php`
 - `C:\xampp\php\php.exe -l scripts/test-relatorio-executivo.php`

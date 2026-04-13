@@ -9,44 +9,22 @@ require_once __DIR__ . '/ManutencaoModel.php';
 final class RelatorioOperacionalModel
 {
     private PDO $connection;
+    private \FrotaSmart\Infrastructure\ReadModels\RelatorioOperacionalQueryService $queries;
 
     public function __construct(?PDO $connection = null)
     {
         $this->connection = $connection ?? $this->resolveLegacyConnection();
+        $this->queries = new \FrotaSmart\Infrastructure\ReadModels\RelatorioOperacionalQueryService($this->connection);
     }
 
     public function getSecretarias(): array
     {
-        $pdo = $this->connection;
-
-        $stmt = $pdo->query(
-            "SELECT secretaria FROM (
-                SELECT secretaria_lotada AS secretaria FROM veiculos WHERE secretaria_lotada IS NOT NULL AND secretaria_lotada <> ''
-                UNION
-                SELECT secretaria FROM motoristas WHERE secretaria IS NOT NULL AND secretaria <> ''
-                UNION
-                SELECT secretaria FROM viagens WHERE secretaria IS NOT NULL AND secretaria <> ''
-            ) AS secretarias
-            ORDER BY secretaria ASC"
-        );
-
-        return array_values(array_filter(array_map(
-            static fn (array $row): string => (string) $row['secretaria'],
-            $stmt->fetchAll(PDO::FETCH_ASSOC)
-        )));
+        return $this->queries->fetchSecretarias();
     }
 
     public function getVeiculos(): array
     {
-        $pdo = $this->connection;
-
-        $stmt = $pdo->query(
-            'SELECT id, placa, modelo, secretaria_lotada, status, deleted_at
-             FROM veiculos
-             ORDER BY placa ASC'
-        );
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->queries->fetchVeiculos();
     }
 
     public function getAbastecimentoReport(array $filters): array
@@ -76,109 +54,12 @@ final class RelatorioOperacionalModel
 
     public function getManutencaoReport(array $filters): array
     {
-        $pdo = $this->connection;
-
-        $conditions = [];
-        $params = [];
-
-        if (($dataInicio = $this->normalizeOptionalString($filters['data_inicio'] ?? null)) !== null) {
-            $conditions[] = 'm.data_abertura >= :data_inicio';
-            $params[':data_inicio'] = $dataInicio;
-        }
-
-        if (($dataFim = $this->normalizeOptionalString($filters['data_fim'] ?? null)) !== null) {
-            $conditions[] = 'm.data_abertura <= :data_fim';
-            $params[':data_fim'] = $dataFim;
-        }
-
-        if (($secretaria = $this->normalizeOptionalString($filters['secretaria'] ?? null)) !== null) {
-            $conditions[] = 'v.secretaria_lotada = :secretaria';
-            $params[':secretaria'] = $secretaria;
-        }
-
-        if (($veiculoId = $this->normalizeOptionalInt($filters['veiculo_id'] ?? null)) !== null) {
-            $conditions[] = 'm.veiculo_id = :veiculo_id';
-            $params[':veiculo_id'] = $veiculoId;
-        }
-
-        if (($status = $this->normalizeOptionalString($filters['status'] ?? null)) !== null) {
-            $conditions[] = 'm.status = :status';
-            $params[':status'] = $status;
-        }
-
-        $sql = 'SELECT
-                    m.*,
-                    v.placa,
-                    v.modelo,
-                    v.secretaria_lotada,
-                    p.nome_fantasia AS parceiro_nome
-                FROM manutencoes m
-                INNER JOIN veiculos v ON v.id = m.veiculo_id
-                LEFT JOIN parceiros_operacionais p ON p.id = m.parceiro_id';
-
-        if ($conditions !== []) {
-            $sql .= ' WHERE ' . implode(' AND ', $conditions);
-        }
-
-        $sql .= ' ORDER BY m.data_abertura DESC, m.id DESC';
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->queries->fetchManutencaoReport($filters);
     }
 
     public function getViagemReport(array $filters): array
     {
-        $pdo = $this->connection;
-
-        $conditions = [];
-        $params = [];
-
-        if (($dataInicio = $this->normalizeOptionalString($filters['data_inicio'] ?? null)) !== null) {
-            $conditions[] = 'DATE(v.data_saida) >= :data_inicio';
-            $params[':data_inicio'] = $dataInicio;
-        }
-
-        if (($dataFim = $this->normalizeOptionalString($filters['data_fim'] ?? null)) !== null) {
-            $conditions[] = 'DATE(v.data_saida) <= :data_fim';
-            $params[':data_fim'] = $dataFim;
-        }
-
-        if (($secretaria = $this->normalizeOptionalString($filters['secretaria'] ?? null)) !== null) {
-            $conditions[] = 'v.secretaria = :secretaria';
-            $params[':secretaria'] = $secretaria;
-        }
-
-        if (($veiculoId = $this->normalizeOptionalInt($filters['veiculo_id'] ?? null)) !== null) {
-            $conditions[] = 'v.veiculo_id = :veiculo_id';
-            $params[':veiculo_id'] = $veiculoId;
-        }
-
-        if (($status = $this->normalizeOptionalString($filters['status'] ?? null)) !== null) {
-            $conditions[] = 'v.status = :status';
-            $params[':status'] = $status;
-        }
-
-        $sql = 'SELECT
-                    v.*,
-                    ve.placa,
-                    ve.modelo,
-                    m.nome AS motorista_nome
-                FROM viagens v
-                INNER JOIN veiculos ve ON ve.id = v.veiculo_id
-                INNER JOIN motoristas m ON m.id = v.motorista_id';
-
-        if ($conditions !== []) {
-            $sql .= ' WHERE ' . implode(' AND ', $conditions);
-        }
-
-        $sql .= ' ORDER BY v.data_saida DESC, v.id DESC';
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $this->queries->fetchViagemReport($filters);
 
         foreach ($rows as &$row) {
             $kmSaida = (int) ($row['km_saida'] ?? 0);
@@ -192,66 +73,7 @@ final class RelatorioOperacionalModel
 
     public function getDisponibilidadeReport(array $filters): array
     {
-        $pdo = $this->connection;
-
-        $conditions = [];
-        $params = [];
-
-        if (($secretaria = $this->normalizeOptionalString($filters['secretaria'] ?? null)) !== null) {
-            $conditions[] = 'v.secretaria_lotada = :secretaria';
-            $params[':secretaria'] = $secretaria;
-        }
-
-        if (($veiculoId = $this->normalizeOptionalInt($filters['veiculo_id'] ?? null)) !== null) {
-            $conditions[] = 'v.id = :veiculo_id';
-            $params[':veiculo_id'] = $veiculoId;
-        }
-
-        if (($status = $this->normalizeOptionalString($filters['status'] ?? null)) !== null) {
-            $conditions[] = 'v.status = :status';
-            $params[':status'] = $status;
-        }
-
-        $sql = 'SELECT
-                    v.id,
-                    v.placa,
-                    v.modelo,
-                    v.secretaria_lotada,
-                    v.status,
-                    v.deleted_at,
-                    v.quilometragem_inicial,
-                    (
-                        SELECT COUNT(*)
-                        FROM viagens vi
-                        WHERE vi.veiculo_id = v.id
-                    ) AS total_viagens,
-                    (
-                        SELECT COUNT(*)
-                        FROM manutencoes m
-                        WHERE m.veiculo_id = v.id
-                    ) AS total_manutencoes,
-                    (
-                        SELECT MAX(a.data_abastecimento)
-                        FROM abastecimentos a
-                        WHERE a.veiculo_id = v.id
-                    ) AS ultimo_abastecimento,
-                    (
-                        SELECT MAX(DATE(vi2.data_saida))
-                        FROM viagens vi2
-                        WHERE vi2.veiculo_id = v.id
-                    ) AS ultima_viagem
-                FROM veiculos v';
-
-        if ($conditions !== []) {
-            $sql .= ' WHERE ' . implode(' AND ', $conditions);
-        }
-
-        $sql .= ' ORDER BY v.secretaria_lotada ASC, v.placa ASC';
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $this->queries->fetchDisponibilidadeReport($filters);
 
         foreach ($rows as &$row) {
             $row['situacao_disponibilidade'] = ! empty($row['deleted_at'])
@@ -283,8 +105,6 @@ final class RelatorioOperacionalModel
 
     public function getExecutiveSummaryBySecretaria(?string $dataInicio = null, ?string $dataFim = null): array
     {
-        $pdo = $this->connection;
-
         $summaries = [];
 
         foreach ($this->getSecretarias() as $secretaria) {
@@ -292,18 +112,7 @@ final class RelatorioOperacionalModel
             $summaries[$normalized] = $this->emptySecretariaSummary($normalized);
         }
 
-        $stmt = $pdo->query(
-            "SELECT
-                COALESCE(NULLIF(secretaria_lotada, ''), 'Secretaria nao informada') AS secretaria,
-                SUM(CASE WHEN deleted_at IS NULL THEN 1 ELSE 0 END) AS frota_ativa,
-                SUM(CASE WHEN deleted_at IS NOT NULL THEN 1 ELSE 0 END) AS frota_arquivada,
-                SUM(CASE WHEN deleted_at IS NULL AND status IN ('ativo', 'disponivel', 'em_viagem', 'reservado') THEN 1 ELSE 0 END) AS frota_operacao,
-                SUM(CASE WHEN deleted_at IS NULL AND status IN ('manutencao', 'em_manutencao') THEN 1 ELSE 0 END) AS frota_manutencao
-             FROM veiculos
-             GROUP BY COALESCE(NULLIF(secretaria_lotada, ''), 'Secretaria nao informada')"
-        );
-
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        foreach ($this->queries->fetchFleetSummaryBySecretaria() as $row) {
             $secretaria = $this->normalizeSecretariaName($row['secretaria'] ?? null);
             $summaries[$secretaria] ??= $this->emptySecretariaSummary($secretaria);
             $summaries[$secretaria]['frota_ativa'] = (int) ($row['frota_ativa'] ?? 0);
@@ -312,54 +121,13 @@ final class RelatorioOperacionalModel
             $summaries[$secretaria]['frota_manutencao'] = (int) ($row['frota_manutencao'] ?? 0);
         }
 
-        $stmt = $pdo->query(
-            "SELECT
-                COALESCE(NULLIF(secretaria, ''), 'Secretaria nao informada') AS secretaria,
-                SUM(CASE WHEN status = 'ativo' THEN 1 ELSE 0 END) AS motoristas_ativos
-             FROM motoristas
-             GROUP BY COALESCE(NULLIF(secretaria, ''), 'Secretaria nao informada')"
-        );
-
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        foreach ($this->queries->fetchMotoristasAtivosBySecretaria() as $row) {
             $secretaria = $this->normalizeSecretariaName($row['secretaria'] ?? null);
             $summaries[$secretaria] ??= $this->emptySecretariaSummary($secretaria);
             $summaries[$secretaria]['motoristas_ativos'] = (int) ($row['motoristas_ativos'] ?? 0);
         }
 
-        $conditions = [];
-        $params = [];
-
-        if ($dataInicio !== null && $dataInicio !== '') {
-            $conditions[] = 'DATE(data_saida) >= :data_inicio';
-            $params[':data_inicio'] = $dataInicio;
-        }
-
-        if ($dataFim !== null && $dataFim !== '') {
-            $conditions[] = 'DATE(data_saida) <= :data_fim';
-            $params[':data_fim'] = $dataFim;
-        }
-
-        $sqlViagens = "SELECT
-                COALESCE(NULLIF(secretaria, ''), 'Secretaria nao informada') AS secretaria,
-                COUNT(*) AS viagens_periodo,
-                SUM(
-                    CASE
-                        WHEN km_chegada IS NOT NULL AND km_chegada >= km_saida THEN km_chegada - km_saida
-                        ELSE 0
-                    END
-                ) AS km_viagens_periodo
-             FROM viagens";
-
-        if ($conditions !== []) {
-            $sqlViagens .= ' WHERE ' . implode(' AND ', $conditions);
-        }
-
-        $sqlViagens .= " GROUP BY COALESCE(NULLIF(secretaria, ''), 'Secretaria nao informada')";
-
-        $stmt = $pdo->prepare($sqlViagens);
-        $stmt->execute($params);
-
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        foreach ($this->queries->fetchViagensSummaryBySecretaria($dataInicio, $dataFim) as $row) {
             $secretaria = $this->normalizeSecretariaName($row['secretaria'] ?? null);
             $summaries[$secretaria] ??= $this->emptySecretariaSummary($secretaria);
             $summaries[$secretaria]['viagens_periodo'] = (int) ($row['viagens_periodo'] ?? 0);
@@ -435,8 +203,6 @@ final class RelatorioOperacionalModel
 
     public function getExecutiveSummaryByVeiculo(?string $dataInicio = null, ?string $dataFim = null, int $limit = 8): array
     {
-        $pdo = $this->connection;
-
         $summaries = [];
 
         foreach ($this->getVeiculos() as $veiculo) {
@@ -469,37 +235,7 @@ final class RelatorioOperacionalModel
             ];
         }
 
-        $conditions = [];
-        $params = [];
-
-        if ($dataInicio !== null && $dataInicio !== '') {
-            $conditions[] = 'DATE(data_saida) >= :data_inicio';
-            $params[':data_inicio'] = $dataInicio;
-        }
-
-        if ($dataFim !== null && $dataFim !== '') {
-            $conditions[] = 'DATE(data_saida) <= :data_fim';
-            $params[':data_fim'] = $dataFim;
-        }
-
-        $sqlViagens = 'SELECT veiculo_id, COUNT(*) AS viagens_periodo, SUM(
-                CASE
-                    WHEN km_chegada IS NOT NULL AND km_chegada >= km_saida THEN km_chegada - km_saida
-                    ELSE 0
-                END
-            ) AS km_viagens_periodo
-            FROM viagens';
-
-        if ($conditions !== []) {
-            $sqlViagens .= ' WHERE ' . implode(' AND ', $conditions);
-        }
-
-        $sqlViagens .= ' GROUP BY veiculo_id';
-
-        $stmt = $pdo->prepare($sqlViagens);
-        $stmt->execute($params);
-
-        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        foreach ($this->queries->fetchViagensSummaryByVeiculo($dataInicio, $dataFim) as $row) {
             $veiculoId = (int) ($row['veiculo_id'] ?? 0);
             if (! isset($summaries[$veiculoId])) {
                 continue;
@@ -645,23 +381,7 @@ final class RelatorioOperacionalModel
 
     public function getAuditTargetTypes(): array
     {
-        $pdo = $this->connection;
-
-        try {
-            $stmt = $pdo->query(
-                "SELECT DISTINCT target_type
-                 FROM audit_logs
-                 WHERE target_type IS NOT NULL AND target_type <> ''
-                 ORDER BY target_type ASC"
-            );
-
-            return array_values(array_filter(array_map(
-                static fn (array $row): string => (string) ($row['target_type'] ?? ''),
-                $stmt->fetchAll(PDO::FETCH_ASSOC)
-            )));
-        } catch (Throwable) {
-            return [];
-        }
+        return $this->queries->fetchAuditTargetTypes();
     }
 
     public function exportCsv(string $report, array $filters): string
@@ -783,67 +503,7 @@ final class RelatorioOperacionalModel
 
     private function fetchAuditRows(array $filters): array
     {
-        $pdo = $this->connection;
-
-        $conditions = [];
-        $params = [];
-
-        if (($dataInicio = $this->normalizeOptionalString($filters['data_inicio'] ?? null)) !== null) {
-            $conditions[] = 'DATE(occurred_at) >= :data_inicio';
-            $params[':data_inicio'] = $dataInicio;
-        }
-
-        if (($dataFim = $this->normalizeOptionalString($filters['data_fim'] ?? null)) !== null) {
-            $conditions[] = 'DATE(occurred_at) <= :data_fim';
-            $params[':data_fim'] = $dataFim;
-        }
-
-        if (($actor = $this->normalizeOptionalString($filters['ator'] ?? null)) !== null) {
-            $conditions[] = 'actor LIKE :actor';
-            $params[':actor'] = '%' . $actor . '%';
-        }
-
-        if (($event = $this->normalizeOptionalString($filters['evento'] ?? null)) !== null) {
-            $conditions[] = 'event LIKE :event';
-            $params[':event'] = '%' . $event . '%';
-        }
-
-        if (($action = $this->normalizeOptionalString($filters['status'] ?? null)) !== null) {
-            $conditions[] = 'action = :action';
-            $params[':action'] = $action;
-        }
-
-        if (($targetType = $this->normalizeOptionalString($filters['tipo_alvo'] ?? null)) !== null) {
-            $conditions[] = 'target_type = :target_type';
-            $params[':target_type'] = $targetType;
-        }
-
-        $sql = 'SELECT
-                    id,
-                    event,
-                    action,
-                    target_type,
-                    target_id,
-                    actor,
-                    actor_role,
-                    ip,
-                    occurred_at,
-                    context_json
-                FROM audit_logs';
-
-        if ($conditions !== []) {
-            $sql .= ' WHERE ' . implode(' AND ', $conditions);
-        }
-
-        $sql .= ' ORDER BY occurred_at DESC, id DESC LIMIT 500';
-
-        try {
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (Throwable) {
-            return [];
-        }
+        $rows = $this->queries->fetchAuditRows($filters);
 
         foreach ($rows as &$row) {
             $context = $this->decodeAuditContext($row['context_json'] ?? null);
