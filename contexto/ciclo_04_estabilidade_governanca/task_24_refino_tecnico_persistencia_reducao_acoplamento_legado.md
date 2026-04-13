@@ -8,17 +8,24 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - atualizada a view [dashboard.php](../../frontend/views/dashboard.php) para consumir `VeiculoDashboardService` com `PdoVeiculoRepository`
 - preservado o comportamento operacional de filtros `ativos`, `arquivados` e `todos`, incluindo ordenacao e historico de arquivamento
 - criado o teste [test-veiculo-dashboard-service.php](../../scripts/test-veiculo-dashboard-service.php) para validar ordenacao, filtros e contagem de arquivados
+- evoluido [RelatorioOperacionalModel.php](../../backend/models/RelatorioOperacionalModel.php) para receber `PDO` explicitamente, reduzindo a dependencia direta de `global $pdo`
+- atualizados [relatorios.php](../../frontend/views/relatorios.php), [dashboard.php](../../frontend/views/dashboard.php), [test-auditoria-relatorio.php](../../scripts/test-auditoria-relatorio.php) e [test-relatorio-executivo.php](../../scripts/test-relatorio-executivo.php) para instanciar o model com a fabrica nova
 
 ## Resultado tecnico desta etapa
 - a leitura central da frota no dashboard deixou de depender do model legado de veiculos
 - o modulo de veiculos agora usa a espinha nova tanto na escrita quanto na principal leitura operacional
 - o legado `VeiculoModel` permanece apenas como compatibilidade para outros pontos ainda nao migrados
+- o modulo de relatorios passou a aceitar conexao explicita e deixou de depender implicitamente do estado global para os seus entrypoints principais
 
 ## Validacao esperada
 - `php -l src/Application/Services/VeiculoDashboardService.php`
 - `php -l frontend/views/dashboard.php`
 - `php -l scripts/test-veiculo-dashboard-service.php`
 - `php scripts/test-veiculo-dashboard-service.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php -l frontend/views/relatorios.php`
+- `php scripts/test-auditoria-relatorio.php`
+- `php scripts/test-relatorio-executivo.php`
 
 ## Proximo recorte recomendado dentro da task
 - aplicar a mesma estrategia para consultas de relatorios e leituras pontuais ainda dependentes de `global $pdo`

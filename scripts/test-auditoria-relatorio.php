@@ -5,6 +5,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/../backend/models/RelatorioOperacionalModel.php';
 
 $model = new RelatorioOperacionalModel();
+if (class_exists(\FrotaSmart\Infrastructure\Config\PdoConnectionFactory::class)) {
+    $model = new RelatorioOperacionalModel(\FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make());
+}
 
 global $pdo;
 

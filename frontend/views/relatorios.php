@@ -13,7 +13,9 @@ if (! isset($_SESSION['user']) || ! user_can(\FrotaSmart\Application\Security\Rb
     exit;
 }
 
-$model = new RelatorioOperacionalModel();
+$model = new RelatorioOperacionalModel(
+    \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make()
+);
 $report = (string) ($_GET['relatorio'] ?? 'abastecimentos');
 $export = (string) ($_GET['export'] ?? '');
 $filters = [

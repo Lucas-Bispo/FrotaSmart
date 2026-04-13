@@ -647,10 +647,19 @@
 ### Resultado tecnico
 - a principal leitura de frota da pagina inicial passou a usar a mesma espinha de persistencia moderna aplicada na escrita
 - a reducao de acoplamento deixou de ser apenas conceitual e passou a remover uma dependencia concreta de `global $pdo` no fluxo mais visivel do sistema
-- o proximo alvo natural de migracao agora fica concentrado nas consultas ainda agregadas em `RelatorioOperacionalModel`
+- o modulo de relatorios agora tambem aceita conexao explicita nos entrypoints principais, reduzindo a dependencia de `global $pdo`
 
 ### Validacao realizada
-- pendente executar validacao completa em WSL e com banco real nesta sessao
+- `C:\xampp\php\php.exe -l src/Application/Services/VeiculoDashboardService.php`
+- `C:\xampp\php\php.exe -l frontend/views/dashboard.php`
+- `C:\xampp\php\php.exe -l backend/models/RelatorioOperacionalModel.php`
+- `C:\xampp\php\php.exe -l frontend/views/relatorios.php`
+- `C:\xampp\php\php.exe -l scripts/test-veiculo-dashboard-service.php`
+- `C:\xampp\php\php.exe -l scripts/test-relatorio-executivo.php`
+- `C:\xampp\php\php.exe -l scripts/test-auditoria-relatorio.php`
+- `C:\xampp\php\php.exe scripts/test-veiculo-dashboard-service.php`
+- `php scripts/test-auditoria-relatorio.php` executado com sucesso no Ubuntu WSL
+- `php scripts/test-relatorio-executivo.php` executado com sucesso no Ubuntu WSL
 
 ### Proximo passo recomendado
-- continuar a `Task 24` pela camada de leitura de relatorios e agregacoes operacionais
+- continuar a `Task 24` extraindo consultas e agregacoes restantes de `RelatorioOperacionalModel` para uma camada de leitura mais dedicada

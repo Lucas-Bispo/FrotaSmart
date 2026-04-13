@@ -34,6 +34,7 @@
 - O dashboard agora tambem entrega leitura executiva por secretaria e por veiculo no proprio painel principal
 - A auditoria agora tambem possui persistencia em banco e leitura exportavel no modulo de relatorios
 - A listagem principal da frota no dashboard agora sai de `VeiculoDashboardService` em `src/`, reutilizando o repositorio PDO novo
+- O modulo de relatorios ja aceita `PDO` explicito nos entrypoints principais, reduzindo dependencia de estado global
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
@@ -49,6 +50,7 @@
 - viagens e abastecimentos agora contam com um guard operacional central para CNH, preventiva e estado do veiculo
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
 - `backend/config/security.php` passou a centralizar a emissao de auditoria estruturada para log e banco
+- `backend/models/RelatorioOperacionalModel.php` foi ajustado para receber conexao explicita, embora ainda concentre consultas legadas
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`

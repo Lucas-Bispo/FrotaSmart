@@ -8,9 +8,16 @@ require_once __DIR__ . '/ManutencaoModel.php';
 
 final class RelatorioOperacionalModel
 {
+    private PDO $connection;
+
+    public function __construct(?PDO $connection = null)
+    {
+        $this->connection = $connection ?? $this->resolveLegacyConnection();
+    }
+
     public function getSecretarias(): array
     {
-        global $pdo;
+        $pdo = $this->connection;
 
         $stmt = $pdo->query(
             "SELECT secretaria FROM (
@@ -31,7 +38,7 @@ final class RelatorioOperacionalModel
 
     public function getVeiculos(): array
     {
-        global $pdo;
+        $pdo = $this->connection;
 
         $stmt = $pdo->query(
             'SELECT id, placa, modelo, secretaria_lotada, status, deleted_at
@@ -69,7 +76,7 @@ final class RelatorioOperacionalModel
 
     public function getManutencaoReport(array $filters): array
     {
-        global $pdo;
+        $pdo = $this->connection;
 
         $conditions = [];
         $params = [];
@@ -123,7 +130,7 @@ final class RelatorioOperacionalModel
 
     public function getViagemReport(array $filters): array
     {
-        global $pdo;
+        $pdo = $this->connection;
 
         $conditions = [];
         $params = [];
@@ -185,7 +192,7 @@ final class RelatorioOperacionalModel
 
     public function getDisponibilidadeReport(array $filters): array
     {
-        global $pdo;
+        $pdo = $this->connection;
 
         $conditions = [];
         $params = [];
@@ -276,7 +283,7 @@ final class RelatorioOperacionalModel
 
     public function getExecutiveSummaryBySecretaria(?string $dataInicio = null, ?string $dataFim = null): array
     {
-        global $pdo;
+        $pdo = $this->connection;
 
         $summaries = [];
 
@@ -428,7 +435,7 @@ final class RelatorioOperacionalModel
 
     public function getExecutiveSummaryByVeiculo(?string $dataInicio = null, ?string $dataFim = null, int $limit = 8): array
     {
-        global $pdo;
+        $pdo = $this->connection;
 
         $summaries = [];
 
@@ -638,7 +645,7 @@ final class RelatorioOperacionalModel
 
     public function getAuditTargetTypes(): array
     {
-        global $pdo;
+        $pdo = $this->connection;
 
         try {
             $stmt = $pdo->query(
@@ -776,7 +783,7 @@ final class RelatorioOperacionalModel
 
     private function fetchAuditRows(array $filters): array
     {
-        global $pdo;
+        $pdo = $this->connection;
 
         $conditions = [];
         $params = [];
@@ -898,5 +905,16 @@ final class RelatorioOperacionalModel
         }
 
         return $parts === [] ? 'Sem contexto adicional.' : implode(' | ', $parts);
+    }
+
+    private function resolveLegacyConnection(): PDO
+    {
+        global $pdo;
+
+        if ($pdo instanceof PDO) {
+            return $pdo;
+        }
+
+        throw new RuntimeException('Conexao PDO indisponivel para RelatorioOperacionalModel.');
     }
 }

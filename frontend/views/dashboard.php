@@ -65,7 +65,9 @@ try {
     $motoristaModel = new MotoristaModel();
     $manutencaoModel = new ManutencaoModel();
     $abastecimentoModel = new AbastecimentoModel();
-    $relatorioModel = new RelatorioOperacionalModel();
+    $relatorioModel = new RelatorioOperacionalModel(
+        \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make()
+    );
 
     $veiculosAtivos = $veiculoDashboardService->listarPorFiltro('ativos');
     $veiculos = $veiculoDashboardService->listarPorFiltro($filtroFrota);

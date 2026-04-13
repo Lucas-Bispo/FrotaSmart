@@ -9,7 +9,7 @@ require_once __DIR__ . '/../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../backend/models/VeiculoModel.php';
 require_once __DIR__ . '/../backend/models/ViagemModel.php';
 
-$relatorioModel = new RelatorioOperacionalModel();
+$relatorioModel = new RelatorioOperacionalModel(\FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make());
 $abastecimentoModel = new AbastecimentoModel();
 $manutencaoModel = new ManutencaoModel();
 $motoristaModel = new MotoristaModel();
