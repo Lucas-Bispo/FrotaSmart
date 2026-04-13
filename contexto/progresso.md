@@ -682,3 +682,36 @@
 
 ### Proximo passo recomendado
 - aplicar o mesmo padrao em views grandes e revisar contratos que ainda dependem de booleanos e `null`
+
+## 2026-04-13 - Clean Code em contratos de veiculos
+
+### Refino de intencao explicita
+- Evoluido [VeiculoRepositoryInterface.php](../src/Domain/Repositories/VeiculoRepositoryInterface.php) para substituir a flag booleana `includeArchived` por metodos explicitos de leitura e existencia ativa ou historica
+- Refatorados [VeiculoService.php](../src/Application/Services/VeiculoService.php) e [PdoVeiculoRepository.php](../src/Infrastructure/Persistence/PdoVeiculoRepository.php) para seguir a mesma direcao com `buscarPorPlaca()` e `buscarPorPlacaIncluindoArquivados()`
+- Ajustado [VeiculoController.php](../backend/controllers/VeiculoController.php) para usar a leitura historica explicita no fluxo de restauracao
+- Atualizados os testes [test-veiculo-service.php](../scripts/test-veiculo-service.php), [test-veiculo-controller-flow.php](../scripts/test-veiculo-controller-flow.php), [test-veiculo-dashboard-service.php](../scripts/test-veiculo-dashboard-service.php), [test-repository-pdo.php](../scripts/test-repository-pdo.php) e [test-repository-contract.php](../scripts/test-repository-contract.php)
+
+### Resultado tecnico
+- o modulo de veiculos deixou de depender de uma assinatura com booleano que escondia dois comportamentos diferentes
+- o codigo ficou mais aderente ao guia de Clean Code do projeto ao tornar a intencao do contrato explicita
+- mocks, repositorio real e testes de contrato agora falam a mesma linguagem sobre leitura ativa e leitura com historico
+
+### Validacao realizada
+- `php -l src/Domain/Repositories/VeiculoRepositoryInterface.php`
+- `php -l src/Application/Services/VeiculoService.php`
+- `php -l src/Infrastructure/Persistence/PdoVeiculoRepository.php`
+- `php -l backend/controllers/VeiculoController.php`
+- `php -l scripts/test-veiculo-service.php`
+- `php -l scripts/test-veiculo-controller-flow.php`
+- `php -l scripts/test-veiculo-dashboard-service.php`
+- `php -l scripts/test-repository-pdo.php`
+- `php -l scripts/test-repository-contract.php`
+- `php scripts/test-repository-contract.php`
+- `php scripts/test-veiculo-service.php`
+- `php scripts/test-veiculo-controller-flow.php`
+- `php scripts/test-veiculo-dashboard-service.php`
+- `php scripts/test-repository-pdo.php`
+- `php scripts/test-wsl-stack.php`
+
+### Proximo passo recomendado
+- continuar a `Task 24` reduzindo a complexidade de views grandes como `dashboard.php` e `relatorios.php`

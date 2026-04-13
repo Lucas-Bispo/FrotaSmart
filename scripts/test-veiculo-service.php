@@ -53,7 +53,7 @@ final class InMemoryVeiculoRepository implements VeiculoRepositoryInterface
         $this->items[$veiculo->placaFormatada()] = $veiculo;
     }
 
-    public function findByPlaca(Placa $placa, bool $includeArchived = false): ?Veiculo
+    public function findActiveByPlaca(Placa $placa): ?Veiculo
     {
         $veiculo = $this->items[$placa->value()] ?? null;
 
@@ -61,16 +61,26 @@ final class InMemoryVeiculoRepository implements VeiculoRepositoryInterface
             return null;
         }
 
-        if (! $includeArchived && $veiculo->estaArquivado()) {
+        if ($veiculo->estaArquivado()) {
             return null;
         }
 
         return $veiculo;
     }
 
-    public function existsByPlaca(Placa $placa, bool $includeArchived = false): bool
+    public function findAnyByPlaca(Placa $placa): ?Veiculo
     {
-        return $this->findByPlaca($placa, $includeArchived) instanceof Veiculo;
+        return $this->items[$placa->value()] ?? null;
+    }
+
+    public function existsActiveByPlaca(Placa $placa): bool
+    {
+        return $this->findActiveByPlaca($placa) instanceof Veiculo;
+    }
+
+    public function existsAnyByPlaca(Placa $placa): bool
+    {
+        return $this->findAnyByPlaca($placa) instanceof Veiculo;
     }
 
     public function findAll(): array
@@ -177,7 +187,7 @@ expectException(
 
 $service->arquivar('XYZ9K88');
 assertTrue($service->buscarPorPlaca('XYZ9K88') === null, 'Remocao deveria excluir o veiculo.');
-assertTrue($service->buscarPorPlaca('XYZ9K88', true)?->estaArquivado() === true, 'Veiculo arquivado deve continuar acessivel no historico.');
+assertTrue($service->buscarPorPlacaIncluindoArquivados('XYZ9K88')?->estaArquivado() === true, 'Veiculo arquivado deve continuar acessivel no historico.');
 $arquivados = $service->listarArquivados();
 assertTrue(count($arquivados) >= 1, 'Listagem de arquivados deve retornar registros arquivados.');
 assertTrue(

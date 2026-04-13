@@ -38,6 +38,7 @@
 - O FrotaSmart agora possui uma camada dedicada de read model para relatorios em `src/Infrastructure/ReadModels`
 - O projeto agora possui um guia formal de Clean Code em `engenharia/padrao_clean_code_frotasmart.md`
 - Os controllers operacionais principais ja comecaram a migrar para validacoes menores e mais nomeadas
+- O modulo de veiculos agora tambem usa contratos mais explicitos para separar leitura ativa de leitura historica
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
@@ -57,6 +58,7 @@
 - parte importante das consultas do `RelatorioOperacionalModel` ja foi extraida para `RelatorioOperacionalQueryService`
 - `ViagemController` iniciou uma rodada de reducao de complexidade com extracao de validacoes em metodos menores
 - `ManutencaoController` e `AbastecimentoController` seguiram a mesma direcao para reduzir complexidade local
+- `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`
@@ -76,6 +78,7 @@ A [task_01_fundacao_arquitetura_composer_psr4.md](./ciclo_01_fundacao_arquitetur
 - O ciclo 02 planejado foi concluido e o proximo passo natural e consolidar backlog do ciclo seguinte
 - O cadastro de veiculos ainda precisava de dados mais aderentes a frota municipal real
 - a trilha de auditoria foi fortalecida, mas a persistencia geral ainda mistura models legados, `global $pdo` e servicos novos
+- views grandes como `dashboard.php` e `relatorios.php` ainda concentram muita responsabilidade de apresentacao
 
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento

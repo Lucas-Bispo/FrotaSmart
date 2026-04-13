@@ -18,7 +18,17 @@ if (! interface_exists(VeiculoRepositoryInterface::class)) {
 }
 
 $reflection = new ReflectionClass(VeiculoRepositoryInterface::class);
-$expectedMethods = ['save', 'findByPlaca', 'existsByPlaca', 'findAll', 'findArchived', 'removeByPlaca', 'restoreByPlaca'];
+$expectedMethods = [
+    'save',
+    'findActiveByPlaca',
+    'findAnyByPlaca',
+    'existsActiveByPlaca',
+    'existsAnyByPlaca',
+    'findAll',
+    'findArchived',
+    'removeByPlaca',
+    'restoreByPlaca',
+];
 
 foreach ($expectedMethods as $methodName) {
     if (! $reflection->hasMethod($methodName)) {

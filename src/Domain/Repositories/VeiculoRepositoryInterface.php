@@ -11,9 +11,13 @@ interface VeiculoRepositoryInterface
 {
     public function save(Veiculo $veiculo): void;
 
-    public function findByPlaca(Placa $placa, bool $includeArchived = false): ?Veiculo;
+    public function findActiveByPlaca(Placa $placa): ?Veiculo;
 
-    public function existsByPlaca(Placa $placa, bool $includeArchived = false): bool;
+    public function findAnyByPlaca(Placa $placa): ?Veiculo;
+
+    public function existsActiveByPlaca(Placa $placa): bool;
+
+    public function existsAnyByPlaca(Placa $placa): bool;
 
     /**
      * @return list<Veiculo>

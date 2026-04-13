@@ -92,9 +92,9 @@ try {
         'data_aquisicao' => '2026-01-15',
     ]));
 
-    assertTrue($repository->existsByPlaca($placa), 'Repositorio deveria encontrar a placa salva.');
+    assertTrue($repository->existsActiveByPlaca($placa), 'Repositorio deveria encontrar a placa salva.');
 
-    $veiculo = $repository->findByPlaca($placa);
+    $veiculo = $repository->findActiveByPlaca($placa);
     assertTrue($veiculo instanceof Veiculo, 'Repositorio deveria hidratar um veiculo.');
     assertTrue($veiculo->status() === 'disponivel', 'Status legado deve ser traduzido para o dominio.');
     assertTrue($veiculo->secretariaLotada() === 'Saude', 'Repositorio deve hidratar secretaria lotada.');
@@ -104,7 +104,7 @@ try {
         'combustivel' => 'diesel_s10',
         'quilometragem_inicial' => 8200,
     ]));
-    $veiculoAtualizado = $repository->findByPlaca($placa);
+    $veiculoAtualizado = $repository->findActiveByPlaca($placa);
 
     assertTrue($veiculoAtualizado instanceof Veiculo, 'Veiculo atualizado deveria continuar acessivel.');
     assertTrue($veiculoAtualizado->modelo() === 'Veiculo Atualizado', 'Modelo deveria ser atualizado.');
@@ -112,15 +112,15 @@ try {
     assertTrue($veiculoAtualizado->tipo() === 'Ambulancia', 'Tipo deveria ser atualizado.');
 
     $repository->removeByPlaca($placa);
-    assertTrue(! $repository->existsByPlaca($placa), 'Veiculo removido nao deveria continuar visivel.');
-    assertTrue($repository->existsByPlaca($placa, true), 'Veiculo arquivado deve continuar existindo no historico.');
+    assertTrue(! $repository->existsActiveByPlaca($placa), 'Veiculo removido nao deveria continuar visivel.');
+    assertTrue($repository->existsAnyByPlaca($placa), 'Veiculo arquivado deve continuar existindo no historico.');
     assertTrue(count($repository->findArchived()) >= 1, 'Repositorio deveria listar veiculos arquivados.');
 
-    $veiculoArquivado = $repository->findByPlaca($placa, true);
+    $veiculoArquivado = $repository->findAnyByPlaca($placa);
     assertTrue($veiculoArquivado instanceof Veiculo && $veiculoArquivado->estaArquivado(), 'Busca expandida deve hidratar veiculo arquivado.');
 
     $repository->restoreByPlaca($placa);
-    assertTrue($repository->existsByPlaca($placa), 'Veiculo restaurado deve voltar a ficar visivel.');
+    assertTrue($repository->existsActiveByPlaca($placa), 'Veiculo restaurado deve voltar a ficar visivel.');
 
     echo "Repositorio PDO validado com sucesso." . PHP_EOL;
 } catch (Throwable $throwable) {

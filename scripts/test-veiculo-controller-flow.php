@@ -40,7 +40,7 @@ final class InMemoryVeiculoRepositoryForController implements VeiculoRepositoryI
         $this->items[$veiculo->placaFormatada()] = $veiculo;
     }
 
-    public function findByPlaca(Placa $placa, bool $includeArchived = false): ?Veiculo
+    public function findActiveByPlaca(Placa $placa): ?Veiculo
     {
         $veiculo = $this->items[$placa->value()] ?? null;
 
@@ -48,16 +48,26 @@ final class InMemoryVeiculoRepositoryForController implements VeiculoRepositoryI
             return null;
         }
 
-        if (! $includeArchived && $veiculo->estaArquivado()) {
+        if ($veiculo->estaArquivado()) {
             return null;
         }
 
         return $veiculo;
     }
 
-    public function existsByPlaca(Placa $placa, bool $includeArchived = false): bool
+    public function findAnyByPlaca(Placa $placa): ?Veiculo
     {
-        return $this->findByPlaca($placa, $includeArchived) instanceof Veiculo;
+        return $this->items[$placa->value()] ?? null;
+    }
+
+    public function existsActiveByPlaca(Placa $placa): bool
+    {
+        return $this->findActiveByPlaca($placa) instanceof Veiculo;
+    }
+
+    public function existsAnyByPlaca(Placa $placa): bool
+    {
+        return $this->findAnyByPlaca($placa) instanceof Veiculo;
     }
 
     public function findAll(): array

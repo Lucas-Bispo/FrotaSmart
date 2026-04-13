@@ -199,7 +199,7 @@ final class VeiculoController
     public function processRestore(array $input): array
     {
         $placa = (string) ($input['placa'] ?? '');
-        $veiculo = $this->service->buscarPorPlaca($placa, true);
+        $veiculo = $this->service->buscarPorPlacaIncluindoArquivados($placa);
 
         if ($veiculo === null || ! $veiculo->estaArquivado()) {
             throw new DomainException('Veiculo arquivado nao encontrado para restauracao.');

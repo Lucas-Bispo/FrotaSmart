@@ -26,7 +26,7 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
 
     public function save(Veiculo $veiculo): void
     {
-        if ($this->existsByPlaca($veiculo->placa())) {
+        if ($this->existsActiveByPlaca($veiculo->placa())) {
             $statement = $this->connection->prepare(
                 'UPDATE veiculos
                  SET modelo = :modelo,
@@ -91,59 +91,24 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
         ]);
     }
 
-    public function findByPlaca(Placa $placa, bool $includeArchived = false): ?Veiculo
+    public function findActiveByPlaca(Placa $placa): ?Veiculo
     {
-        $sql = 'SELECT
-                placa,
-                modelo,
-                status,
-                renavam,
-                chassi,
-                ano_fabricacao,
-                tipo,
-                combustivel,
-                secretaria_lotada,
-                quilometragem_inicial,
-                data_aquisicao,
-                documentos_observacoes,
-                deleted_at
-             FROM veiculos
-             WHERE placa = :placa';
-
-        if (! $includeArchived) {
-            $sql .= ' AND deleted_at IS NULL';
-        }
-
-        $sql .= ' LIMIT 1';
-
-        $statement = $this->connection->prepare(
-            $sql
-        );
-        $statement->execute([':placa' => $placa->value()]);
-
-        $row = $statement->fetch();
-
-        if ($row === false) {
-            return null;
-        }
-
-        return $this->hydrateVeiculo($row);
+        return $this->findSingleByPlaca($placa, false);
     }
 
-    public function existsByPlaca(Placa $placa, bool $includeArchived = false): bool
+    public function findAnyByPlaca(Placa $placa): ?Veiculo
     {
-        $sql = 'SELECT 1 FROM veiculos WHERE placa = :placa';
+        return $this->findSingleByPlaca($placa, true);
+    }
 
-        if (! $includeArchived) {
-            $sql .= ' AND deleted_at IS NULL';
-        }
+    public function existsActiveByPlaca(Placa $placa): bool
+    {
+        return $this->existsSingleByPlaca($placa, false);
+    }
 
-        $sql .= ' LIMIT 1';
-
-        $statement = $this->connection->prepare($sql);
-        $statement->execute([':placa' => $placa->value()]);
-
-        return $statement->fetchColumn() !== false;
+    public function existsAnyByPlaca(Placa $placa): bool
+    {
+        return $this->existsSingleByPlaca($placa, true);
     }
 
     public function findAll(): array
@@ -262,5 +227,58 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
             'manutencao' => 'em_manutencao',
             default => $storageStatus,
         };
+    }
+
+    private function findSingleByPlaca(Placa $placa, bool $allowArchived): ?Veiculo
+    {
+        $sql = 'SELECT
+                placa,
+                modelo,
+                status,
+                renavam,
+                chassi,
+                ano_fabricacao,
+                tipo,
+                combustivel,
+                secretaria_lotada,
+                quilometragem_inicial,
+                data_aquisicao,
+                documentos_observacoes,
+                deleted_at
+             FROM veiculos
+             WHERE placa = :placa';
+
+        if (! $allowArchived) {
+            $sql .= ' AND deleted_at IS NULL';
+        }
+
+        $sql .= ' LIMIT 1';
+
+        $statement = $this->connection->prepare($sql);
+        $statement->execute([':placa' => $placa->value()]);
+
+        $row = $statement->fetch();
+
+        if ($row === false) {
+            return null;
+        }
+
+        return $this->hydrateVeiculo($row);
+    }
+
+    private function existsSingleByPlaca(Placa $placa, bool $allowArchived): bool
+    {
+        $sql = 'SELECT 1 FROM veiculos WHERE placa = :placa';
+
+        if (! $allowArchived) {
+            $sql .= ' AND deleted_at IS NULL';
+        }
+
+        $sql .= ' LIMIT 1';
+
+        $statement = $this->connection->prepare($sql);
+        $statement->execute([':placa' => $placa->value()]);
+
+        return $statement->fetchColumn() !== false;
     }
 }

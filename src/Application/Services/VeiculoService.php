@@ -24,7 +24,7 @@ final class VeiculoService
     {
         $veiculo = new Veiculo($placa, $modelo, $status, $dadosCadastro);
 
-        if ($this->repository->existsByPlaca($veiculo->placa(), true)) {
+        if ($this->repository->existsAnyByPlaca($veiculo->placa())) {
             throw VeiculoAlreadyExistsException::forPlaca($veiculo->placaFormatada());
         }
 
@@ -41,7 +41,7 @@ final class VeiculoService
         array $dadosCadastro = []
     ): Veiculo {
         $placaAtualVo = new Placa($placaAtual);
-        $veiculoAtual = $this->repository->findByPlaca($placaAtualVo);
+        $veiculoAtual = $this->repository->findActiveByPlaca($placaAtualVo);
 
         if ($veiculoAtual === null) {
             throw VeiculoNotFoundException::forPlaca($placaAtualVo->value());
@@ -50,7 +50,7 @@ final class VeiculoService
         $veiculoAtualizado = new Veiculo($novaPlaca, $modelo, $status, $dadosCadastro);
         $placaFoiAlterada = ! $placaAtualVo->equals($veiculoAtualizado->placa());
 
-        if ($placaFoiAlterada && $this->repository->existsByPlaca($veiculoAtualizado->placa(), true)) {
+        if ($placaFoiAlterada && $this->repository->existsAnyByPlaca($veiculoAtualizado->placa())) {
             throw VeiculoAlreadyExistsException::forPlaca($veiculoAtualizado->placaFormatada());
         }
 
@@ -63,9 +63,14 @@ final class VeiculoService
         return $veiculoAtualizado;
     }
 
-    public function buscarPorPlaca(string $placa, bool $includeArchived = false): ?Veiculo
+    public function buscarPorPlaca(string $placa): ?Veiculo
     {
-        return $this->repository->findByPlaca(new Placa($placa), $includeArchived);
+        return $this->repository->findActiveByPlaca(new Placa($placa));
+    }
+
+    public function buscarPorPlacaIncluindoArquivados(string $placa): ?Veiculo
+    {
+        return $this->repository->findAnyByPlaca(new Placa($placa));
     }
 
     /**
@@ -88,7 +93,7 @@ final class VeiculoService
     {
         $placaVo = new Placa($placa);
 
-        if (! $this->repository->existsByPlaca($placaVo)) {
+        if (! $this->repository->existsActiveByPlaca($placaVo)) {
             throw VeiculoNotFoundException::forPlaca($placaVo->value());
         }
 
@@ -98,7 +103,7 @@ final class VeiculoService
     public function restaurar(string $placa): void
     {
         $placaVo = new Placa($placa);
-        $veiculo = $this->repository->findByPlaca($placaVo, true);
+        $veiculo = $this->repository->findAnyByPlaca($placaVo);
 
         if ($veiculo === null || ! $veiculo->estaArquivado()) {
             throw VeiculoNotFoundException::forPlaca($placaVo->value());

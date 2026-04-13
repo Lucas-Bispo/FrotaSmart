@@ -40,12 +40,22 @@ final class InMemoryVeiculoDashboardRepository implements VeiculoRepositoryInter
         throw new BadMethodCallException('Nao utilizado neste teste.');
     }
 
-    public function findByPlaca(Placa $placa, bool $includeArchived = false): ?Veiculo
+    public function findActiveByPlaca(Placa $placa): ?Veiculo
     {
         throw new BadMethodCallException('Nao utilizado neste teste.');
     }
 
-    public function existsByPlaca(Placa $placa, bool $includeArchived = false): bool
+    public function findAnyByPlaca(Placa $placa): ?Veiculo
+    {
+        throw new BadMethodCallException('Nao utilizado neste teste.');
+    }
+
+    public function existsActiveByPlaca(Placa $placa): bool
+    {
+        throw new BadMethodCallException('Nao utilizado neste teste.');
+    }
+
+    public function existsAnyByPlaca(Placa $placa): bool
     {
         throw new BadMethodCallException('Nao utilizado neste teste.');
     }
