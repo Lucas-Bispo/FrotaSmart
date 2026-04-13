@@ -653,3 +653,23 @@
 
 ### Proximo passo recomendado
 - continuar a `Task 24` extraindo consultas e agregacoes restantes de `RelatorioOperacionalModel` para uma camada de leitura mais dedicada
+
+## 2026-04-13 - Padrao Clean Code
+
+### Guia de adocao do projeto
+- Criado o guia [padrao_clean_code_frotasmart.md](../engenharia/padrao_clean_code_frotasmart.md) com diretrizes praticas para regra do escoteiro, tamanhos pequenos, comentarios, nomes significativos, formatacao, refatoracao, complexidade ciclomática, excecoes, consistencia, testes de unidade, booleanos, nulos e funcoes puras
+- Registrada uma analise objetiva dos hotspots atuais do FrotaSmart, com foco em views grandes, controllers com validacao extensa e pontos de acoplamento residual
+
+### Primeira execucao no codigo
+- Refatorado [ViagemController.php](../backend/controllers/ViagemController.php) para reduzir complexidade em `validatedPayload()`
+- Extraidas validacoes para metodos pequenos e nomeados, como `assertRequiredSelections()`, `assertRequiredTextFields()`, `assertDateFields()`, `assertKilometers()` e `assertStatus()`
+- Padronizado o uso de constante para status aceitos e helper para campos textuais opcionais
+
+### Validacao realizada
+- `php -l backend/controllers/ViagemController.php`
+- `php -l public/viagens.php`
+- `php -l frontend/views/viagens.php`
+- observacao: o projeto ainda nao possui teste automatizado especifico para o controller de viagens
+
+### Proximo passo recomendado
+- aplicar o mesmo padrao nos controllers de manutencao e abastecimento, que tambem concentram validacao extensa

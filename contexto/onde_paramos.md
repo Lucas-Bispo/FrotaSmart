@@ -23,6 +23,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - a leitura principal da frota no dashboard passou a sair de `VeiculoDashboardService` em `src/`, reaproveitando `PdoVeiculoRepository`
 - o `VeiculoModel` legado deixou de ser o ponto central da frota na pagina principal
 - a leitura SQL de relatorios comecou a migrar para `RelatorioOperacionalQueryService` em `src/Infrastructure/ReadModels`
+- o padrao de Clean Code do projeto agora esta formalizado em `engenharia/padrao_clean_code_frotasmart.md` e ja comecou a ser aplicado no `ViagemController`
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -30,7 +31,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado`, extraindo agora as agregacoes remanescentes e reduzindo o acoplamento indireto com models legados
+- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` e espalhar o padrao de Clean Code pelos controllers operacionais restantes
 
 ## O que ja esta concluido por ciclo
 

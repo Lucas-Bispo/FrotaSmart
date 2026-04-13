@@ -36,6 +36,7 @@
 - A listagem principal da frota no dashboard agora sai de `VeiculoDashboardService` em `src/`, reutilizando o repositorio PDO novo
 - O modulo de relatorios ja aceita `PDO` explicito nos entrypoints principais, reduzindo dependencia de estado global
 - O FrotaSmart agora possui uma camada dedicada de read model para relatorios em `src/Infrastructure/ReadModels`
+- O projeto agora possui um guia formal de Clean Code em `engenharia/padrao_clean_code_frotasmart.md`
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
@@ -53,6 +54,7 @@
 - `backend/config/security.php` passou a centralizar a emissao de auditoria estruturada para log e banco
 - `backend/models/RelatorioOperacionalModel.php` foi ajustado para receber conexao explicita, embora ainda concentre consultas legadas
 - parte importante das consultas do `RelatorioOperacionalModel` ja foi extraida para `RelatorioOperacionalQueryService`
+- `ViagemController` iniciou uma rodada de reducao de complexidade com extracao de validacoes em metodos menores
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`

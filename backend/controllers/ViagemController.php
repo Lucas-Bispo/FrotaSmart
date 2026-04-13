@@ -8,6 +8,8 @@ require_once __DIR__ . '/../models/ViagemModel.php';
 
 final class ViagemController
 {
+    private const ALLOWED_STATUS = ['em_curso', 'concluida', 'cancelada'];
+
     private ViagemModel $model;
     private OperacaoFrotaGuard $guard;
 
@@ -85,75 +87,141 @@ final class ViagemController
 
     private function validatedPayload(): array
     {
-        $veiculoId = (int) ($_POST['veiculo_id'] ?? 0);
-        $motoristaId = (int) ($_POST['motorista_id'] ?? 0);
-        $secretaria = trim((string) ($_POST['secretaria'] ?? ''));
-        $solicitante = trim((string) ($_POST['solicitante'] ?? ''));
-        $origem = trim((string) ($_POST['origem'] ?? ''));
-        $destino = trim((string) ($_POST['destino'] ?? ''));
-        $finalidade = trim((string) ($_POST['finalidade'] ?? ''));
-        $dataSaida = trim((string) ($_POST['data_saida'] ?? ''));
-        $dataRetorno = trim((string) ($_POST['data_retorno'] ?? ''));
-        $kmSaida = $this->normalizeInteger((string) ($_POST['km_saida'] ?? '0'));
-        $kmChegada = $this->normalizeOptionalInteger((string) ($_POST['km_chegada'] ?? ''));
-        $status = (string) ($_POST['status'] ?? '');
-        $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
+        $payload = $this->collectPayload();
+        $this->assertRequiredSelections($payload);
+        $this->assertRequiredTextFields($payload);
+        $this->assertDateFields($payload);
+        $this->assertKilometers($payload);
+        $this->assertStatus($payload);
 
-        if ($veiculoId <= 0) {
+        return [
+            'veiculo_id' => $payload['veiculo_id'],
+            'motorista_id' => $payload['motorista_id'],
+            'secretaria' => $payload['secretaria'],
+            'solicitante' => $payload['solicitante'],
+            'origem' => $payload['origem'],
+            'destino' => $payload['destino'],
+            'finalidade' => $payload['finalidade'],
+            'data_saida' => $payload['data_saida'],
+            'data_retorno' => $this->nullableText($payload['data_retorno']),
+            'km_saida' => $payload['km_saida'],
+            'km_chegada' => $payload['km_chegada'],
+            'status' => $payload['status'],
+            'observacoes' => $this->nullableText($payload['observacoes']),
+        ];
+    }
+
+    /**
+     * @return array<string, int|string|null>
+     */
+    private function collectPayload(): array
+    {
+        return [
+            'veiculo_id' => (int) ($_POST['veiculo_id'] ?? 0),
+            'motorista_id' => (int) ($_POST['motorista_id'] ?? 0),
+            'secretaria' => trim((string) ($_POST['secretaria'] ?? '')),
+            'solicitante' => trim((string) ($_POST['solicitante'] ?? '')),
+            'origem' => trim((string) ($_POST['origem'] ?? '')),
+            'destino' => trim((string) ($_POST['destino'] ?? '')),
+            'finalidade' => trim((string) ($_POST['finalidade'] ?? '')),
+            'data_saida' => trim((string) ($_POST['data_saida'] ?? '')),
+            'data_retorno' => trim((string) ($_POST['data_retorno'] ?? '')),
+            'km_saida' => $this->normalizeInteger((string) ($_POST['km_saida'] ?? '0')),
+            'km_chegada' => $this->normalizeOptionalInteger((string) ($_POST['km_chegada'] ?? '')),
+            'status' => (string) ($_POST['status'] ?? ''),
+            'observacoes' => trim((string) ($_POST['observacoes'] ?? '')),
+        ];
+    }
+
+    /**
+     * @param array<string, int|string|null> $payload
+     */
+    private function assertRequiredSelections(array $payload): void
+    {
+        if ((int) $payload['veiculo_id'] <= 0) {
             $this->flashAndRedirect('error', 'Selecione um veiculo valido.');
         }
-        if ($motoristaId <= 0) {
+
+        if ((int) $payload['motorista_id'] <= 0) {
             $this->flashAndRedirect('error', 'Selecione um motorista valido.');
         }
-        if ($secretaria === '') {
-            $this->flashAndRedirect('error', 'Informe a secretaria solicitante.');
+    }
+
+    /**
+     * @param array<string, int|string|null> $payload
+     */
+    private function assertRequiredTextFields(array $payload): void
+    {
+        $requiredFields = [
+            'secretaria' => 'Informe a secretaria solicitante.',
+            'solicitante' => 'Informe o solicitante ou responsavel.',
+            'origem' => 'Informe a origem da viagem.',
+            'destino' => 'Informe o destino da viagem.',
+            'finalidade' => 'Informe a finalidade da viagem.',
+        ];
+
+        foreach ($requiredFields as $field => $message) {
+            if (trim((string) ($payload[$field] ?? '')) === '') {
+                $this->flashAndRedirect('error', $message);
+            }
         }
-        if ($solicitante === '') {
-            $this->flashAndRedirect('error', 'Informe o solicitante ou responsavel.');
-        }
-        if ($origem === '') {
-            $this->flashAndRedirect('error', 'Informe a origem da viagem.');
-        }
-        if ($destino === '') {
-            $this->flashAndRedirect('error', 'Informe o destino da viagem.');
-        }
-        if ($finalidade === '') {
-            $this->flashAndRedirect('error', 'Informe a finalidade da viagem.');
-        }
-        if (!$this->isValidDateTime($dataSaida)) {
+    }
+
+    /**
+     * @param array<string, int|string|null> $payload
+     */
+    private function assertDateFields(array $payload): void
+    {
+        $dataSaida = (string) ($payload['data_saida'] ?? '');
+        $dataRetorno = (string) ($payload['data_retorno'] ?? '');
+
+        if (! $this->isValidDateTime($dataSaida)) {
             $this->flashAndRedirect('error', 'Informe uma data e hora de saida valida.');
         }
-        if ($dataRetorno !== '' && !$this->isValidDateTime($dataRetorno)) {
+
+        if ($dataRetorno !== '' && ! $this->isValidDateTime($dataRetorno)) {
             $this->flashAndRedirect('error', 'Informe uma data e hora de retorno valida.');
         }
+    }
+
+    /**
+     * @param array<string, int|string|null> $payload
+     */
+    private function assertKilometers(array $payload): void
+    {
+        $kmSaida = (int) ($payload['km_saida'] ?? 0);
+        $kmChegada = $payload['km_chegada'];
+
         if ($kmSaida <= 0) {
             $this->flashAndRedirect('error', 'Informe um km inicial valido.');
         }
-        if ($kmChegada !== null && $kmChegada < $kmSaida) {
+
+        if (is_int($kmChegada) && $kmChegada < $kmSaida) {
             $this->flashAndRedirect('error', 'O km final nao pode ser menor que o km inicial.');
         }
-        if (!in_array($status, ['em_curso', 'concluida', 'cancelada'], true)) {
+    }
+
+    /**
+     * @param array<string, int|string|null> $payload
+     */
+    private function assertStatus(array $payload): void
+    {
+        $status = (string) ($payload['status'] ?? '');
+        $dataRetorno = (string) ($payload['data_retorno'] ?? '');
+        $kmChegada = $payload['km_chegada'];
+
+        if (! in_array($status, self::ALLOWED_STATUS, true)) {
             $this->flashAndRedirect('error', 'Informe um status de viagem valido.');
         }
-        if ($status === 'concluida' && ($dataRetorno === '' || $kmChegada === null)) {
+
+        if ($status === 'concluida' && ($dataRetorno === '' || ! is_int($kmChegada))) {
             $this->flashAndRedirect('error', 'Viagens concluidas exigem data de retorno e km final.');
         }
+    }
 
-        return [
-            'veiculo_id' => $veiculoId,
-            'motorista_id' => $motoristaId,
-            'secretaria' => $secretaria,
-            'solicitante' => $solicitante,
-            'origem' => $origem,
-            'destino' => $destino,
-            'finalidade' => $finalidade,
-            'data_saida' => $dataSaida,
-            'data_retorno' => $dataRetorno !== '' ? $dataRetorno : null,
-            'km_saida' => $kmSaida,
-            'km_chegada' => $kmChegada,
-            'status' => $status,
-            'observacoes' => $observacoes !== '' ? $observacoes : null,
-        ];
+    private function nullableText(string $value): ?string
+    {
+        return $value !== '' ? $value : null;
     }
 
     /**
@@ -217,7 +285,7 @@ final class ViagemController
 
     private function assertCanManage(): void
     {
-        if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE)) {
+        if (! isset($_SESSION['user']) || ! user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE)) {
             set_flash('error', 'Acesso negado ao modulo de viagens.');
             header('Location: /dashboard.php');
             exit;
