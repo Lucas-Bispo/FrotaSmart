@@ -737,3 +737,25 @@
 
 ### Proximo passo recomendado
 - aplicar o mesmo padrao de fracionamento na view [relatorios.php](../frontend/views/relatorios.php)
+
+## 2026-04-13 - Clean Code em relatorios
+
+### Fracionamento inicial da view de relatorios
+- Criado o helper [relatorios_view_helpers.php](../frontend/views/helpers/relatorios_view_helpers.php) com funcoes para labels, opcoes de status, cards de resumo, cabecalhos de tabela e renderizacao de linhas por tipo de relatorio
+- Refatorada a view [relatorios.php](../frontend/views/relatorios.php) para consumir essas estruturas, reduzindo a quantidade de `if` e `elseif` espalhada pela camada de apresentacao
+- Mantido o comportamento funcional dos relatorios operacionais, inclusive a aba de auditoria, filtros e exportacao CSV
+
+### Resultado tecnico
+- o modulo de relatorios ficou mais previsivel de ler e alterar ao concentrar as variacoes da tela em helpers dedicados
+- a view principal passou a focar mais em composicao da pagina do que em detalhes de montagem por tipo de relatorio
+- o projeto agora tem o mesmo padrao de fracionamento aplicado nas duas maiores views operacionais
+
+### Validacao realizada
+- `php -l frontend/views/helpers/relatorios_view_helpers.php`
+- `php -l frontend/views/relatorios.php`
+- `php scripts/test-auditoria-relatorio.php`
+- `php scripts/test-relatorio-executivo.php`
+- `php scripts/test-wsl-stack.php`
+
+### Proximo passo recomendado
+- continuar a `Task 24` reduzindo blocos residuais grandes em views e simplificando composicoes ainda concentradas no modulo de relatorios

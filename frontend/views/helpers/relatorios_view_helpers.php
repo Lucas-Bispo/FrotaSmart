@@ -1,0 +1,188 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * @return array<string, string>
+ */
+function relatorios_report_labels(): array
+{
+    return [
+        'abastecimentos' => 'Abastecimentos',
+        'manutencoes' => 'Manutencoes',
+        'viagens' => 'Viagens',
+        'disponibilidade' => 'Disponibilidade',
+        'auditoria' => 'Auditoria',
+    ];
+}
+
+/**
+ * @return array<string, string>
+ */
+function relatorios_status_options(string $report): array
+{
+    return match ($report) {
+        'abastecimentos' => ['normal' => 'Normal', 'atencao' => 'Atencao', 'critico' => 'Critico'],
+        'manutencoes' => ['aberta' => 'Aberta', 'em_andamento' => 'Em andamento', 'concluida' => 'Concluida', 'cancelada' => 'Cancelada'],
+        'viagens' => ['em_curso' => 'Em curso', 'concluida' => 'Concluida', 'cancelada' => 'Cancelada'],
+        'disponibilidade' => ['ativo' => 'Ativo', 'manutencao' => 'Manutencao', 'em_viagem' => 'Em viagem', 'reservado' => 'Reservado', 'baixado' => 'Baixado'],
+        'auditoria' => ['create' => 'Criacao', 'update' => 'Atualizacao', 'archive' => 'Arquivamento', 'restore' => 'Restauracao', 'delete' => 'Exclusao', 'blocked' => 'Bloqueio', 'export' => 'Exportacao', 'login' => 'Login', 'login_failed' => 'Falha login', 'logout' => 'Logout'],
+        default => [],
+    };
+}
+
+/**
+ * @param array<string, mixed> $summary
+ * @param array<string, mixed> $auditSummary
+ * @return list<array{title:string,value:string,value_class:string}>
+ */
+function relatorios_summary_cards(string $report, array $summary, array $auditSummary): array
+{
+    if ($report === 'auditoria') {
+        return [
+            ['title' => 'Eventos auditados', 'value' => (string) (int) ($auditSummary['eventos_total'] ?? 0), 'value_class' => 'text-slate-800'],
+            ['title' => 'Atores unicos', 'value' => (string) (int) ($auditSummary['atores_unicos'] ?? 0), 'value_class' => 'text-cyan-700'],
+            ['title' => 'Exportacoes', 'value' => (string) (int) ($auditSummary['exportacoes'] ?? 0), 'value_class' => 'text-emerald-600'],
+            ['title' => 'Bloqueios', 'value' => (string) (int) ($auditSummary['bloqueios'] ?? 0), 'value_class' => 'text-amber-600'],
+        ];
+    }
+
+    return [
+        ['title' => 'Gasto abastecimento', 'value' => 'R$ ' . number_format((float) ($summary['gasto_abastecimento'] ?? 0), 2, ',', '.'), 'value_class' => 'text-emerald-600'],
+        ['title' => 'Custo manutencao', 'value' => 'R$ ' . number_format((float) ($summary['custo_manutencao'] ?? 0), 2, ',', '.'), 'value_class' => 'text-amber-600'],
+        ['title' => 'Viagens / KM', 'value' => (int) ($summary['viagens'] ?? 0) . ' / ' . number_format((float) ($summary['km_viagens'] ?? 0), 0, ',', '.'), 'value_class' => 'text-cyan-700'],
+        ['title' => 'Veiculos disponiveis', 'value' => (string) (int) ($summary['veiculos_disponiveis'] ?? 0), 'value_class' => 'text-slate-800'],
+    ];
+}
+
+/**
+ * @return list<string>
+ */
+function relatorios_table_headers(string $report): array
+{
+    return match ($report) {
+        'abastecimentos' => ['Veiculo', 'Secretaria', 'Data e combustivel', 'Consumo', 'Custos'],
+        'manutencoes' => ['Veiculo', 'Secretaria', 'Tipo e periodo', 'Parceiro', 'Custos'],
+        'viagens' => ['Veiculo', 'Secretaria', 'Motorista', 'Trajeto', 'KM e status'],
+        'auditoria' => ['Data e evento', 'Acao', 'Alvo', 'Ator e origem', 'Contexto'],
+        default => ['Veiculo', 'Secretaria', 'Status', 'Uso', 'Historico'],
+    };
+}
+
+function relatorios_row_markup(string $report, array $row): string
+{
+    return match ($report) {
+        'abastecimentos' => relatorios_abastecimento_row($row),
+        'manutencoes' => relatorios_manutencao_row($row),
+        'viagens' => relatorios_viagem_row($row),
+        'auditoria' => relatorios_auditoria_row($row),
+        default => relatorios_disponibilidade_row($row),
+    };
+}
+
+function relatorios_abastecimento_row(array $row): string
+{
+    $consumo = ($row['consumo_km_l'] ?? null) !== null ? number_format((float) $row['consumo_km_l'], 2, ',', '.') . ' km/L' : '--';
+    $combustivel = strtoupper(str_replace('_', ' ', (string) $row['tipo_combustivel']));
+
+    return sprintf(
+        '<td class="px-6 py-4"><div class="text-sm font-bold text-slate-900">%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700">%s</td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>R$ %s</div><div class="text-xs text-slate-500">%s L</div></td>',
+        htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['secretaria'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['data_abastecimento'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($combustivel, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($consumo, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['anomalia_status'] ?? 'normal'), ENT_QUOTES, 'UTF-8'),
+        number_format((float) $row['valor_total'], 2, ',', '.'),
+        number_format((float) $row['litros'], 2, ',', '.')
+    );
+}
+
+function relatorios_manutencao_row(array $row): string
+{
+    $parceiro = (string) ($row['parceiro_nome'] ?? $row['fornecedor'] ?? 'Nao informado');
+    $custo = (float) ((($row['custo_final'] ?? 0) > 0) ? $row['custo_final'] : $row['custo_estimado']);
+
+    return sprintf(
+        '<td class="px-6 py-4"><div class="text-sm font-bold text-slate-900">%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700">%s</td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>R$ %s</div></td>',
+        htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['secretaria_lotada'] ?? 'Nao informada'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars(ucfirst((string) $row['tipo']), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['data_abertura'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($parceiro, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['status'], ENT_QUOTES, 'UTF-8'),
+        number_format($custo, 2, ',', '.')
+    );
+}
+
+function relatorios_viagem_row(array $row): string
+{
+    $km = ($row['km_percorrido'] ?? null) !== null ? number_format((float) $row['km_percorrido'], 0, ',', '.') . ' km' : '--';
+
+    return sprintf(
+        '<td class="px-6 py-4"><div class="text-sm font-bold text-slate-900">%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700">%s</td>
+        <td class="px-6 py-4 text-sm text-slate-700">%s</td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s &rarr; %s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>',
+        htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['secretaria'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['motorista_nome'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['origem'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['destino'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['finalidade'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($km, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['status'], ENT_QUOTES, 'UTF-8')
+    );
+}
+
+function relatorios_auditoria_row(array $row): string
+{
+    return sprintf(
+        '<td class="px-6 py-4 text-sm text-slate-700"><div class="font-semibold text-slate-900">%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700">%s</td>',
+        htmlspecialchars((string) $row['event'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['occurred_at'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['action'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['actor_role'] ?? 'sem perfil'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['target_type'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['target_id'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['actor'] ?? 'sistema'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['ip'] ?? 'n/a'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['context_summary'] ?? 'Sem contexto adicional.'), ENT_QUOTES, 'UTF-8')
+    );
+}
+
+function relatorios_disponibilidade_row(array $row): string
+{
+    return sprintf(
+        '<td class="px-6 py-4"><div class="text-sm font-bold text-slate-900">%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700">%s</td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%d viagem(ns)</div><div class="text-xs text-slate-500">%d manutencao(oes)</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>Ult. viagem: %s</div><div class="text-xs text-slate-500">Ult. abastecimento: %s</div></td>',
+        htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['secretaria_lotada'] ?? 'Nao informada'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['status'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['situacao_disponibilidade'], ENT_QUOTES, 'UTF-8'),
+        (int) $row['total_viagens'],
+        (int) $row['total_manutencoes'],
+        htmlspecialchars((string) ($row['ultima_viagem'] ?? '--'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['ultimo_abastecimento'] ?? '--'), ENT_QUOTES, 'UTF-8')
+    );
+}

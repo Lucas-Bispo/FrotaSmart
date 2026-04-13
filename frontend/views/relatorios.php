@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../backend/config/security.php';
 require_once __DIR__ . '/../../backend/models/RelatorioOperacionalModel.php';
+require_once __DIR__ . '/helpers/relatorios_view_helpers.php';
 
 secure_session_start();
 
@@ -29,13 +30,7 @@ $filters = [
     'tipo_alvo' => (string) ($_GET['tipo_alvo'] ?? ''),
 ];
 
-$reportLabels = [
-    'abastecimentos' => 'Abastecimentos',
-    'manutencoes' => 'Manutencoes',
-    'viagens' => 'Viagens',
-    'disponibilidade' => 'Disponibilidade',
-    'auditoria' => 'Auditoria',
-];
+$reportLabels = relatorios_report_labels();
 
 if (! isset($reportLabels[$report])) {
     $report = 'abastecimentos';
@@ -68,14 +63,9 @@ $rows = match ($report) {
     default => $model->getAbastecimentoReport($filters),
 };
 
-$statusOptions = match ($report) {
-    'abastecimentos' => ['normal' => 'Normal', 'atencao' => 'Atencao', 'critico' => 'Critico'],
-    'manutencoes' => ['aberta' => 'Aberta', 'em_andamento' => 'Em andamento', 'concluida' => 'Concluida', 'cancelada' => 'Cancelada'],
-    'viagens' => ['em_curso' => 'Em curso', 'concluida' => 'Concluida', 'cancelada' => 'Cancelada'],
-    'disponibilidade' => ['ativo' => 'Ativo', 'manutencao' => 'Manutencao', 'em_viagem' => 'Em viagem', 'reservado' => 'Reservado', 'baixado' => 'Baixado'],
-    'auditoria' => ['create' => 'Criacao', 'update' => 'Atualizacao', 'archive' => 'Arquivamento', 'restore' => 'Restauracao', 'delete' => 'Exclusao', 'blocked' => 'Bloqueio', 'export' => 'Exportacao', 'login' => 'Login', 'login_failed' => 'Falha login', 'logout' => 'Logout'],
-    default => [],
-};
+$statusOptions = relatorios_status_options($report);
+$summaryCards = relatorios_summary_cards($report, $summary, $auditSummary);
+$tableHeaders = relatorios_table_headers($report);
 
 $pageTitle = 'Relatorios';
 require_once __DIR__ . '/../includes/header.php';
@@ -91,45 +81,14 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php if ($report === 'auditoria'): ?>
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Eventos auditados</p>
-        <p class="text-3xl font-bold text-slate-800 mt-2"><?php echo (int) $auditSummary['eventos_total']; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Atores unicos</p>
-        <p class="text-3xl font-bold text-cyan-700 mt-2"><?php echo (int) $auditSummary['atores_unicos']; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Exportacoes</p>
-        <p class="text-3xl font-bold text-emerald-600 mt-2"><?php echo (int) $auditSummary['exportacoes']; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Bloqueios</p>
-        <p class="text-3xl font-bold text-amber-600 mt-2"><?php echo (int) $auditSummary['bloqueios']; ?></p>
-    </div>
+    <?php foreach ($summaryCards as $card): ?>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <p class="text-sm font-medium text-slate-500 uppercase"><?php echo htmlspecialchars($card['title'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="text-3xl font-bold mt-2 <?php echo htmlspecialchars($card['value_class'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($card['value'], ENT_QUOTES, 'UTF-8'); ?></p>
+        </div>
+    <?php endforeach; ?>
 </div>
-<?php else: ?>
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Gasto abastecimento</p>
-        <p class="text-3xl font-bold text-emerald-600 mt-2">R$ <?php echo number_format((float) $summary['gasto_abastecimento'], 2, ',', '.'); ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Custo manutencao</p>
-        <p class="text-3xl font-bold text-amber-600 mt-2">R$ <?php echo number_format((float) $summary['custo_manutencao'], 2, ',', '.'); ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Viagens / KM</p>
-        <p class="text-3xl font-bold text-cyan-700 mt-2"><?php echo (int) $summary['viagens']; ?> / <?php echo number_format((float) $summary['km_viagens'], 0, ',', '.'); ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Veiculos disponiveis</p>
-        <p class="text-3xl font-bold text-slate-800 mt-2"><?php echo (int) $summary['veiculos_disponiveis']; ?></p>
-    </div>
-</div>
-<?php endif; ?>
 
 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -214,37 +173,9 @@ require_once __DIR__ . '/../includes/header.php';
         <table class="min-w-full divide-y divide-slate-200">
             <thead class="bg-slate-50">
                 <tr>
-                    <?php if ($report === 'abastecimentos'): ?>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Secretaria</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Data e combustivel</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Consumo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Custos</th>
-                    <?php elseif ($report === 'manutencoes'): ?>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Secretaria</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Tipo e periodo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Parceiro</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Custos</th>
-                    <?php elseif ($report === 'viagens'): ?>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Secretaria</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Motorista</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Trajeto</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">KM e status</th>
-                    <?php elseif ($report === 'auditoria'): ?>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Data e evento</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Acao</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Alvo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Ator e origem</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Contexto</th>
-                    <?php else: ?>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Secretaria</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Uso</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Historico</th>
-                    <?php endif; ?>
+                    <?php foreach ($tableHeaders as $header): ?>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase"><?php echo htmlspecialchars($header, ENT_QUOTES, 'UTF-8'); ?></th>
+                    <?php endforeach; ?>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
@@ -256,37 +187,7 @@ require_once __DIR__ . '/../includes/header.php';
 
                 <?php foreach ($rows as $row): ?>
                     <tr class="hover:bg-slate-50 transition align-top">
-                        <?php if ($report === 'abastecimentos'): ?>
-                            <td class="px-6 py-4"><div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><?php echo htmlspecialchars((string) $row['secretaria'], ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) $row['data_abastecimento'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars(strtoupper(str_replace('_', ' ', (string) $row['tipo_combustivel'])), ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo ($row['consumo_km_l'] ?? null) !== null ? number_format((float) $row['consumo_km_l'], 2, ',', '.') . ' km/L' : '--'; ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) ($row['anomalia_status'] ?? 'normal'), ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div>R$ <?php echo number_format((float) $row['valor_total'], 2, ',', '.'); ?></div><div class="text-xs text-slate-500"><?php echo number_format((float) $row['litros'], 2, ',', '.'); ?> L</div></td>
-                        <?php elseif ($report === 'manutencoes'): ?>
-                            <td class="px-6 py-4"><div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($row['secretaria_lotada'] ?? 'Nao informada'), ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) ucfirst((string) $row['tipo']), ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['data_abertura'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) ($row['parceiro_nome'] ?? $row['fornecedor'] ?? 'Nao informado'), ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['status'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div>R$ <?php echo number_format((float) (($row['custo_final'] ?? 0) > 0 ? $row['custo_final'] : $row['custo_estimado']), 2, ',', '.'); ?></div></td>
-                        <?php elseif ($report === 'viagens'): ?>
-                            <td class="px-6 py-4"><div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><?php echo htmlspecialchars((string) $row['secretaria'], ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><?php echo htmlspecialchars((string) $row['motorista_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) $row['origem'], ENT_QUOTES, 'UTF-8'); ?> &rarr; <?php echo htmlspecialchars((string) $row['destino'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['finalidade'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo ($row['km_percorrido'] ?? null) !== null ? number_format((float) $row['km_percorrido'], 0, ',', '.') . ' km' : '--'; ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['status'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                        <?php elseif ($report === 'auditoria'): ?>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div class="font-semibold text-slate-900"><?php echo htmlspecialchars((string) $row['event'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['occurred_at'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) $row['action'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) ($row['actor_role'] ?? 'sem perfil'), ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) $row['target_type'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['target_id'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) ($row['actor'] ?? 'sistema'), ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) ($row['ip'] ?? 'n/a'), ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($row['context_summary'] ?? 'Sem contexto adicional.'), ENT_QUOTES, 'UTF-8'); ?></td>
-                        <?php else: ?>
-                            <td class="px-6 py-4"><div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($row['secretaria_lotada'] ?? 'Nao informada'), ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) $row['status'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['situacao_disponibilidade'], ENT_QUOTES, 'UTF-8'); ?></div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo (int) $row['total_viagens']; ?> viagem(ns)</div><div class="text-xs text-slate-500"><?php echo (int) $row['total_manutencoes']; ?> manutencao(oes)</div></td>
-                            <td class="px-6 py-4 text-sm text-slate-700"><div>Ult. viagem: <?php echo htmlspecialchars((string) ($row['ultima_viagem'] ?? '--'), ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500">Ult. abastecimento: <?php echo htmlspecialchars((string) ($row['ultimo_abastecimento'] ?? '--'), ENT_QUOTES, 'UTF-8'); ?></div></td>
-                        <?php endif; ?>
+                        <?php echo relatorios_row_markup($report, $row); ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

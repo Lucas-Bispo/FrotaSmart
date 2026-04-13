@@ -27,6 +27,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - o mesmo padrao agora tambem foi aplicado em `ManutencaoController` e `AbastecimentoController`, reduzindo validacoes extensas em metodos menores
 - o contrato de veiculos agora diferencia leitura ativa e leitura historica com metodos explicitos, sem depender da flag `includeArchived`
 - o `dashboard.php` agora comecou a ser fracionado por helpers puros de view e por cards montados em estrutura, reduzindo repeticao visual
+- o `relatorios.php` agora tambem comecou a ser fracionado por helpers de view para labels, cards, cabecalhos e linhas por tipo de relatorio
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -34,7 +35,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` levando o mesmo fracionamento de view para `relatorios.php`
+- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` reduzindo os ultimos blocos grandes de apresentacao e montagem residual nas views e read models
 
 ## O que ja esta concluido por ciclo
 
