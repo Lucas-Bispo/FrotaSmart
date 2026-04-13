@@ -174,6 +174,24 @@ $statements = [
         FOREIGN KEY (motorista_id) REFERENCES motoristas(id),
         FOREIGN KEY (secretaria_id) REFERENCES secretarias(id) ON DELETE SET NULL
     )",
+    "CREATE TABLE IF NOT EXISTS audit_logs (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        event VARCHAR(120) NOT NULL,
+        action VARCHAR(60) NOT NULL,
+        target_type VARCHAR(80) NOT NULL,
+        target_id VARCHAR(160) NOT NULL,
+        actor VARCHAR(120) DEFAULT NULL,
+        actor_role VARCHAR(50) DEFAULT NULL,
+        ip VARCHAR(45) DEFAULT NULL,
+        occurred_at DATETIME NOT NULL,
+        context_json LONGTEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_audit_logs_occurred_at (occurred_at),
+        INDEX idx_audit_logs_event (event),
+        INDEX idx_audit_logs_action (action),
+        INDEX idx_audit_logs_actor (actor),
+        INDEX idx_audit_logs_target (target_type, target_id)
+    )",
 ];
 
 try {
@@ -358,6 +376,28 @@ try {
     $pdo->exec("ALTER TABLE viagens MODIFY destino VARCHAR(160) NOT NULL");
     $pdo->exec("ALTER TABLE viagens MODIFY data_saida DATETIME NOT NULL");
     $pdo->exec("ALTER TABLE viagens MODIFY status ENUM('em_curso', 'concluida', 'cancelada') NOT NULL DEFAULT 'em_curso'");
+
+    if (! table_has_column($pdo, 'audit_logs', 'actor_role')) {
+        $pdo->exec("ALTER TABLE audit_logs ADD COLUMN actor_role VARCHAR(50) NULL AFTER actor");
+    }
+    if (! table_has_column($pdo, 'audit_logs', 'context_json')) {
+        $pdo->exec("ALTER TABLE audit_logs ADD COLUMN context_json LONGTEXT NULL AFTER occurred_at");
+    }
+    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_occurred_at')) {
+        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_occurred_at (occurred_at)");
+    }
+    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_event')) {
+        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_event (event)");
+    }
+    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_action')) {
+        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_action (action)");
+    }
+    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_actor')) {
+        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_actor (actor)");
+    }
+    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_target')) {
+        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_target (target_type, target_id)");
+    }
 
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = :username');
     $stmt->execute([':username' => $adminUsername]);

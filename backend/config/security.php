@@ -245,15 +245,129 @@ function pull_flash(string $key): ?string
 
 function audit_log(string $event, array $context = []): void
 {
-    $payload = [
-        'event' => $event,
-        'timestamp' => gmdate(DATE_ATOM),
-        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'cli',
-        'user' => $_SESSION['user'] ?? null,
-        'context' => $context,
+    try {
+        $auditTrail = frotasmart_audit_trail();
+        $auditTrail->recordMutation(
+            $event,
+            infer_audit_action($event),
+            infer_audit_target_type($event, $context),
+            infer_audit_target_id($event, $context),
+            enrich_audit_context($context)
+        );
+    } catch (Throwable $throwable) {
+        error_log('Falha ao registrar auditoria estruturada: ' . $throwable->getMessage());
+
+        $payload = [
+            'event' => $event,
+            'timestamp' => gmdate(DATE_ATOM),
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'cli',
+            'user' => $_SESSION['user'] ?? null,
+            'context' => $context,
+        ];
+
+        error_log('[AUDIT] ' . json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+}
+
+function frotasmart_audit_trail(): \FrotaSmart\Application\Services\AuditTrailService
+{
+    static $service = null;
+
+    if ($service instanceof \FrotaSmart\Application\Services\AuditTrailService) {
+        return $service;
+    }
+
+    $service = new \FrotaSmart\Application\Services\AuditTrailService(
+        new \FrotaSmart\Infrastructure\Audit\CompositeAuditLogger([
+            new \FrotaSmart\Infrastructure\Audit\ErrorLogAuditLogger(),
+            new \FrotaSmart\Infrastructure\Audit\PdoAuditLogger(),
+        ]),
+        new \FrotaSmart\Infrastructure\Audit\RequestAuditContextProvider()
+    );
+
+    return $service;
+}
+
+function infer_audit_action(string $event): string
+{
+    $segments = explode('.', $event);
+    $suffix = (string) end($segments);
+
+    return match ($suffix) {
+        'created' => 'create',
+        'updated' => 'update',
+        'deleted' => 'delete',
+        'archived' => 'archive',
+        'restored' => 'restore',
+        'success' => 'login',
+        'failed' => 'login_failed',
+        'logout' => 'logout',
+        'rate_limited' => 'rate_limit',
+        'exported' => 'export',
+        'blocked', 'created_blocked', 'updated_blocked' => 'blocked',
+        default => str_replace('-', '_', $suffix),
+    };
+}
+
+function infer_audit_target_type(string $event, array $context): string
+{
+    $segments = explode('.', $event);
+    $targetType = trim((string) ($segments[0] ?? 'sistema'));
+
+    if ($targetType !== '') {
+        return $targetType;
+    }
+
+    foreach (['target_type', 'modulo', 'entidade'] as $key) {
+        if (isset($context[$key]) && is_string($context[$key]) && $context[$key] !== '') {
+            return $context[$key];
+        }
+    }
+
+    return 'sistema';
+}
+
+function infer_audit_target_id(string $event, array $context): string
+{
+    $candidates = [
+        'target_id',
+        'placa',
+        'placa_anterior',
+        'username',
+        'veiculo_id',
+        'viagem_id',
+        'abastecimento_id',
+        'motorista_id',
+        'parceiro_id',
+        'user_id',
+        'id',
     ];
 
-    error_log('[AUDIT] ' . json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    foreach ($candidates as $candidate) {
+        if (! array_key_exists($candidate, $context)) {
+            continue;
+        }
+
+        $value = $context[$candidate];
+        if (is_scalar($value) && trim((string) $value) !== '') {
+            return trim((string) $value);
+        }
+    }
+
+    if ($event === 'auth.logout' && isset($_SESSION['user']) && is_string($_SESSION['user'])) {
+        return $_SESSION['user'];
+    }
+
+    return 'n/a';
+}
+
+function enrich_audit_context(array $context): array
+{
+    $context['actor_role'] ??= $_SESSION['role'] ?? null;
+    $context['request_method'] ??= $_SERVER['REQUEST_METHOD'] ?? (is_cli_request() ? 'CLI' : 'GET');
+    $context['request_uri'] ??= $_SERVER['REQUEST_URI'] ?? null;
+
+    return $context;
 }
 
 function is_cli_request(): bool

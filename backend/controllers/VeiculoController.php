@@ -9,7 +9,9 @@ use FrotaSmart\Application\Exceptions\ApplicationException;
 use FrotaSmart\Application\Services\AuditTrailService;
 use FrotaSmart\Application\Services\VeiculoService;
 use FrotaSmart\Domain\Exceptions\DomainException;
+use FrotaSmart\Infrastructure\Audit\CompositeAuditLogger;
 use FrotaSmart\Infrastructure\Audit\ErrorLogAuditLogger;
+use FrotaSmart\Infrastructure\Audit\PdoAuditLogger;
 use FrotaSmart\Infrastructure\Audit\RequestAuditContextProvider;
 use FrotaSmart\Infrastructure\Config\PdoConnectionFactory;
 use FrotaSmart\Infrastructure\Persistence\PdoVeiculoRepository;
@@ -35,7 +37,10 @@ final class VeiculoController
                 )
             ),
             new AuditTrailService(
-                new ErrorLogAuditLogger(),
+                new CompositeAuditLogger([
+                    new ErrorLogAuditLogger(),
+                    new PdoAuditLogger(),
+                ]),
                 new RequestAuditContextProvider()
             )
         );

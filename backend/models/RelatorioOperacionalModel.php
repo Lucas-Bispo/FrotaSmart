@@ -595,6 +595,68 @@ final class RelatorioOperacionalModel
         return array_slice(array_values($summaries), 0, max(1, $limit));
     }
 
+    public function getAuditReport(array $filters): array
+    {
+        return $this->fetchAuditRows($filters);
+    }
+
+    public function getAuditSummary(array $filters): array
+    {
+        $rows = $this->fetchAuditRows($filters);
+        $actors = [];
+        $exports = 0;
+        $blocked = 0;
+        $mutations = 0;
+
+        foreach ($rows as $row) {
+            $actor = trim((string) ($row['actor'] ?? ''));
+            if ($actor !== '') {
+                $actors[$actor] = true;
+            }
+
+            if (($row['action'] ?? '') === 'export' || ($row['event'] ?? '') === 'relatorio.exported') {
+                $exports++;
+            }
+
+            if (($row['action'] ?? '') === 'blocked') {
+                $blocked++;
+            }
+
+            if (in_array((string) ($row['action'] ?? ''), ['create', 'update', 'delete', 'archive', 'restore'], true)) {
+                $mutations++;
+            }
+        }
+
+        return [
+            'eventos_total' => count($rows),
+            'atores_unicos' => count($actors),
+            'exportacoes' => $exports,
+            'bloqueios' => $blocked,
+            'mutacoes' => $mutations,
+        ];
+    }
+
+    public function getAuditTargetTypes(): array
+    {
+        global $pdo;
+
+        try {
+            $stmt = $pdo->query(
+                "SELECT DISTINCT target_type
+                 FROM audit_logs
+                 WHERE target_type IS NOT NULL AND target_type <> ''
+                 ORDER BY target_type ASC"
+            );
+
+            return array_values(array_filter(array_map(
+                static fn (array $row): string => (string) ($row['target_type'] ?? ''),
+                $stmt->fetchAll(PDO::FETCH_ASSOC)
+            )));
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
     public function exportCsv(string $report, array $filters): string
     {
         $rows = match ($report) {
@@ -602,6 +664,7 @@ final class RelatorioOperacionalModel
             'manutencoes' => $this->getManutencaoReport($filters),
             'viagens' => $this->getViagemReport($filters),
             'disponibilidade' => $this->getDisponibilidadeReport($filters),
+            'auditoria' => $this->getAuditReport($filters),
             default => [],
         };
 
@@ -709,5 +772,131 @@ final class RelatorioOperacionalModel
             'em_dia' => 1,
             default => 0,
         };
+    }
+
+    private function fetchAuditRows(array $filters): array
+    {
+        global $pdo;
+
+        $conditions = [];
+        $params = [];
+
+        if (($dataInicio = $this->normalizeOptionalString($filters['data_inicio'] ?? null)) !== null) {
+            $conditions[] = 'DATE(occurred_at) >= :data_inicio';
+            $params[':data_inicio'] = $dataInicio;
+        }
+
+        if (($dataFim = $this->normalizeOptionalString($filters['data_fim'] ?? null)) !== null) {
+            $conditions[] = 'DATE(occurred_at) <= :data_fim';
+            $params[':data_fim'] = $dataFim;
+        }
+
+        if (($actor = $this->normalizeOptionalString($filters['ator'] ?? null)) !== null) {
+            $conditions[] = 'actor LIKE :actor';
+            $params[':actor'] = '%' . $actor . '%';
+        }
+
+        if (($event = $this->normalizeOptionalString($filters['evento'] ?? null)) !== null) {
+            $conditions[] = 'event LIKE :event';
+            $params[':event'] = '%' . $event . '%';
+        }
+
+        if (($action = $this->normalizeOptionalString($filters['status'] ?? null)) !== null) {
+            $conditions[] = 'action = :action';
+            $params[':action'] = $action;
+        }
+
+        if (($targetType = $this->normalizeOptionalString($filters['tipo_alvo'] ?? null)) !== null) {
+            $conditions[] = 'target_type = :target_type';
+            $params[':target_type'] = $targetType;
+        }
+
+        $sql = 'SELECT
+                    id,
+                    event,
+                    action,
+                    target_type,
+                    target_id,
+                    actor,
+                    actor_role,
+                    ip,
+                    occurred_at,
+                    context_json
+                FROM audit_logs';
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' ORDER BY occurred_at DESC, id DESC LIMIT 500';
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Throwable) {
+            return [];
+        }
+
+        foreach ($rows as &$row) {
+            $context = $this->decodeAuditContext($row['context_json'] ?? null);
+            $row['context_summary'] = $this->summarizeAuditContext($context);
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decodeAuditContext(mixed $json): array
+    {
+        if (! is_string($json) || trim($json) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($json, true);
+
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function summarizeAuditContext(array $context): string
+    {
+        if ($context === []) {
+            return 'Sem contexto adicional.';
+        }
+
+        $parts = [];
+        foreach ($context as $key => $value) {
+            if (in_array($key, ['request_uri'], true)) {
+                continue;
+            }
+
+            if (is_array($value)) {
+                $rendered = implode('; ', array_map(static fn (mixed $item): string => (string) $item, $value));
+            } elseif (is_bool($value)) {
+                $rendered = $value ? 'sim' : 'nao';
+            } elseif ($value === null) {
+                continue;
+            } else {
+                $rendered = trim((string) $value);
+            }
+
+            if ($rendered === '') {
+                continue;
+            }
+
+            $parts[] = str_replace('_', ' ', (string) $key) . ': ' . $rendered;
+
+            if (count($parts) >= 4) {
+                break;
+            }
+        }
+
+        return $parts === [] ? 'Sem contexto adicional.' : implode(' | ', $parts);
     }
 }

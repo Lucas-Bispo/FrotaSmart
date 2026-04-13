@@ -22,6 +22,9 @@ $filters = [
     'secretaria' => (string) ($_GET['secretaria'] ?? ''),
     'veiculo_id' => (string) ($_GET['veiculo_id'] ?? ''),
     'status' => (string) ($_GET['status'] ?? ''),
+    'ator' => (string) ($_GET['ator'] ?? ''),
+    'evento' => (string) ($_GET['evento'] ?? ''),
+    'tipo_alvo' => (string) ($_GET['tipo_alvo'] ?? ''),
 ];
 
 $reportLabels = [
@@ -29,6 +32,7 @@ $reportLabels = [
     'manutencoes' => 'Manutencoes',
     'viagens' => 'Viagens',
     'disponibilidade' => 'Disponibilidade',
+    'auditoria' => 'Auditoria',
 ];
 
 if (! isset($reportLabels[$report])) {
@@ -36,6 +40,12 @@ if (! isset($reportLabels[$report])) {
 }
 
 if ($export === 'csv') {
+    audit_log('relatorio.exported', [
+        'target_id' => $report,
+        'report' => $report,
+        'filters' => array_filter($filters, static fn (string $value): bool => trim($value) !== ''),
+    ]);
+
     $filename = sprintf('relatorio_%s_%s.csv', $report, date('Ymd_His'));
     header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
@@ -46,10 +56,13 @@ if ($export === 'csv') {
 $secretarias = $model->getSecretarias();
 $veiculos = $model->getVeiculos();
 $summary = $model->getResumo($filters);
+$auditSummary = $model->getAuditSummary($filters);
+$auditTargetTypes = $model->getAuditTargetTypes();
 $rows = match ($report) {
     'manutencoes' => $model->getManutencaoReport($filters),
     'viagens' => $model->getViagemReport($filters),
     'disponibilidade' => $model->getDisponibilidadeReport($filters),
+    'auditoria' => $model->getAuditReport($filters),
     default => $model->getAbastecimentoReport($filters),
 };
 
@@ -58,6 +71,7 @@ $statusOptions = match ($report) {
     'manutencoes' => ['aberta' => 'Aberta', 'em_andamento' => 'Em andamento', 'concluida' => 'Concluida', 'cancelada' => 'Cancelada'],
     'viagens' => ['em_curso' => 'Em curso', 'concluida' => 'Concluida', 'cancelada' => 'Cancelada'],
     'disponibilidade' => ['ativo' => 'Ativo', 'manutencao' => 'Manutencao', 'em_viagem' => 'Em viagem', 'reservado' => 'Reservado', 'baixado' => 'Baixado'],
+    'auditoria' => ['create' => 'Criacao', 'update' => 'Atualizacao', 'archive' => 'Arquivamento', 'restore' => 'Restauracao', 'delete' => 'Exclusao', 'blocked' => 'Bloqueio', 'export' => 'Exportacao', 'login' => 'Login', 'login_failed' => 'Falha login', 'logout' => 'Logout'],
     default => [],
 };
 
@@ -75,6 +89,26 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<?php if ($report === 'auditoria'): ?>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Eventos auditados</p>
+        <p class="text-3xl font-bold text-slate-800 mt-2"><?php echo (int) $auditSummary['eventos_total']; ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Atores unicos</p>
+        <p class="text-3xl font-bold text-cyan-700 mt-2"><?php echo (int) $auditSummary['atores_unicos']; ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Exportacoes</p>
+        <p class="text-3xl font-bold text-emerald-600 mt-2"><?php echo (int) $auditSummary['exportacoes']; ?></p>
+    </div>
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <p class="text-sm font-medium text-slate-500 uppercase">Bloqueios</p>
+        <p class="text-3xl font-bold text-amber-600 mt-2"><?php echo (int) $auditSummary['bloqueios']; ?></p>
+    </div>
+</div>
+<?php else: ?>
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <p class="text-sm font-medium text-slate-500 uppercase">Gasto abastecimento</p>
@@ -93,6 +127,7 @@ require_once __DIR__ . '/../includes/header.php';
         <p class="text-3xl font-bold text-slate-800 mt-2"><?php echo (int) $summary['veiculos_disponiveis']; ?></p>
     </div>
 </div>
+<?php endif; ?>
 
 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -100,30 +135,53 @@ require_once __DIR__ . '/../includes/header.php';
             <input type="hidden" name="relatorio" value="<?php echo htmlspecialchars($report, ENT_QUOTES, 'UTF-8'); ?>">
             <input type="date" name="data_inicio" value="<?php echo htmlspecialchars($filters['data_inicio'], ENT_QUOTES, 'UTF-8'); ?>" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
             <input type="date" name="data_fim" value="<?php echo htmlspecialchars($filters['data_fim'], ENT_QUOTES, 'UTF-8'); ?>" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-            <select name="secretaria" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                <option value="">Todas as secretarias</option>
-                <?php foreach ($secretarias as $secretaria): ?>
-                    <option value="<?php echo htmlspecialchars($secretaria, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['secretaria'] === $secretaria ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($secretaria, ENT_QUOTES, 'UTF-8'); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <select name="veiculo_id" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                <option value="">Todos os veiculos</option>
-                <?php foreach ($veiculos as $veiculo): ?>
-                    <option value="<?php echo (int) $veiculo['id']; ?>" <?php echo $filters['veiculo_id'] === (string) $veiculo['id'] ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars((string) $veiculo['placa'] . ' - ' . (string) $veiculo['modelo'], ENT_QUOTES, 'UTF-8'); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <select name="status" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
-                <option value="">Todos os status</option>
-                <?php foreach ($statusOptions as $statusValue => $statusLabel): ?>
-                    <option value="<?php echo htmlspecialchars($statusValue, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['status'] === $statusValue ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($statusLabel, ENT_QUOTES, 'UTF-8'); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <?php if ($report === 'auditoria'): ?>
+                <input type="text" name="ator" value="<?php echo htmlspecialchars($filters['ator'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="Ator ou usuario" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                <input type="text" name="evento" value="<?php echo htmlspecialchars($filters['evento'], ENT_QUOTES, 'UTF-8'); ?>" placeholder="Evento, ex: relatorio.exported" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                <select name="tipo_alvo" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Todos os modulos</option>
+                    <?php foreach ($auditTargetTypes as $targetType): ?>
+                        <option value="<?php echo htmlspecialchars($targetType, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['tipo_alvo'] === $targetType ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars(ucfirst($targetType), ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            <?php else: ?>
+                <select name="secretaria" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Todas as secretarias</option>
+                    <?php foreach ($secretarias as $secretaria): ?>
+                        <option value="<?php echo htmlspecialchars($secretaria, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['secretaria'] === $secretaria ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($secretaria, ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <select name="veiculo_id" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Todos os veiculos</option>
+                    <?php foreach ($veiculos as $veiculo): ?>
+                        <option value="<?php echo (int) $veiculo['id']; ?>" <?php echo $filters['veiculo_id'] === (string) $veiculo['id'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars((string) $veiculo['placa'] . ' - ' . (string) $veiculo['modelo'], ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <select name="status" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Todos os status</option>
+                    <?php foreach ($statusOptions as $statusValue => $statusLabel): ?>
+                        <option value="<?php echo htmlspecialchars($statusValue, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['status'] === $statusValue ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($statusLabel, ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
+            <?php if ($report === 'auditoria'): ?>
+                <select name="status" class="border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Todas as acoes</option>
+                    <?php foreach ($statusOptions as $statusValue => $statusLabel): ?>
+                        <option value="<?php echo htmlspecialchars($statusValue, ENT_QUOTES, 'UTF-8'); ?>" <?php echo $filters['status'] === $statusValue ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($statusLabel, ENT_QUOTES, 'UTF-8'); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            <?php endif; ?>
             <button type="submit" class="rounded-xl bg-slate-900 px-4 py-3 text-white hover:bg-slate-800">Aplicar filtros</button>
         </form>
 
@@ -172,6 +230,12 @@ require_once __DIR__ . '/../includes/header.php';
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Motorista</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Trajeto</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">KM e status</th>
+                    <?php elseif ($report === 'auditoria'): ?>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Data e evento</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Acao</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Alvo</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Ator e origem</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Contexto</th>
                     <?php else: ?>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Veiculo</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Secretaria</th>
@@ -208,6 +272,12 @@ require_once __DIR__ . '/../includes/header.php';
                             <td class="px-6 py-4 text-sm text-slate-700"><?php echo htmlspecialchars((string) $row['motorista_nome'], ENT_QUOTES, 'UTF-8'); ?></td>
                             <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) $row['origem'], ENT_QUOTES, 'UTF-8'); ?> &rarr; <?php echo htmlspecialchars((string) $row['destino'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['finalidade'], ENT_QUOTES, 'UTF-8'); ?></div></td>
                             <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo ($row['km_percorrido'] ?? null) !== null ? number_format((float) $row['km_percorrido'], 0, ',', '.') . ' km' : '--'; ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['status'], ENT_QUOTES, 'UTF-8'); ?></div></td>
+                        <?php elseif ($report === 'auditoria'): ?>
+                            <td class="px-6 py-4 text-sm text-slate-700"><div class="font-semibold text-slate-900"><?php echo htmlspecialchars((string) $row['event'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['occurred_at'], ENT_QUOTES, 'UTF-8'); ?></div></td>
+                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) $row['action'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) ($row['actor_role'] ?? 'sem perfil'), ENT_QUOTES, 'UTF-8'); ?></div></td>
+                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) $row['target_type'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['target_id'], ENT_QUOTES, 'UTF-8'); ?></div></td>
+                            <td class="px-6 py-4 text-sm text-slate-700"><div><?php echo htmlspecialchars((string) ($row['actor'] ?? 'sistema'), ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) ($row['ip'] ?? 'n/a'), ENT_QUOTES, 'UTF-8'); ?></div></td>
+                            <td class="px-6 py-4 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($row['context_summary'] ?? 'Sem contexto adicional.'), ENT_QUOTES, 'UTF-8'); ?></td>
                         <?php else: ?>
                             <td class="px-6 py-4"><div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'); ?></div><div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'); ?></div></td>
                             <td class="px-6 py-4 text-sm text-slate-700"><?php echo htmlspecialchars((string) ($row['secretaria_lotada'] ?? 'Nao informada'), ENT_QUOTES, 'UTF-8'); ?></td>
