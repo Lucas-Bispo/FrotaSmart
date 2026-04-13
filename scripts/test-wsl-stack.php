@@ -56,6 +56,8 @@ $commands = [
     'manutencao' => 'php scripts/test-manutencao-model.php',
     'operacao_guard' => 'php scripts/test-operacao-frota-guard.php',
     'abastecimento' => 'php scripts/test-abastecimento-model.php',
+    'auditoria_relatorio' => 'php scripts/test-auditoria-relatorio.php',
+    'veiculo_dashboard' => 'php scripts/test-veiculo-dashboard-service.php',
     'relatorio_executivo' => 'php scripts/test-relatorio-executivo.php',
 ];
 

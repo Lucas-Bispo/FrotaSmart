@@ -4,7 +4,7 @@
 Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando claro o ultimo estado confiavel de entrega, o ambiente padrao e o proximo passo recomendado.
 
 ## Data de referencia
-2026-04-11
+2026-04-13
 
 ## Estado atual
 - ambiente principal do projeto: Ubuntu WSL no Windows
@@ -13,13 +13,15 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - repositorio limpo e com commits organizados por task ate este ponto
 
 ## Ultima entrega funcional consolidada
-- `Task 22 - Painel executivo por secretaria e por veiculo`
-- o dashboard agora consolida leitura executiva por secretaria com:
-- frota ativa, disponibilidade e manutencao
-- viagens e km do periodo
-- abastecimentos, custo total e alertas
-- preventivas vencidas ou proximas
-- o dashboard agora destaca os veiculos mais sensiveis do periodo com custo, uso e risco operacional
+- `Task 23 - Auditoria expandida e trilha de exportacao`
+- a aplicacao agora persiste auditoria em `audit_logs`, combinando log tecnico com trilha consultavel
+- o modulo de relatorios ganhou uma aba de auditoria com filtros por ator, evento, modulo e acao
+- exportacoes CSV agora tambem geram evento auditavel, fortalecendo a governanca operacional
+
+## Avanco atual em andamento
+- `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado`
+- a leitura principal da frota no dashboard passou a sair de `VeiculoDashboardService` em `src/`, reaproveitando `PdoVeiculoRepository`
+- o `VeiculoModel` legado deixou de ser o ponto central da frota na pagina principal
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -27,7 +29,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- executar a `Task 23 - Auditoria expandida e trilha de exportacao`
+- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado`, atacando agora consultas legadas ainda acopladas em `RelatorioOperacionalModel`
 
 ## O que ja esta concluido por ciclo
 
@@ -48,7 +50,8 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - task 20: concluida
 - task 21: concluida
 - task 22: concluida
-- task 23: proxima
+- task 23: concluida
+- task 24: em andamento
 - ver: [roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
 
 ## Arquivos principais para retomar rapido
@@ -56,7 +59,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - progresso acumulado: [progresso.md](./progresso.md)
 - guia WSL: [readme_wsl_ubuntu_windows.md](./readme_wsl_ubuntu_windows.md)
 - regras de negocio: [regras_negocio.md](./regras_negocio.md)
-- task atual mais recente: [task_22_painel_executivo_secretaria_veiculo.md](./ciclo_04_estabilidade_governanca/task_22_painel_executivo_secretaria_veiculo.md)
+- task atual mais recente: [task_24_refino_tecnico_persistencia_reducao_acoplamento_legado.md](./ciclo_04_estabilidade_governanca/task_24_refino_tecnico_persistencia_reducao_acoplamento_legado.md)
 
 ## Validacao de ambiente recomendada antes de continuar
 ```bash
@@ -66,12 +69,13 @@ php scripts/test-wsl-stack.php
 
 ## Ultimos commits importantes
 - pendente registrar commit desta retomada
+- `em andamento local` `feat(auditoria): persistir trilha auditavel e exportacao`
 - `cecf42f` `docs(contexto): reorganizar tasks em ciclos e padronizar nomes`
 - `5b0d76a` `feat(operacao): aplicar bloqueios automaticos na frota`
 - `e5a1973` `chore(wsl): estabilizar runtime e bootstrap do ambiente`
 
 ## Direcao de produto mais forte neste momento
-- auditoria expandida e trilha de exportacao
+- refino tecnico da persistencia e reducao de acoplamento legado
 - compliance documental e vencimentos
 - transparencia de dados nao pessoais
-- checklists operacionais com evidencias como possivel passo seguinte apos auditoria
+- checklists operacionais com evidencias como possivel passo seguinte apos o refino tecnico

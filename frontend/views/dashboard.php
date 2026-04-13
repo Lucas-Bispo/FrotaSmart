@@ -10,7 +10,6 @@ if (! isset($_SESSION['user'])) {
     exit;
 }
 
-require_once __DIR__ . '/../../backend/models/VeiculoModel.php';
 require_once __DIR__ . '/../../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../../backend/models/ManutencaoModel.php';
 require_once __DIR__ . '/../../backend/models/AbastecimentoModel.php';
@@ -58,19 +57,23 @@ $alertasAbastecimento = 0;
 $alertasOperacionais = [];
 
 try {
-    $veiculoModel = new VeiculoModel();
+    $veiculoDashboardService = new \FrotaSmart\Application\Services\VeiculoDashboardService(
+        new \FrotaSmart\Infrastructure\Persistence\PdoVeiculoRepository(
+            \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make()
+        )
+    );
     $motoristaModel = new MotoristaModel();
     $manutencaoModel = new ManutencaoModel();
     $abastecimentoModel = new AbastecimentoModel();
     $relatorioModel = new RelatorioOperacionalModel();
 
-    $veiculosAtivos = $veiculoModel->getAllVeiculos();
-    $veiculos = $veiculoModel->getAllVeiculos($filtroFrota);
+    $veiculosAtivos = $veiculoDashboardService->listarPorFiltro('ativos');
+    $veiculos = $veiculoDashboardService->listarPorFiltro($filtroFrota);
     $motoristas = $motoristaModel->getAllMotoristas();
     $manutencoesRecentes = $manutencaoModel->getRecent(5);
     $abastecimentosRecentes = $abastecimentoModel->getRecent(5);
     $totalFrota = count($veiculosAtivos);
-    $veiculosArquivados = $veiculoModel->countArquivados();
+    $veiculosArquivados = $veiculoDashboardService->contarArquivados();
     $manutencoesAbertas = $manutencaoModel->countAbertas();
     $preventivasVencidas = $manutencaoModel->countPreventivasVencidas();
     $preventivasProximas = $manutencaoModel->countPreventivasProximas();

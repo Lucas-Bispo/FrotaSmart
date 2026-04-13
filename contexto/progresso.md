@@ -606,3 +606,51 @@
 
 ### Proximo passo recomendado
 - Executar a `Task 23`: auditoria expandida e trilha de exportacao
+
+## 2026-04-13 - Task 23
+
+### Auditoria expandida e trilha de exportacao
+- Criados [CompositeAuditLogger.php](../src/Infrastructure/Audit/CompositeAuditLogger.php) e [PdoAuditLogger.php](../src/Infrastructure/Audit/PdoAuditLogger.php)
+- Evoluido [security.php](../backend/config/security.php) para centralizar `audit_log()` em auditoria estruturada e persistente
+- Adaptado [VeiculoController.php](../backend/controllers/VeiculoController.php) para usar a mesma trilha combinada de log tecnico e banco
+- Expandido [bootstrap-db.php](../scripts/bootstrap-db.php) com a tabela `audit_logs`
+- Evoluido [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) com leitura, resumo e exportacao CSV da auditoria
+- Atualizada a tela [relatorios.php](../frontend/views/relatorios.php) com aba de auditoria e filtros especificos
+- Criado o teste [test-auditoria-relatorio.php](../scripts/test-auditoria-relatorio.php)
+- Atualizados [test-wsl-stack.php](../scripts/test-wsl-stack.php), [composer.json](../composer.json) e a task [task_23_auditoria_expandida_trilha_exportacao.md](./ciclo_04_estabilidade_governanca/task_23_auditoria_expandida_trilha_exportacao.md)
+
+### Resultado tecnico
+- a auditoria agora pode ser consultada por ator, evento, modulo, acao e periodo
+- exportacoes CSV passaram a gerar seu proprio rastro auditavel
+- a governanca operacional ficou menos dependente de leitura manual de logs tecnicos
+
+### Validacao realizada
+- `C:\xampp\php\php.exe -l backend/config/security.php`
+- `C:\xampp\php\php.exe -l backend/models/RelatorioOperacionalModel.php`
+- `C:\xampp\php\php.exe -l frontend/views/relatorios.php`
+- `C:\xampp\php\php.exe -l src/Infrastructure/Audit/CompositeAuditLogger.php`
+- `C:\xampp\php\php.exe -l src/Infrastructure/Audit/PdoAuditLogger.php`
+- `C:\xampp\php\php.exe -l scripts/test-auditoria-relatorio.php`
+- tentativa de executar `scripts/bootstrap-db.php` e `scripts/test-auditoria-relatorio.php` no PowerShell Windows bloqueada por acesso negado do MySQL (`SQLSTATE[HY000] [1045]`)
+
+### Proximo passo recomendado
+- Executar a `Task 24`: refino tecnico da persistencia e reducao de acoplamento legado
+
+## 2026-04-13 - Task 24
+
+### Refino tecnico da persistencia e reducao de acoplamento legado
+- Criado o service [VeiculoDashboardService.php](../src/Application/Services/VeiculoDashboardService.php) para expor a frota do dashboard sobre `PdoVeiculoRepository`
+- Atualizada a view [dashboard.php](../frontend/views/dashboard.php) para consumir a leitura nova em `src/`, sem depender de [VeiculoModel.php](../backend/models/VeiculoModel.php) na consulta principal
+- Criado o teste [test-veiculo-dashboard-service.php](../scripts/test-veiculo-dashboard-service.php) para validar filtros, ordenacao e contagem de arquivados
+- Atualizada a task em [task_24_refino_tecnico_persistencia_reducao_acoplamento_legado.md](./ciclo_04_estabilidade_governanca/task_24_refino_tecnico_persistencia_reducao_acoplamento_legado.md)
+
+### Resultado tecnico
+- a principal leitura de frota da pagina inicial passou a usar a mesma espinha de persistencia moderna aplicada na escrita
+- a reducao de acoplamento deixou de ser apenas conceitual e passou a remover uma dependencia concreta de `global $pdo` no fluxo mais visivel do sistema
+- o proximo alvo natural de migracao agora fica concentrado nas consultas ainda agregadas em `RelatorioOperacionalModel`
+
+### Validacao realizada
+- pendente executar validacao completa em WSL e com banco real nesta sessao
+
+### Proximo passo recomendado
+- continuar a `Task 24` pela camada de leitura de relatorios e agregacoes operacionais

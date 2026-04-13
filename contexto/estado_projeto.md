@@ -9,7 +9,7 @@
 - Contexto de transicao: [contexto_transicao.md](./contexto_transicao.md)
 
 ## Data de referencia
-2026-04-11
+2026-04-13
 
 ## Leitura rapida
 - O FrotaSmart hoje esta organizado em `backend/` e `frontend/`
@@ -32,10 +32,12 @@
 - O projeto ja possui `public/` como document root recomendado para Linux/WSL
 - O ciclo 04 ja comecou a reagir com bloqueios e alertas automaticos no fluxo de viagens e abastecimentos
 - O dashboard agora tambem entrega leitura executiva por secretaria e por veiculo no proprio painel principal
+- A auditoria agora tambem possui persistencia em banco e leitura exportavel no modulo de relatorios
+- A listagem principal da frota no dashboard agora sai de `VeiculoDashboardService` em `src/`, reutilizando o repositorio PDO novo
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
-- `backend/controllers/VeiculoController.php` ja delega a escrita para o service, mas a listagem do dashboard ainda vem do model legado
+- `backend/controllers/VeiculoController.php` ja delega a escrita para o service, e a listagem principal do dashboard agora tambem passa pela espinha nova em `src/`
 - A auditoria de veiculos agora usa servico e contratos proprios em `src/`
 - O legado de autorizacao passou a consumir uma politica unica de permissoes por perfil
 - Os modulos de motoristas e manutencoes ainda usam models legados, mas ja estao integrados ao fluxo principal da aplicacao
@@ -46,6 +48,7 @@
 - manutencoes e abastecimentos continuam compativeis com texto livre, mas agora aceitam vinculo estruturado com parceiro cadastrado
 - viagens e abastecimentos agora contam com um guard operacional central para CNH, preventiva e estado do veiculo
 - `backend/config/db.php` centraliza conexao e leitura do `.env`
+- `backend/config/security.php` passou a centralizar a emissao de auditoria estruturada para log e banco
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`
@@ -61,10 +64,10 @@ A [task_01_fundacao_arquitetura_composer_psr4.md](./ciclo_01_fundacao_arquitetur
 ## Riscos atuais
 - O legado ainda depende de `global $pdo` e `require_once`
 - O CRUD legado de veiculos ainda faz `DELETE` fisico, enquanto a regra de negocio pede soft delete
-- A leitura do dashboard ainda depende de `VeiculoModel`, mesmo com a escrita ja migrada
+- outras leituras legadas ainda dependem de `global $pdo`, com destaque para `RelatorioOperacionalModel`
 - O ciclo 02 planejado foi concluido e o proximo passo natural e consolidar backlog do ciclo seguinte
 - O cadastro de veiculos ainda precisava de dados mais aderentes a frota municipal real
-- a trilha executiva ja existe, mas a camada de auditoria expandida ainda e o gap funcional mais visivel do ciclo 04
+- a trilha de auditoria foi fortalecida, mas a persistencia geral ainda mistura models legados, `global $pdo` e servicos novos
 
 ## Decisao atual
 - Manter `composer.phar` apenas como ferramenta local, fora do versionamento
@@ -72,4 +75,4 @@ A [task_01_fundacao_arquitetura_composer_psr4.md](./ciclo_01_fundacao_arquitetur
 - Consolidar a migracao de leitura e finalizar o alinhamento de persistencia com soft delete e banco real
 - Preservar a compatibilidade com Linux/WSL e com a publicacao via `public/`
 - Manter o WSL Ubuntu como ambiente principal e repetivel de desenvolvimento
-- Avancar o ciclo 04 priorizando auditoria expandida, governanca operacional, compliance e transparencia de dados nao pessoais
+- Avancar o ciclo 04 priorizando refino tecnico da persistencia, governanca operacional, compliance e transparencia de dados nao pessoais

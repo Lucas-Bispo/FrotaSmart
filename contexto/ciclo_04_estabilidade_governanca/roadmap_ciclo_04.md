@@ -12,8 +12,8 @@ Fortalecer o FrotaSmart para uso continuo em ambiente real, com foco em estabili
 - `Task 20 - Estabilizacao definitiva do ambiente WSL e validacao integrada` - `concluida`
 - `Task 21 - Regras operacionais automaticas de bloqueio e alerta` - `concluida`
 - `Task 22 - Painel executivo por secretaria e por veiculo` - `concluida`
-- `Task 23 - Auditoria expandida e trilha de exportacao` - `proposta`
-- `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` - `proposta`
+- `Task 23 - Auditoria expandida e trilha de exportacao` - `concluida`
+- `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` - `em andamento`
 
 ## Diretrizes
 - manter o WSL Ubuntu como ambiente principal de desenvolvimento
