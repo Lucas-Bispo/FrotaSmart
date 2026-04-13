@@ -26,6 +26,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - o padrao de Clean Code do projeto agora esta formalizado em `engenharia/padrao_clean_code_frotasmart.md` e ja comecou a ser aplicado no `ViagemController`
 - o mesmo padrao agora tambem foi aplicado em `ManutencaoController` e `AbastecimentoController`, reduzindo validacoes extensas em metodos menores
 - o contrato de veiculos agora diferencia leitura ativa e leitura historica com metodos explicitos, sem depender da flag `includeArchived`
+- o `dashboard.php` agora comecou a ser fracionado por helpers puros de view e por cards montados em estrutura, reduzindo repeticao visual
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -33,7 +34,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` e levar o padrao de Clean Code para views grandes com alta concentracao de apresentacao
+- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` levando o mesmo fracionamento de view para `relatorios.php`
 
 ## O que ja esta concluido por ciclo
 

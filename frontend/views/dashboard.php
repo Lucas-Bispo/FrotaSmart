@@ -14,6 +14,7 @@ require_once __DIR__ . '/../../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../../backend/models/ManutencaoModel.php';
 require_once __DIR__ . '/../../backend/models/AbastecimentoModel.php';
 require_once __DIR__ . '/../../backend/models/RelatorioOperacionalModel.php';
+require_once __DIR__ . '/helpers/dashboard_view_helpers.php';
 
 $pageTitle = 'Dashboard';
 require_once __DIR__ . '/../includes/header.php';
@@ -55,6 +56,9 @@ $custoOperacionalPeriodo = 0.0;
 $consumoMedioPeriodo = 0.0;
 $alertasAbastecimento = 0;
 $alertasOperacionais = [];
+$primaryMetricCards = [];
+$secondaryMetricCards = [];
+$quickActions = [];
 
 try {
     $veiculoDashboardService = new \FrotaSmart\Application\Services\VeiculoDashboardService(
@@ -90,113 +94,41 @@ try {
     $errorMessage = 'Nao foi possivel carregar os dados do dashboard no momento.';
 }
 
-foreach ($veiculosAtivos as $v) {
-    $status = strtolower((string) ($v['status'] ?? ''));
+$statusResumo = dashboard_summarize_vehicle_statuses($veiculosAtivos);
+$veiculosOperacao = $statusResumo['operacao'];
+$veiculosManutencao = $statusResumo['manutencao'];
 
-    if (in_array($status, ['ativo', 'disponivel', 'em_viagem', 'reservado'], true)) {
-        $veiculosOperacao++;
-    }
+$motoristasResumo = dashboard_summarize_motoristas($motoristas, $today, $alertLimit);
+$motoristasAtivos = $motoristasResumo['ativos'];
+$cnhsVencendo = $motoristasResumo['cnhs_vencendo'];
 
-    if (in_array($status, ['manutencao', 'em_manutencao'], true)) {
-        $veiculosManutencao++;
-    }
-}
-
-foreach ($motoristas as $motorista) {
-    if (($motorista['status'] ?? '') === 'ativo') {
-        $motoristasAtivos++;
-    }
-
-    $vencimento = DateTimeImmutable::createFromFormat('Y-m-d', (string) ($motorista['cnh_vencimento'] ?? ''));
-    if ($vencimento instanceof DateTimeImmutable && $vencimento >= $today && $vencimento <= $alertLimit) {
-        $cnhsVencendo++;
-    }
-}
-
-foreach ($abastecimentosRecentes as $abastecimento) {
-    $data = DateTimeImmutable::createFromFormat('Y-m-d', (string) ($abastecimento['data_abastecimento'] ?? ''));
-    if ($data instanceof DateTimeImmutable && $data >= $today->modify('-7 days')) {
-        $abastecimentosUltimos7Dias++;
-    }
-}
-
-if ($veiculosManutencao > 0) {
-    $alertasOperacionais[] = $veiculosManutencao . ' veiculo(s) estao em manutencao neste momento.';
-}
-if ($manutencoesAbertas > 0) {
-    $alertasOperacionais[] = $manutencoesAbertas . ' manutencao(oes) seguem abertas ou em andamento.';
-}
-if ($preventivasVencidas > 0) {
-    $alertasOperacionais[] = $preventivasVencidas . ' preventiva(s) estao vencidas e pedem acao imediata.';
-}
-if ($preventivasProximas > 0) {
-    $alertasOperacionais[] = $preventivasProximas . ' preventiva(s) entram em janela de atencao nos proximos dias ou kms.';
-}
-if ($alertasAbastecimento > 0) {
-    $alertasOperacionais[] = $alertasAbastecimento . ' abastecimento(s) apresentam anomalias de consumo ou custo no periodo.';
-}
-if ($cnhsVencendo > 0) {
-    $alertasOperacionais[] = $cnhsVencendo . ' CNH(s) vencem nos proximos 30 dias.';
-}
-if ($veiculosArquivados > 0) {
-    $alertasOperacionais[] = $veiculosArquivados . ' veiculo(s) seguem arquivados e disponiveis para consulta ou restauracao.';
-}
-
-/**
- * @param string $status
- */
-function dashboard_vehicle_status_label(string $status): string
-{
-    return match ($status) {
-        'ativo' => 'Disponivel',
-        'manutencao' => 'Em manutencao',
-        default => ucfirst(str_replace('_', ' ', $status)),
-    };
-}
-
-/**
- * @param string $status
- */
-function dashboard_vehicle_status_badge(string $status): string
-{
-    return match ($status) {
-        'ativo', 'disponivel' => 'bg-emerald-100 text-emerald-800',
-        'manutencao', 'em_manutencao' => 'bg-amber-100 text-amber-800',
-        'em_viagem' => 'bg-blue-100 text-blue-800',
-        'reservado' => 'bg-purple-100 text-purple-800',
-        'baixado' => 'bg-slate-300 text-slate-700',
-        default => 'bg-slate-200 text-slate-700',
-    };
-}
-
-function dashboard_vehicle_filter_label(string $filtro): string
-{
-    return match ($filtro) {
-        'arquivados' => 'somente arquivados',
-        'todos' => 'ativos e arquivados',
-        default => 'somente ativos',
-    };
-}
-
-function dashboard_executive_alert_badge(string $status): string
-{
-    return match ($status) {
-        'vencida' => 'bg-rose-100 text-rose-800',
-        'proxima' => 'bg-amber-100 text-amber-800',
-        'em_dia' => 'bg-emerald-100 text-emerald-800',
-        default => 'bg-slate-100 text-slate-700',
-    };
-}
-
-function dashboard_executive_alert_label(string $status): string
-{
-    return match ($status) {
-        'vencida' => 'Preventiva vencida',
-        'proxima' => 'Preventiva proxima',
-        'em_dia' => 'Preventiva em dia',
-        default => 'Sem plano',
-    };
-}
+$abastecimentosUltimos7Dias = dashboard_count_recent_refuels($abastecimentosRecentes, $today);
+$alertasOperacionais = dashboard_build_operational_alerts(
+    $veiculosManutencao,
+    $manutencoesAbertas,
+    $preventivasVencidas,
+    $preventivasProximas,
+    $alertasAbastecimento,
+    $cnhsVencendo,
+    $veiculosArquivados
+);
+$primaryMetricCards = dashboard_build_primary_metric_cards(
+    $totalFrota,
+    $veiculosOperacao,
+    $veiculosManutencao,
+    $custoOperacionalPeriodo
+);
+$secondaryMetricCards = dashboard_build_secondary_metric_cards(
+    $manutencoesAbertas,
+    $abastecimentosUltimos7Dias,
+    $motoristasAtivos,
+    $cnhsVencendo,
+    $preventivasVencidas,
+    $preventivasProximas,
+    $consumoMedioPeriodo,
+    $veiculosArquivados
+);
+$quickActions = dashboard_build_quick_actions($canManageUsers);
 
 $secretariasMonitoradas = count($painelSecretarias);
 $topSecretaria = $painelSecretarias[0] ?? null;
@@ -227,80 +159,29 @@ $topVeiculoExecutivo = $painelVeiculos[0] ?? null;
 <?php endif; ?>
 
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center">
-        <div class="p-3 bg-blue-500 rounded-xl mr-4">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path></svg>
+    <?php foreach ($primaryMetricCards as $card): ?>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center">
+            <div class="p-3 rounded-xl mr-4 <?php echo htmlspecialchars($card['icon_background'], ENT_QUOTES, 'UTF-8'); ?>">
+                <?php echo $card['icon_svg']; ?>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-slate-500 uppercase"><?php echo htmlspecialchars($card['title'], ENT_QUOTES, 'UTF-8'); ?></p>
+                <p class="text-2xl font-bold text-slate-800"><?php echo htmlspecialchars($card['value'], ENT_QUOTES, 'UTF-8'); ?></p>
+            </div>
         </div>
-        <div>
-            <p class="text-sm font-medium text-slate-500 uppercase">Total da Frota</p>
-            <p class="text-2xl font-bold text-slate-800"><?php echo $totalFrota; ?></p>
-        </div>
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center">
-        <div class="p-3 bg-emerald-500 rounded-xl mr-4">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-slate-500 uppercase">Em Operacao</p>
-            <p class="text-2xl font-bold text-slate-800"><?php echo $veiculosOperacao; ?></p>
-        </div>
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center">
-        <div class="p-3 bg-amber-500 rounded-xl mr-4">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-slate-500 uppercase">Manutencao</p>
-            <p class="text-2xl font-bold text-slate-800"><?php echo $veiculosManutencao; ?></p>
-        </div>
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center">
-        <div class="p-3 bg-cyan-600 rounded-xl mr-4">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m3 0h6M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z"></path></svg>
-        </div>
-        <div>
-            <p class="text-sm font-medium text-slate-500 uppercase">Custo do Periodo</p>
-            <p class="text-2xl font-bold text-slate-800">R$ <?php echo number_format($custoOperacionalPeriodo, 2, ',', '.'); ?></p>
-        </div>
-    </div>
+    <?php endforeach; ?>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-8 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Manutencoes abertas</p>
-        <p class="text-3xl font-bold text-amber-600 mt-2"><?php echo $manutencoesAbertas; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Abastecimentos em 7 dias</p>
-        <p class="text-3xl font-bold text-cyan-700 mt-2"><?php echo $abastecimentosUltimos7Dias; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Motoristas ativos</p>
-        <p class="text-3xl font-bold text-emerald-600 mt-2"><?php echo $motoristasAtivos; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">CNHs vencendo</p>
-        <p class="text-3xl font-bold text-rose-600 mt-2"><?php echo $cnhsVencendo; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Prev. vencidas</p>
-        <p class="text-3xl font-bold text-rose-700 mt-2"><?php echo $preventivasVencidas; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Prev. proximas</p>
-        <p class="text-3xl font-bold text-amber-600 mt-2"><?php echo $preventivasProximas; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Consumo medio</p>
-        <p class="text-3xl font-bold text-cyan-700 mt-2"><?php echo $consumoMedioPeriodo > 0 ? number_format($consumoMedioPeriodo, 2, ',', '.') : '--'; ?></p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Arquivados</p>
-        <p class="text-3xl font-bold text-slate-700 mt-2"><?php echo $veiculosArquivados; ?></p>
-    </div>
+    <?php foreach ($secondaryMetricCards as $card): ?>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <p class="text-sm font-medium text-slate-500 uppercase"><?php echo htmlspecialchars($card['title'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="text-3xl font-bold mt-2 <?php echo htmlspecialchars($card['value_class'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($card['value'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php if ($card['description'] !== null): ?>
+                <p class="text-xs text-slate-500 mt-2"><?php echo htmlspecialchars($card['description'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <?php endif; ?>
+        </div>
+    <?php endforeach; ?>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
@@ -356,24 +237,12 @@ $topVeiculoExecutivo = $painelVeiculos[0] ?? null;
             <h2 class="text-lg font-semibold mb-2 text-slate-700">Acoes rapidas</h2>
             <p class="text-sm text-slate-500 mb-5">Atalhos para os fluxos mais frequentes da operacao.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <a href="/motoristas.php" class="rounded-2xl border border-slate-200 px-4 py-4 hover:border-cyan-300 hover:bg-cyan-50 transition">
-                    <span class="block text-sm font-semibold text-slate-800">Motoristas</span>
-                    <span class="block text-xs text-slate-500 mt-1">Cadastro e situacao das CNHs</span>
-                </a>
-                <a href="/manutencoes.php" class="rounded-2xl border border-slate-200 px-4 py-4 hover:border-amber-300 hover:bg-amber-50 transition">
-                    <span class="block text-sm font-semibold text-slate-800">Manutencoes</span>
-                    <span class="block text-xs text-slate-500 mt-1">Abertura e acompanhamento das OS</span>
-                </a>
-                <a href="/abastecimentos.php" class="rounded-2xl border border-slate-200 px-4 py-4 hover:border-emerald-300 hover:bg-emerald-50 transition">
-                    <span class="block text-sm font-semibold text-slate-800">Abastecimentos</span>
-                    <span class="block text-xs text-slate-500 mt-1">Registro de combustivel e custo</span>
-                </a>
-                <?php if ($canManageUsers): ?>
-                    <a href="/user_management.php" class="rounded-2xl border border-slate-200 px-4 py-4 hover:border-slate-400 hover:bg-slate-50 transition">
-                        <span class="block text-sm font-semibold text-slate-800">Usuarios</span>
-                        <span class="block text-xs text-slate-500 mt-1">Perfis e acessos do sistema</span>
+                <?php foreach ($quickActions as $action): ?>
+                    <a href="<?php echo htmlspecialchars($action['href'], ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl border border-slate-200 px-4 py-4 transition <?php echo htmlspecialchars($action['classes'], ENT_QUOTES, 'UTF-8'); ?>">
+                        <span class="block text-sm font-semibold text-slate-800"><?php echo htmlspecialchars($action['title'], ENT_QUOTES, 'UTF-8'); ?></span>
+                        <span class="block text-xs text-slate-500 mt-1"><?php echo htmlspecialchars($action['description'], ENT_QUOTES, 'UTF-8'); ?></span>
                     </a>
-                <?php endif; ?>
+                <?php endforeach; ?>
             </div>
         </div>
 

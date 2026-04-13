@@ -14,6 +14,7 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - simplificado [RelatorioOperacionalModel.php](../../backend/models/RelatorioOperacionalModel.php) para atuar mais como fachada de composicao e pos-processamento
 - refinado o contrato de veiculos em [VeiculoRepositoryInterface.php](../../src/Domain/Repositories/VeiculoRepositoryInterface.php), [VeiculoService.php](../../src/Application/Services/VeiculoService.php) e [PdoVeiculoRepository.php](../../src/Infrastructure/Persistence/PdoVeiculoRepository.php) para trocar a flag `includeArchived` por metodos explicitos de leitura ativa e historica
 - ajustados [VeiculoController.php](../../backend/controllers/VeiculoController.php) e os testes de repositorio e service para acompanhar a nova intencao explicita do contrato
+- iniciado o fracionamento de [dashboard.php](../../frontend/views/dashboard.php) com o helper [dashboard_view_helpers.php](../../frontend/views/helpers/dashboard_view_helpers.php), extraindo sumarizacao, cards e atalhos para funcoes puras de apoio
 
 ## Resultado tecnico desta etapa
 - a leitura central da frota no dashboard deixou de depender do model legado de veiculos
@@ -22,6 +23,7 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - o modulo de relatorios passou a aceitar conexao explicita e deixou de depender implicitamente do estado global para os seus entrypoints principais
 - a leitura SQL mais critica de relatorios saiu do model legado e passou a viver em uma camada dedicada de read model dentro de `src/Infrastructure`
 - o modulo de veiculos ficou mais aderente ao padrao de Clean Code do projeto ao remover uma flag booleana que escondia dois comportamentos diferentes no mesmo metodo
+- o dashboard principal ficou menos acoplado a calculos e a blocos repetidos de markup, preparando a view para novos recortes menores
 
 ## Validacao esperada
 - `php -l src/Application/Services/VeiculoDashboardService.php`
@@ -38,8 +40,9 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - `php scripts/test-repository-pdo.php`
 - `php scripts/test-repository-contract.php`
 - `php scripts/test-wsl-stack.php`
+- `php -l frontend/views/helpers/dashboard_view_helpers.php`
 
 ## Proximo recorte recomendado dentro da task
 - continuar deslocando agregacoes e regras de montagem ainda presas ao `RelatorioOperacionalModel`
 - avaliar se `AbastecimentoModel` e `ManutencaoModel` tambem devem ganhar portas de leitura mais explicitas para compor os relatorios
-- fracionar `dashboard.php` e `relatorios.php` para reduzir responsabilidade de view e aproximar a apresentacao do padrao de Clean Code definido para o projeto
+- continuar o fracionamento de `relatorios.php` para reduzir responsabilidade de view e aproximar a apresentacao do padrao de Clean Code definido para o projeto

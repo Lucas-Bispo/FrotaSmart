@@ -39,6 +39,7 @@
 - O projeto agora possui um guia formal de Clean Code em `engenharia/padrao_clean_code_frotasmart.md`
 - Os controllers operacionais principais ja comecaram a migrar para validacoes menores e mais nomeadas
 - O modulo de veiculos agora tambem usa contratos mais explicitos para separar leitura ativa de leitura historica
+- O dashboard principal iniciou um fracionamento de view com helpers puros para cards, alertas e sumarizacao operacional
 
 ## Achados tecnicos
 - `backend/models/VeiculoModel.php` usa `global $pdo`
@@ -59,6 +60,7 @@
 - `ViagemController` iniciou uma rodada de reducao de complexidade com extracao de validacoes em metodos menores
 - `ManutencaoController` e `AbastecimentoController` seguiram a mesma direcao para reduzir complexidade local
 - `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita
+- `dashboard.php` agora reaproveita `dashboard_view_helpers.php` para organizar parte da camada de apresentacao em funcoes puras e estruturas declarativas
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`

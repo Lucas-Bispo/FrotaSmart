@@ -715,3 +715,25 @@
 
 ### Proximo passo recomendado
 - continuar a `Task 24` reduzindo a complexidade de views grandes como `dashboard.php` e `relatorios.php`
+
+## 2026-04-13 - Clean Code no dashboard
+
+### Fracionamento inicial da view principal
+- Criado o helper [dashboard_view_helpers.php](../frontend/views/helpers/dashboard_view_helpers.php) com funcoes puras para resumir status da frota, motoristas, abastecimentos recentes, alertas operacionais, cards e atalhos
+- Refatorada a view [dashboard.php](../frontend/views/dashboard.php) para consumir essas estruturas em loops, reduzindo repeticao de markup e separando melhor calculo de apresentacao
+- Mantido o comportamento visual e operacional do painel principal, incluindo cards, alertas, atalhos e leitura executiva
+
+### Resultado tecnico
+- o dashboard passou a concentrar menos regra de sumarizacao e menos markup duplicado no mesmo arquivo
+- a leitura da view ficou mais previsivel ao usar arrays declarativos para metricas e acoes rapidas
+- o projeto ganhou uma base mais segura para continuar o fracionamento da camada de apresentacao sem reescrever a tela
+
+### Validacao realizada
+- `php -l frontend/views/helpers/dashboard_view_helpers.php`
+- `php -l frontend/views/dashboard.php`
+- `php scripts/test-veiculo-dashboard-service.php`
+- `php scripts/test-relatorio-executivo.php`
+- `php scripts/test-wsl-stack.php`
+
+### Proximo passo recomendado
+- aplicar o mesmo padrao de fracionamento na view [relatorios.php](../frontend/views/relatorios.php)
