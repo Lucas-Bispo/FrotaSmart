@@ -9,7 +9,7 @@
 - Contexto de transicao: [contexto_transicao.md](./contexto_transicao.md)
 
 ## Data de referencia
-2026-04-13
+2026-04-14
 
 ## Leitura rapida
 - O FrotaSmart hoje esta organizado em `backend/` e `frontend/`
@@ -36,6 +36,9 @@
 - A listagem principal da frota no dashboard agora sai de `VeiculoDashboardService` em `src/`, reutilizando o repositorio PDO novo
 - O modulo de relatorios ja aceita `PDO` explicito nos entrypoints principais, reduzindo dependencia de estado global
 - O FrotaSmart agora possui uma camada dedicada de read model para relatorios em `src/Infrastructure/ReadModels`
+- O modulo de relatorios agora tambem usa read models dedicados para abastecimentos e manutencoes analiticas, reduzindo apoio direto dos models legados nesse fluxo
+- o painel executivo agora tambem possui montagem dedicada em `src/Application/Services/RelatorioExecutiveSummaryService.php`
+- o resumo de auditoria e a exportacao CSV dos relatorios agora tambem usam services dedicados em `src/Application/Services`
 - O projeto agora possui um guia formal de Clean Code em `engenharia/padrao_clean_code_frotasmart.md`
 - Os controllers operacionais principais ja comecaram a migrar para validacoes menores e mais nomeadas
 - O modulo de veiculos agora tambem usa contratos mais explicitos para separar leitura ativa de leitura historica
@@ -59,6 +62,9 @@
 - `backend/config/security.php` passou a centralizar a emissao de auditoria estruturada para log e banco
 - `backend/models/RelatorioOperacionalModel.php` foi ajustado para receber conexao explicita, embora ainda concentre consultas legadas
 - parte importante das consultas do `RelatorioOperacionalModel` ja foi extraida para `RelatorioOperacionalQueryService`
+- parte da leitura analitica reutilizada por relatorios saiu de `AbastecimentoModel` e `ManutencaoModel` e passou a ser atendida por read models dedicados em `src/Infrastructure/ReadModels`
+- a montagem do painel executivo tambem saiu do `RelatorioOperacionalModel` e passou a ser orquestrada por um service dedicado em `src/Application/Services`
+- a consolidacao do resumo de auditoria e a serializacao CSV tambem comecaram a sair do `RelatorioOperacionalModel`, reduzindo mais responsabilidade nessa fachada legada
 - `ViagemController` iniciou uma rodada de reducao de complexidade com extracao de validacoes em metodos menores
 - `ManutencaoController` e `AbastecimentoController` seguiram a mesma direcao para reduzir complexidade local
 - `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita

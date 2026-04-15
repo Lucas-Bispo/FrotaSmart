@@ -781,3 +781,100 @@
 
 ### Proximo passo recomendado
 - continuar a `Task 24` deslocando composicoes residuais do modulo de relatorios e revisando agregacoes ainda concentradas no model legado
+
+## 2026-04-14 - Task 24, continuidade
+
+### Reducao adicional de acoplamento de conexao nos relatorios
+- Evoluidos [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) e [ManutencaoModel.php](../backend/models/ManutencaoModel.php) para aceitar `PDO` explicito no construtor, preservando fallback legado apenas como compatibilidade
+- Refatorado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para reutilizar a mesma conexao explicitamente em `AbastecimentoModel` e `ManutencaoModel`, sem reinstanciar leituras dependentes de estado global
+- Mantido o comportamento funcional dos relatorios operacionais, auditoria e painel executivo enquanto o modulo continua a migracao incremental
+
+### Resultado tecnico
+- a composicao do modulo de relatorios ficou mais previsivel ao compartilhar uma unica conexao entre fachada, query service e modelos legados auxiliares
+- a dependencia de `global $pdo` deixou de ser obrigatoria dentro das leituras reaproveitadas por `RelatorioOperacionalModel`
+- o recorte prepara a proxima etapa de extrair consultas e agregacoes restantes para portas de leitura mais dedicadas em `src/`
+
+### Validacao realizada
+- `php -l backend/models/AbastecimentoModel.php`
+- `php -l backend/models/ManutencaoModel.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php scripts/test-auditoria-relatorio.php`
+- `php scripts/test-relatorio-executivo.php`
+
+### Proximo passo recomendado
+- continuar a `Task 24` deslocando leituras analiticas de abastecimento e manutencao para `src/Infrastructure/ReadModels`, reduzindo ainda mais o papel de fachada do legado
+
+## 2026-04-14 - Clean Code na continuidade da Task 24
+
+### Ajuste de aderencia ao guia do projeto
+- Refatorado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para quebrar os resumos executivos por secretaria e por veiculo em etapas menores e nomeadas
+- Ajustado [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) para usar nomes internos mais consistentes com a linguagem do projeto na deteccao de anomalias
+- Mantido o comportamento funcional dos relatorios enquanto o codigo ficou menos concentrado em metodos longos
+
+### Resultado tecnico
+- o hotspot principal de relatorios ficou mais alinhado ao guia [padrao_clean_code_frotasmart.md](../engenharia/padrao_clean_code_frotasmart.md), com menos complexidade ciclomatica por metodo
+- a leitura do fluxo executivo ficou mais previsivel porque cada etapa de consolidacao agora tem um nome proprio
+- a continuidade da migracao para `src/` segue incremental, sem reescrita arriscada
+
+### Validacao realizada
+- `php -l backend/models/AbastecimentoModel.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php scripts/test-auditoria-relatorio.php`
+- `php scripts/test-relatorio-executivo.php`
+
+## 2026-04-14 - Task 24, extracao de read models analiticos
+
+### Leitura dedicada de abastecimentos e manutencoes
+- Criados [AbastecimentoReadModel.php](../src/Infrastructure/ReadModels/AbastecimentoReadModel.php) e [ManutencaoReadModel.php](../src/Infrastructure/ReadModels/ManutencaoReadModel.php) para concentrar a leitura analitica e preventiva usada pelos relatorios
+- Refatorado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para consumir esses read models em vez de depender diretamente de [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) e [ManutencaoModel.php](../backend/models/ManutencaoModel.php)
+- Mantido o comportamento funcional do painel executivo e do relatorio de auditoria enquanto o modulo avanca na migracao incremental para `src/`
+
+### Resultado tecnico
+- o modulo de relatorios ficou mais coerente com a diretriz de deslocar consultas e leituras extensas para `src/Infrastructure/ReadModels`
+- a fachada legacy de relatorios reduziu mais uma dependencia de apoio em models legados operacionais
+- a base agora fica melhor preparada para compartilhar leitura analitica sem prender o fluxo a `global $pdo`
+
+### Validacao realizada
+- `php -l src/Infrastructure/ReadModels/AbastecimentoReadModel.php`
+- `php -l src/Infrastructure/ReadModels/ManutencaoReadModel.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php scripts/test-auditoria-relatorio.php`
+- `php scripts/test-relatorio-executivo.php`
+
+## 2026-04-14 - Task 24, service de consolidacao executiva
+
+### Simplificacao adicional da fachada legacy
+- Criado [RelatorioExecutiveSummaryService.php](../src/Application/Services/RelatorioExecutiveSummaryService.php) para concentrar a montagem do painel executivo por secretaria e por veiculo
+- Simplificado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para delegar o resumo executivo ao novo service, mantendo nele apenas papel de fachada para relatorios, auditoria e exportacao
+- Mantido o comportamento do dashboard executivo e dos testes existentes enquanto a responsabilidade do model legado ficou menor
+
+### Resultado tecnico
+- o hotspot de relatorios ficou mais alinhado ao guia de Clean Code ao reduzir tamanho e responsabilidade do `RelatorioOperacionalModel`
+- a consolidacao executiva agora ficou em um componente mais nomeado e mais facil de evoluir ou testar isoladamente
+- o modulo de relatorios segue a migracao incremental para `src/` sem quebrar compatibilidade com o legado
+
+### Validacao realizada
+- `php -l src/Application/Services/RelatorioExecutiveSummaryService.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php scripts/test-auditoria-relatorio.php`
+- `php scripts/test-relatorio-executivo.php`
+
+## 2026-04-14 - Task 24, resumo de auditoria e exportacao desacoplados
+
+### Services menores para o modulo de relatorios
+- Criados [RelatorioAuditSummaryService.php](../src/Application/Services/RelatorioAuditSummaryService.php) e [RelatorioCsvExporterService.php](../src/Application/Services/RelatorioCsvExporterService.php) para retirar do [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) a consolidacao do resumo de auditoria e a serializacao CSV
+- Simplificado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para delegar essas responsabilidades a services dedicados e manter-se mais proximo de uma fachada de composicao
+- Criado o teste [test-relatorio-support-services.php](../scripts/test-relatorio-support-services.php) para validar o recorte em componentes pequenos e previsiveis
+
+### Resultado tecnico
+- o hotspot de relatorios reduziu mais responsabilidade local e ficou mais aderente ao guia [padrao_clean_code_frotasmart.md](../engenharia/padrao_clean_code_frotasmart.md)
+- o resumo de auditoria e a exportacao agora podem evoluir de forma mais isolada, sem aumentar ainda mais a complexidade do model legado
+- a continuidade da `Task 24` ficou melhor posicionada para extrair os pos-processamentos restantes do modulo
+
+### Validacao realizada
+- `php -l src/Application/Services/RelatorioAuditSummaryService.php`
+- `php -l src/Application/Services/RelatorioCsvExporterService.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php -l scripts/test-relatorio-support-services.php`
+- `php scripts/test-relatorio-support-services.php`
+- `php scripts/test-auditoria-relatorio.php`

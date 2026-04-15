@@ -6,10 +6,15 @@ require_once __DIR__ . '/../config/db.php';
 
 final class AbastecimentoModel
 {
+    private PDO $connection;
+
+    public function __construct(?PDO $connection = null)
+    {
+        $this->connection = $connection ?? $this->resolveLegacyConnection();
+    }
+
     public function getAll(?int $veiculoId = null, ?string $dataInicio = null, ?string $dataFim = null): array
     {
-        global $pdo;
-
         $conditions = [];
         $params = [];
 
@@ -40,7 +45,7 @@ final class AbastecimentoModel
 
         $sql .= ' ORDER BY a.data_abastecimento DESC, a.id DESC';
 
-        $stmt = $pdo->prepare($sql);
+        $stmt = $this->connection->prepare($sql);
         $stmt->execute($params);
 
         return $this->enrichRowsWithAnalytics($stmt->fetchAll(PDO::FETCH_ASSOC));
@@ -48,9 +53,7 @@ final class AbastecimentoModel
 
     public function findById(int $id): ?array
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'SELECT a.*, v.placa, v.modelo, v.secretaria_lotada AS veiculo_secretaria_lotada, m.nome AS motorista_nome, m.secretaria, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM abastecimentos a
              INNER JOIN veiculos v ON v.id = a.veiculo_id
@@ -79,9 +82,7 @@ final class AbastecimentoModel
 
     public function create(array $data): int
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'INSERT INTO abastecimentos (
                 veiculo_id,
                 motorista_id,
@@ -120,14 +121,12 @@ final class AbastecimentoModel
             ':observacoes' => $data['observacoes'],
         ]);
 
-        return (int) $pdo->lastInsertId();
+        return (int) $this->connection->lastInsertId();
     }
 
     public function update(int $id, array $data): void
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'UPDATE abastecimentos
              SET veiculo_id = :veiculo_id,
                  motorista_id = :motorista_id,
@@ -159,10 +158,8 @@ final class AbastecimentoModel
 
     public function getRecent(int $limit = 5): array
     {
-        global $pdo;
-
         $limit = max(1, $limit);
-        $stmt = $pdo->query(
+        $stmt = $this->connection->query(
             'SELECT a.*, v.placa, v.modelo, v.secretaria_lotada AS veiculo_secretaria_lotada, m.nome AS motorista_nome, m.secretaria, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM abastecimentos a
              INNER JOIN veiculos v ON v.id = a.veiculo_id
@@ -177,8 +174,6 @@ final class AbastecimentoModel
 
     public function totalValorPeriodo(?string $dataInicio = null, ?string $dataFim = null): float
     {
-        global $pdo;
-
         $conditions = [];
         $params = [];
 
@@ -198,7 +193,7 @@ final class AbastecimentoModel
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $stmt = $pdo->prepare($sql);
+        $stmt = $this->connection->prepare($sql);
         $stmt->execute($params);
 
         return (float) $stmt->fetchColumn();
@@ -368,8 +363,8 @@ final class AbastecimentoModel
     private function detectAnomaly(array $row, ?float $mediaVeiculo): array
     {
         $motivos = [];
-        $critical = false;
-        $atention = false;
+        $critico = false;
+        $atencao = false;
 
         $kmPercorrido = $row['km_percorrido_desde_anterior'] ?? null;
         $litros = (float) ($row['litros'] ?? 0);
@@ -379,48 +374,59 @@ final class AbastecimentoModel
         $consumo = $row['consumo_km_l'] ?? null;
 
         if ($kmPercorrido !== null && $kmPercorrido <= 0) {
-            $critical = true;
+            $critico = true;
             $motivos[] = 'KM nao avancou desde o ultimo abastecimento.';
         }
 
         if ($kmPercorrido !== null && $litros > 0 && $kmPercorrido < 20 && $litros >= 20) {
-            $critical = true;
+            $critico = true;
             $motivos[] = 'Litros altos para distancia muito curta.';
         }
 
         if ($variacaoLitros !== null && $variacaoLitros >= 35) {
-            $atention = true;
+            $atencao = true;
             $motivos[] = 'Litros subiram ' . number_format($variacaoLitros, 2, ',', '.') . '% frente ao abastecimento anterior.';
         }
 
         if ($variacaoValor !== null && $variacaoValor >= 35) {
-            $atention = true;
+            $atencao = true;
             $motivos[] = 'Valor total subiu ' . number_format($variacaoValor, 2, ',', '.') . '% frente ao abastecimento anterior.';
         }
 
         if ($custoPorLitro !== null && $custoPorLitro >= 9.5) {
-            $atention = true;
+            $atencao = true;
             $motivos[] = 'Custo por litro acima da faixa esperada.';
         }
 
         if ($mediaVeiculo !== null && $consumo !== null && $mediaVeiculo > 0) {
             if ($consumo <= ($mediaVeiculo * 0.6)) {
-                $critical = true;
+                $critico = true;
                 $motivos[] = 'Consumo caiu muito abaixo da media historica do veiculo.';
             } elseif ($consumo <= ($mediaVeiculo * 0.8)) {
-                $atention = true;
+                $atencao = true;
                 $motivos[] = 'Consumo abaixo da media historica do veiculo.';
             }
         }
 
-        if ($critical) {
+        if ($critico) {
             return ['critico', implode(' ', $motivos)];
         }
 
-        if ($atention) {
+        if ($atencao) {
             return ['atencao', implode(' ', $motivos)];
         }
 
         return ['normal', null];
+    }
+
+    private function resolveLegacyConnection(): PDO
+    {
+        global $pdo;
+
+        if ($pdo instanceof PDO) {
+            return $pdo;
+        }
+
+        throw new RuntimeException('Conexao PDO indisponivel para AbastecimentoModel.');
     }
 }

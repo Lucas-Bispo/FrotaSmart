@@ -4,7 +4,7 @@
 Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando claro o ultimo estado confiavel de entrega, o ambiente padrao e o proximo passo recomendado.
 
 ## Data de referencia
-2026-04-13
+2026-04-14
 
 ## Estado atual
 - ambiente principal do projeto: Ubuntu WSL no Windows
@@ -29,6 +29,10 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - o `dashboard.php` agora comecou a ser fracionado por helpers puros de view e por cards montados em estrutura, reduzindo repeticao visual
 - o `relatorios.php` agora tambem comecou a ser fracionado por helpers de view para labels, cards, cabecalhos e linhas por tipo de relatorio
 - o `relatorios.php` avancou mais uma etapa e agora tambem delega ao helper a montagem do formulario de filtros, exportacao e abas de navegacao
+- os models de `Abastecimento` e `Manutencao` agora aceitam `PDO` explicito, e o `RelatorioOperacionalModel` reutiliza a mesma conexao compartilhada nas leituras do modulo
+- as leituras analiticas e preventivas reaproveitadas pelos relatorios agora tambem vivem em `AbastecimentoReadModel` e `ManutencaoReadModel` dentro de `src/Infrastructure/ReadModels`
+- a consolidacao executiva do dashboard agora tambem saiu de dentro do `RelatorioOperacionalModel` e passou a ficar em `RelatorioExecutiveSummaryService` dentro de `src/Application/Services`
+- o resumo de auditoria e a exportacao CSV do modulo de relatorios agora tambem comecaram a sair do `RelatorioOperacionalModel` e passaram a usar services dedicados em `src/Application/Services`
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -36,7 +40,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` deslocando composicoes residuais do modulo de relatorios e agregacoes ainda concentradas no model legado
+- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` deslocando pos-processamentos residuais de relatorio, especialmente resumo operacional e selecao de datasets por tipo, para componentes menores e mais testaveis
 
 ## O que ja esta concluido por ciclo
 

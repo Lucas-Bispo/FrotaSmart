@@ -6,11 +6,16 @@ require_once __DIR__ . '/../config/db.php';
 
 final class ManutencaoModel
 {
+    private PDO $connection;
+
+    public function __construct(?PDO $connection = null)
+    {
+        $this->connection = $connection ?? $this->resolveLegacyConnection();
+    }
+
     public function getAll(): array
     {
-        global $pdo;
-
-        $stmt = $pdo->query(
+        $stmt = $this->connection->query(
             'SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
@@ -23,9 +28,7 @@ final class ManutencaoModel
 
     public function findById(int $id): ?array
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
@@ -47,10 +50,8 @@ final class ManutencaoModel
 
     public function getRecent(int $limit = 5): array
     {
-        global $pdo;
-
         $limit = max(1, $limit);
-        $stmt = $pdo->query(
+        $stmt = $this->connection->query(
             'SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
@@ -64,10 +65,8 @@ final class ManutencaoModel
 
     public function create(array $data): int
     {
-        global $pdo;
-
         $preventiva = $this->normalizePreventivePayload($data);
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'INSERT INTO manutencoes (
                 veiculo_id,
                 data_abertura,
@@ -130,7 +129,7 @@ final class ManutencaoModel
             ':observacoes' => $data['observacoes'],
         ]);
 
-        $id = (int) $pdo->lastInsertId();
+        $id = (int) $this->connection->lastInsertId();
         $this->syncVeiculoStatus((int) $data['veiculo_id']);
 
         return $id;
@@ -138,10 +137,8 @@ final class ManutencaoModel
 
     public function update(int $id, array $data): void
     {
-        global $pdo;
-
         $preventiva = $this->normalizePreventivePayload($data);
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'UPDATE manutencoes
              SET veiculo_id = :veiculo_id,
                  data_abertura = :data_abertura,
@@ -191,16 +188,14 @@ final class ManutencaoModel
 
     public function countAbertas(): int
     {
-        global $pdo;
-        $stmt = $pdo->query("SELECT COUNT(*) FROM manutencoes WHERE status IN ('aberta', 'em_andamento')");
+        $stmt = $this->connection->query("SELECT COUNT(*) FROM manutencoes WHERE status IN ('aberta', 'em_andamento')");
 
         return (int) $stmt->fetchColumn();
     }
 
     public function countByVeiculoOpen(int $veiculoId): int
     {
-        global $pdo;
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM manutencoes WHERE veiculo_id = :veiculo_id AND status IN ('aberta', 'em_andamento')");
+        $stmt = $this->connection->prepare("SELECT COUNT(*) FROM manutencoes WHERE veiculo_id = :veiculo_id AND status IN ('aberta', 'em_andamento')");
         $stmt->execute([':veiculo_id' => $veiculoId]);
 
         return (int) $stmt->fetchColumn();
@@ -224,9 +219,7 @@ final class ManutencaoModel
 
     public function getPreventiveAlerts(int $days = 30, int $kmTolerance = 500): array
     {
-        global $pdo;
-
-        $stmt = $pdo->query(
+        $stmt = $this->connection->query(
             "SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
@@ -251,9 +244,7 @@ final class ManutencaoModel
         int $days = 30,
         int $kmTolerance = 500
     ): ?array {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             "SELECT m.*, v.placa, v.modelo, v.secretaria_lotada, p.nome_fantasia AS parceiro_nome, p.tipo AS parceiro_tipo
              FROM manutencoes m
              INNER JOIN veiculos v ON v.id = m.veiculo_id
@@ -278,9 +269,8 @@ final class ManutencaoModel
 
     public function syncVeiculoStatus(int $veiculoId): void
     {
-        global $pdo;
         $status = $this->countByVeiculoOpen($veiculoId) > 0 ? 'manutencao' : 'ativo';
-        $stmt = $pdo->prepare('UPDATE veiculos SET status = :status WHERE id = :id');
+        $stmt = $this->connection->prepare('UPDATE veiculos SET status = :status WHERE id = :id');
         $stmt->execute([
             ':status' => $status,
             ':id' => $veiculoId,
@@ -368,8 +358,6 @@ final class ManutencaoModel
 
     private function resolveCurrentKmMap(array $rows): array
     {
-        global $pdo;
-
         $veiculoIds = array_values(array_unique(array_map(
             static fn (array $row): int => (int) ($row['veiculo_id'] ?? 0),
             $rows
@@ -381,7 +369,7 @@ final class ManutencaoModel
         }
 
         $placeholders = implode(',', array_fill(0, count($veiculoIds), '?'));
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'SELECT
                 v.id,
                 GREATEST(
@@ -514,5 +502,16 @@ final class ManutencaoModel
         }
 
         return $parts === [] ? 'Plano preventivo sem parametros futuros.' : implode(' | ', $parts);
+    }
+
+    private function resolveLegacyConnection(): PDO
+    {
+        global $pdo;
+
+        if ($pdo instanceof PDO) {
+            return $pdo;
+        }
+
+        throw new RuntimeException('Conexao PDO indisponivel para ManutencaoModel.');
     }
 }
