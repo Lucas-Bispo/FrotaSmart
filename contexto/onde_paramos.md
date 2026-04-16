@@ -52,6 +52,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - o fluxo administrativo de autenticacao agora tambem delega a validacao basica de login para um service dedicado em `src/Application/Services`, reduzindo mais regra inline no controller
 - o repositório PDO de veiculos agora tambem removeu flags booleanas residuais no detalhe privado de implementacao, usando metodos explicitos para leitura ativa e historica
 - o contrato de leitura de abastecimentos agora tambem usa criterio nomeado em vez de parametros opcionais sobrecarregados, reduzindo mais um ponto guiado por nulos no modulo analitico
+- o modulo de viagens agora tambem usa criterio nomeado para listagem filtrada, reduzindo mais uma assinatura guiada por parametros opcionais posicionais no legado operacional
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`

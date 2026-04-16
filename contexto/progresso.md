@@ -934,7 +934,12 @@
 - a continuidade da `Task 24` agora pode focar nas proximas agregacoes e leituras ainda presas ao model legado
 
 ### Validacao realizada
-- pendente executar nesta retomada
+- `php -l src/Application/Services/RelatorioAbastecimentoCriteriaService.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php -l scripts/test-relatorio-abastecimento-criteria-service.php`
+- `php scripts/test-relatorio-abastecimento-criteria-service.php`
+- `php scripts/test-relatorio-support-services.php`
+- `php scripts/test-relatorio-composition-services.php`
 
 ## 2026-04-16 - Task 24, fluxo de abastecimentos consolidado fora da fachada
 
@@ -950,7 +955,15 @@
 - a `Task 24` segue reduzindo o hotspot principal por extracoes pequenas, testaveis e compativeis com o legado
 
 ### Validacao realizada
-- pendente executar nesta retomada
+- `php -l src/Application/Services/RelatorioAbastecimentoFilterService.php`
+- `php -l src/Application/Services/RelatorioAbastecimentoReportService.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php -l scripts/test-relatorio-abastecimento-filter-service.php`
+- `php -l scripts/test-relatorio-abastecimento-report-service.php`
+- `php scripts/test-relatorio-abastecimento-filter-service.php`
+- `php scripts/test-relatorio-abastecimento-report-service.php`
+- `php scripts/test-relatorio-composition-services.php`
+- `php scripts/test-relatorio-support-services.php`
 
 ## 2026-04-15 - Task 24, pacote principal de view data consolidado
 
@@ -965,7 +978,10 @@
 - a `Task 24` segue reduzindo o hotspot de relatorios tanto por persistencia quanto por apresentacao
 
 ### Validacao realizada
-- pendente executar nesta retomada
+- `php -l backend/models/ViagemModel.php`
+- `php -l frontend/views/viagens.php`
+- `php -l scripts/test-viagem-model.php`
+- `php scripts/test-viagem-model.php`
 
 ## 2026-04-15 - Task 24, estado da view de relatorios extraido
 
@@ -1230,3 +1246,20 @@
 - `php scripts/test-relatorio-abastecimento-report-service.php`
 - `php scripts/test-relatorio-export-service.php`
 - `php scripts/test-relatorio-executivo.php`
+
+## 2026-04-16 - Continuidade tecnica apos Task 24, etapa 3
+
+### Filtros de viagens com criterio nomeado
+- Refatorado [ViagemModel.php](../backend/models/ViagemModel.php) para trocar a assinatura posicional de filtros opcionais por `listByFilters()` com criterio nomeado
+- Ajustada [viagens.php](../frontend/views/viagens.php) para montar o filtro de status e secretaria em uma estrutura explicita
+- Atualizado [test-viagem-model.php](../scripts/test-viagem-model.php) para validar o contrato novo sem depender de ordem de parametros
+
+### Resultado tecnico
+- o modulo de viagens reduz mais um ponto legado guiado por parametros opcionais posicionais, alinhando a leitura com o padrao de criterios nomeados que ja vinha sendo aplicado em outras partes do projeto
+- a intencao dos filtros de listagem fica mais clara tanto na view quanto no teste de persistencia do modulo
+
+### Validacao realizada
+- `php -l backend/models/ViagemModel.php`
+- `php -l frontend/views/viagens.php`
+- `php -l scripts/test-viagem-model.php`
+- `php scripts/test-viagem-model.php`

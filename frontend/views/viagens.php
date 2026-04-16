@@ -22,7 +22,10 @@ $motoristaModel = new MotoristaModel();
 $filtroStatus = trim((string) ($_GET['status'] ?? ''));
 $filtroSecretaria = trim((string) ($_GET['secretaria'] ?? ''));
 
-$viagens = $viagemModel->getAll($filtroStatus !== '' ? $filtroStatus : null, $filtroSecretaria !== '' ? $filtroSecretaria : null);
+$viagens = $viagemModel->listByFilters([
+    'status' => $filtroStatus !== '' ? $filtroStatus : null,
+    'secretaria' => $filtroSecretaria !== '' ? $filtroSecretaria : null,
+]);
 $veiculos = $veiculoModel->getAllVeiculos();
 $motoristas = $motoristaModel->getAllMotoristas();
 $canManage = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);

@@ -84,7 +84,10 @@ if ($updated === null || $updated['status'] !== 'concluida' || (int) $updated['k
     throw new RuntimeException('Viagem nao foi atualizada corretamente.');
 }
 
-$historico = $viagemModel->getAll('concluida', 'Secretaria de Educacao');
+$historico = $viagemModel->listByFilters([
+    'status' => 'concluida',
+    'secretaria' => 'Secretaria de Educacao',
+]);
 if (count($historico) !== 1) {
     throw new RuntimeException('Filtro de historico de viagens nao retornou o volume esperado.');
 }

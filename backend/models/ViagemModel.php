@@ -6,10 +6,15 @@ require_once __DIR__ . '/../config/db.php';
 
 final class ViagemModel
 {
-    public function getAll(?string $status = null, ?string $secretaria = null): array
+    /**
+     * @param array{status?:?string,secretaria?:?string} $filters
+     */
+    public function listByFilters(array $filters = []): array
     {
         global $pdo;
 
+        $status = $filters['status'] ?? null;
+        $secretaria = $filters['secretaria'] ?? null;
         $conditions = [];
         $params = [];
 
