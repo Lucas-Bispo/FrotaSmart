@@ -43,15 +43,10 @@ $periodoInicio = $today->modify('first day of this month')->format('Y-m-d');
 $periodoFim = $today->modify('last day of this month')->format('Y-m-d');
 
 $totalFrota = 0;
-$veiculosOperacao = 0;
-$veiculosManutencao = 0;
 $veiculosArquivados = 0;
-$motoristasAtivos = 0;
-$cnhsVencendo = 0;
 $manutencoesAbertas = 0;
 $preventivasVencidas = 0;
 $preventivasProximas = 0;
-$abastecimentosUltimos7Dias = 0;
 $custoOperacionalPeriodo = 0.0;
 $consumoMedioPeriodo = 0.0;
 $alertasAbastecimento = 0;
@@ -59,6 +54,8 @@ $alertasOperacionais = [];
 $primaryMetricCards = [];
 $secondaryMetricCards = [];
 $quickActions = [];
+$executiveOverviewCards = [];
+$fleetFilterTabs = [];
 
 try {
     $veiculoDashboardService = new \FrotaSmart\Application\Services\VeiculoDashboardService(
@@ -94,45 +91,31 @@ try {
     $errorMessage = 'Nao foi possivel carregar os dados do dashboard no momento.';
 }
 
-$statusResumo = dashboard_summarize_vehicle_statuses($veiculosAtivos);
-$veiculosOperacao = $statusResumo['operacao'];
-$veiculosManutencao = $statusResumo['manutencao'];
-
-$motoristasResumo = dashboard_summarize_motoristas($motoristas, $today, $alertLimit);
-$motoristasAtivos = $motoristasResumo['ativos'];
-$cnhsVencendo = $motoristasResumo['cnhs_vencendo'];
-
-$abastecimentosUltimos7Dias = dashboard_count_recent_refuels($abastecimentosRecentes, $today);
-$alertasOperacionais = dashboard_build_operational_alerts(
-    $veiculosManutencao,
+$pageData = dashboard_build_page_data(
+    $veiculosAtivos,
+    $motoristas,
+    $abastecimentosRecentes,
+    $painelSecretarias,
+    $painelVeiculos,
+    $canManageUsers,
+    $filtroFrota,
+    $today,
+    $alertLimit,
+    $totalFrota,
     $manutencoesAbertas,
     $preventivasVencidas,
     $preventivasProximas,
     $alertasAbastecimento,
-    $cnhsVencendo,
-    $veiculosArquivados
+    $veiculosArquivados,
+    $custoOperacionalPeriodo,
+    $consumoMedioPeriodo
 );
-$primaryMetricCards = dashboard_build_primary_metric_cards(
-    $totalFrota,
-    $veiculosOperacao,
-    $veiculosManutencao,
-    $custoOperacionalPeriodo
-);
-$secondaryMetricCards = dashboard_build_secondary_metric_cards(
-    $manutencoesAbertas,
-    $abastecimentosUltimos7Dias,
-    $motoristasAtivos,
-    $cnhsVencendo,
-    $preventivasVencidas,
-    $preventivasProximas,
-    $consumoMedioPeriodo,
-    $veiculosArquivados
-);
-$quickActions = dashboard_build_quick_actions($canManageUsers);
-
-$secretariasMonitoradas = count($painelSecretarias);
-$topSecretaria = $painelSecretarias[0] ?? null;
-$topVeiculoExecutivo = $painelVeiculos[0] ?? null;
+$alertasOperacionais = $pageData['alertas_operacionais'];
+$primaryMetricCards = $pageData['primary_metric_cards'];
+$secondaryMetricCards = $pageData['secondary_metric_cards'];
+$quickActions = $pageData['quick_actions'];
+$executiveOverviewCards = $pageData['executive_overview_cards'];
+$fleetFilterTabs = $pageData['fleet_filter_tabs'];
 ?>
 <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-8">
     <div>
@@ -185,31 +168,13 @@ $topVeiculoExecutivo = $painelVeiculos[0] ?? null;
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Secretarias monitoradas</p>
-        <p class="text-3xl font-bold text-slate-800 mt-2"><?php echo $secretariasMonitoradas; ?></p>
-        <p class="text-xs text-slate-500 mt-2">Consolidacao de frota, viagens, custo e alertas no periodo.</p>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Secretaria com maior custo</p>
-        <?php if (is_array($topSecretaria)): ?>
-            <p class="text-xl font-bold text-slate-800 mt-2"><?php echo htmlspecialchars((string) $topSecretaria['secretaria'], ENT_QUOTES, 'UTF-8'); ?></p>
-            <p class="text-sm text-slate-600 mt-1">R$ <?php echo number_format((float) ($topSecretaria['custo_total_periodo'] ?? 0), 2, ',', '.'); ?> no periodo</p>
-        <?php else: ?>
-            <p class="text-xl font-bold text-slate-800 mt-2">--</p>
-            <p class="text-sm text-slate-500 mt-1">Sem custo consolidado ate o momento.</p>
-        <?php endif; ?>
-    </div>
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p class="text-sm font-medium text-slate-500 uppercase">Veiculo mais sensivel</p>
-        <?php if (is_array($topVeiculoExecutivo)): ?>
-            <p class="text-xl font-bold text-slate-800 mt-2"><?php echo htmlspecialchars((string) $topVeiculoExecutivo['placa'], ENT_QUOTES, 'UTF-8'); ?></p>
-            <p class="text-sm text-slate-600 mt-1"><?php echo (int) ($topVeiculoExecutivo['total_alertas'] ?? 0); ?> alerta(s) e R$ <?php echo number_format((float) ($topVeiculoExecutivo['custo_total_periodo'] ?? 0), 2, ',', '.'); ?></p>
-        <?php else: ?>
-            <p class="text-xl font-bold text-slate-800 mt-2">--</p>
-            <p class="text-sm text-slate-500 mt-1">Sem consolidacao por veiculo no periodo.</p>
-        <?php endif; ?>
-    </div>
+    <?php foreach ($executiveOverviewCards as $card): ?>
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <p class="text-sm font-medium text-slate-500 uppercase"><?php echo htmlspecialchars($card['title'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="text-xl font-bold text-slate-800 mt-2"><?php echo htmlspecialchars($card['value'], ENT_QUOTES, 'UTF-8'); ?></p>
+            <p class="text-sm text-slate-500 mt-1"><?php echo htmlspecialchars($card['description'], ENT_QUOTES, 'UTF-8'); ?></p>
+        </div>
+    <?php endforeach; ?>
 </div>
 
 <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -546,9 +511,11 @@ $topVeiculoExecutivo = $painelVeiculos[0] ?? null;
                         <p class="text-sm text-slate-500">Consulta <?php echo htmlspecialchars(dashboard_vehicle_filter_label($filtroFrota), ENT_QUOTES, 'UTF-8'); ?> com historico de arquivamento.</p>
                     </div>
                     <div class="flex flex-wrap gap-2 text-sm">
-                        <a href="/dashboard.php?frota=ativos" class="rounded-full px-3 py-1.5 <?php echo $filtroFrota === 'ativos' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'; ?>">Ativos</a>
-                        <a href="/dashboard.php?frota=arquivados" class="rounded-full px-3 py-1.5 <?php echo $filtroFrota === 'arquivados' ? 'bg-slate-700 text-white' : 'bg-white text-slate-600 border border-slate-200'; ?>">Arquivados</a>
-                        <a href="/dashboard.php?frota=todos" class="rounded-full px-3 py-1.5 <?php echo $filtroFrota === 'todos' ? 'bg-cyan-700 text-white' : 'bg-white text-slate-600 border border-slate-200'; ?>">Todos</a>
+                        <?php foreach ($fleetFilterTabs as $tab): ?>
+                            <a href="<?php echo htmlspecialchars($tab['href'], ENT_QUOTES, 'UTF-8'); ?>" class="rounded-full px-3 py-1.5 <?php echo $tab['is_active'] ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 border border-slate-200'; ?>">
+                                <?php echo htmlspecialchars($tab['label'], ENT_QUOTES, 'UTF-8'); ?>
+                            </a>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>

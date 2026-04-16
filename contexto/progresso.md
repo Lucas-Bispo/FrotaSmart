@@ -1044,3 +1044,18 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-16 - Clean Code no dashboard, etapa 2
+
+### Pacote principal da tela consolidado no helper
+- Evoluido [dashboard_view_helpers.php](../frontend/views/helpers/dashboard_view_helpers.php) para montar o pacote principal de dados da tela, incluindo alertas, cards, visao executiva e tabs de filtro da frota
+- Simplificado [dashboard.php](../frontend/views/dashboard.php) para consumir esse pacote pronto em vez de espalhar atribuicoes e composicoes locais
+- Criado o teste [test-dashboard-view-helpers.php](../scripts/test-dashboard-view-helpers.php) para validar esse recorte
+
+### Resultado tecnico
+- o dashboard ficou mais declarativo e mais alinhado ao guia [padrao_clean_code_frotasmart.md](../engenharia/padrao_clean_code_frotasmart.md)
+- a view principal perdeu mais variaveis derivadas e mais repeticao de blocos simples de apresentacao
+- o projeto avanca no mesmo padrao ja aplicado ao modulo de relatorios, reduzindo mais um hotspot legado de interface
+
+### Validacao realizada
+- pendente executar nesta retomada

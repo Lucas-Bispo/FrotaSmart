@@ -215,6 +215,138 @@ function dashboard_build_quick_actions(bool $canManageUsers): array
     return $actions;
 }
 
+/**
+ * @param list<array<string, mixed>> $veiculosAtivos
+ * @param list<array<string, mixed>> $motoristas
+ * @param list<array<string, mixed>> $abastecimentosRecentes
+ * @param list<array<string, mixed>> $painelSecretarias
+ * @param list<array<string, mixed>> $painelVeiculos
+ * @return array{
+ *     alertas_operacionais:list<string>,
+ *     primary_metric_cards:list<array{title:string,value:string,icon_background:string,icon_svg:string}>,
+ *     secondary_metric_cards:list<array{title:string,value:string,value_class:string,description:?string}>,
+ *     quick_actions:list<array{href:string,title:string,description:string,classes:string}>,
+ *     executive_overview_cards:list<array{title:string,value:string,description:string}>,
+ *     fleet_filter_tabs:list<array{label:string,href:string,is_active:bool}>
+ * }
+ */
+function dashboard_build_page_data(
+    array $veiculosAtivos,
+    array $motoristas,
+    array $abastecimentosRecentes,
+    array $painelSecretarias,
+    array $painelVeiculos,
+    bool $canManageUsers,
+    string $filtroFrota,
+    DateTimeImmutable $today,
+    DateTimeImmutable $alertLimit,
+    int $totalFrota,
+    int $manutencoesAbertas,
+    int $preventivasVencidas,
+    int $preventivasProximas,
+    int $alertasAbastecimento,
+    int $veiculosArquivados,
+    float $custoOperacionalPeriodo,
+    float $consumoMedioPeriodo
+): array {
+    $statusResumo = dashboard_summarize_vehicle_statuses($veiculosAtivos);
+    $motoristasResumo = dashboard_summarize_motoristas($motoristas, $today, $alertLimit);
+    $abastecimentosUltimos7Dias = dashboard_count_recent_refuels($abastecimentosRecentes, $today);
+
+    return [
+        'alertas_operacionais' => dashboard_build_operational_alerts(
+            $statusResumo['manutencao'],
+            $manutencoesAbertas,
+            $preventivasVencidas,
+            $preventivasProximas,
+            $alertasAbastecimento,
+            $motoristasResumo['cnhs_vencendo'],
+            $veiculosArquivados
+        ),
+        'primary_metric_cards' => dashboard_build_primary_metric_cards(
+            $totalFrota,
+            $statusResumo['operacao'],
+            $statusResumo['manutencao'],
+            $custoOperacionalPeriodo
+        ),
+        'secondary_metric_cards' => dashboard_build_secondary_metric_cards(
+            $manutencoesAbertas,
+            $abastecimentosUltimos7Dias,
+            $motoristasResumo['ativos'],
+            $motoristasResumo['cnhs_vencendo'],
+            $preventivasVencidas,
+            $preventivasProximas,
+            $consumoMedioPeriodo,
+            $veiculosArquivados
+        ),
+        'quick_actions' => dashboard_build_quick_actions($canManageUsers),
+        'executive_overview_cards' => dashboard_build_executive_overview_cards($painelSecretarias, $painelVeiculos),
+        'fleet_filter_tabs' => dashboard_build_fleet_filter_tabs($filtroFrota),
+    ];
+}
+
+/**
+ * @param list<array<string, mixed>> $painelSecretarias
+ * @param list<array<string, mixed>> $painelVeiculos
+ * @return list<array{title:string,value:string,description:string}>
+ */
+function dashboard_build_executive_overview_cards(array $painelSecretarias, array $painelVeiculos): array
+{
+    $secretariasMonitoradas = count($painelSecretarias);
+    $topSecretaria = $painelSecretarias[0] ?? null;
+    $topVeiculoExecutivo = $painelVeiculos[0] ?? null;
+
+    return [
+        [
+            'title' => 'Secretarias monitoradas',
+            'value' => (string) $secretariasMonitoradas,
+            'description' => 'Consolidacao de frota, viagens, custo e alertas no periodo.',
+        ],
+        [
+            'title' => 'Secretaria com maior custo',
+            'value' => is_array($topSecretaria)
+                ? (string) ($topSecretaria['secretaria'] ?? '--')
+                : '--',
+            'description' => is_array($topSecretaria)
+                ? 'R$ ' . number_format((float) ($topSecretaria['custo_total_periodo'] ?? 0), 2, ',', '.') . ' no periodo'
+                : 'Sem custo consolidado ate o momento.',
+        ],
+        [
+            'title' => 'Veiculo mais sensivel',
+            'value' => is_array($topVeiculoExecutivo)
+                ? (string) ($topVeiculoExecutivo['placa'] ?? '--')
+                : '--',
+            'description' => is_array($topVeiculoExecutivo)
+                ? (int) ($topVeiculoExecutivo['total_alertas'] ?? 0) . ' alerta(s) e R$ '
+                    . number_format((float) ($topVeiculoExecutivo['custo_total_periodo'] ?? 0), 2, ',', '.')
+                : 'Sem consolidacao por veiculo no periodo.',
+        ],
+    ];
+}
+
+/**
+ * @return list<array{label:string,href:string,is_active:bool}>
+ */
+function dashboard_build_fleet_filter_tabs(string $currentFilter): array
+{
+    $tabs = [];
+    $labels = [
+        'ativos' => 'Ativos',
+        'arquivados' => 'Arquivados',
+        'todos' => 'Todos',
+    ];
+
+    foreach ($labels as $filter => $label) {
+        $tabs[] = [
+            'label' => $label,
+            'href' => '/dashboard.php?frota=' . $filter,
+            'is_active' => $currentFilter === $filter,
+        ];
+    }
+
+    return $tabs;
+}
+
 function dashboard_vehicle_status_label(string $status): string
 {
     return match ($status) {
