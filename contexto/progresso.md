@@ -1120,3 +1120,24 @@
 - `php scripts/test-dashboard-table-view-helpers.php`
 - `php scripts/test-dashboard-view-helpers.php`
 - `php scripts/test-relatorio-executivo.php`
+
+## 2026-04-16 - Clean Code em relatorios, etapa 3
+
+### Pacote final da tabela preparado no helper
+- Evoluido [relatorios_view_helpers.php](../frontend/views/helpers/relatorios_view_helpers.php) para expor o titulo da aba, o link de limpeza e o markup final das linhas da tabela
+- Simplificado [relatorios.php](../frontend/views/relatorios.php) para consumir esse pacote pronto e reduzir mais decisao de apresentacao na view principal
+- Atualizado [test-relatorio-view-helpers.php](../scripts/test-relatorio-view-helpers.php) para validar esse recorte final da camada de apoio visual
+
+### Resultado tecnico
+- a view de relatorios perdeu mais uma rodada de composicao local e ficou mais consistente com o padrao declarativo que ja vinha sendo aplicado ao dashboard
+- a renderizacao da tabela ficou mais previsivel porque o helper agora concentra tambem o passo final de preparacao da aba ativa
+- a `Task 24` segue reduzindo a responsabilidade das views grandes sem alterar o fluxo legacy do modulo
+
+### Validacao realizada
+- `php -l frontend/views/helpers/relatorios_view_helpers.php`
+- `php -l frontend/views/relatorios.php`
+- `php -l scripts/test-relatorio-view-helpers.php`
+- `php -l scripts/test-relatorio-request-state-service.php`
+- `php scripts/test-relatorio-view-helpers.php`
+- `php scripts/test-relatorio-request-state-service.php`
+- `php scripts/test-auditoria-relatorio.php`

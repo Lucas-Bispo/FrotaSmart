@@ -44,6 +44,9 @@ $tableHeaders = $pageData['tableHeaders'];
 $filterFieldsMarkup = $pageData['filterFieldsMarkup'];
 $tabs = $pageData['tabs'];
 $exportQuery = $pageData['exportQuery'];
+$rowMarkupList = $pageData['rowMarkupList'];
+$reportTitle = $pageData['reportTitle'];
+$clearHref = $pageData['clearHref'];
 
 $pageTitle = 'Relatorios';
 require_once __DIR__ . '/../includes/header.php';
@@ -82,7 +85,7 @@ require_once __DIR__ . '/../includes/header.php';
             <a href="/relatorios.php?<?php echo htmlspecialchars($exportQuery, ENT_QUOTES, 'UTF-8'); ?>" class="rounded-xl bg-emerald-600 px-4 py-3 text-white hover:bg-emerald-700">
                 Exportar CSV
             </a>
-            <a href="/relatorios.php?relatorio=<?php echo htmlspecialchars($report, ENT_QUOTES, 'UTF-8'); ?>" class="rounded-xl border border-slate-300 px-4 py-3 text-slate-700 hover:bg-slate-50">
+            <a href="<?php echo htmlspecialchars($clearHref, ENT_QUOTES, 'UTF-8'); ?>" class="rounded-xl border border-slate-300 px-4 py-3 text-slate-700 hover:bg-slate-50">
                 Limpar
             </a>
         </div>
@@ -99,7 +102,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
     <div class="p-6 border-b border-slate-200 bg-slate-50">
-        <h2 class="text-lg font-semibold text-slate-700"><?php echo htmlspecialchars($reportLabels[$report], ENT_QUOTES, 'UTF-8'); ?></h2>
+        <h2 class="text-lg font-semibold text-slate-700"><?php echo htmlspecialchars($reportTitle, ENT_QUOTES, 'UTF-8'); ?></h2>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-200">
@@ -117,9 +120,9 @@ require_once __DIR__ . '/../includes/header.php';
                     </tr>
                 <?php endif; ?>
 
-                <?php foreach ($rows as $row): ?>
+                <?php foreach ($rowMarkupList as $rowMarkup): ?>
                     <tr class="hover:bg-slate-50 transition align-top">
-                        <?php echo relatorios_row_markup($report, $row); ?>
+                        <?php echo $rowMarkup; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

@@ -110,4 +110,16 @@ if (! str_contains((string) ($pageData['exportQuery'] ?? ''), 'relatorio=abastec
     throw new RuntimeException('Helper de view deveria preparar a query de exportacao da aba atual.');
 }
 
+if (($pageData['reportTitle'] ?? '') !== 'Abastecimentos') {
+    throw new RuntimeException('Helper de view deveria expor o titulo formatado da aba atual.');
+}
+
+if (($pageData['clearHref'] ?? '') !== '/relatorios.php?relatorio=abastecimentos') {
+    throw new RuntimeException('Helper de view deveria preparar o link de limpeza da aba atual.');
+}
+
+if (! str_contains((string) (($pageData['rowMarkupList'][0] ?? '')), 'ABC1D23')) {
+    throw new RuntimeException('Helper de view deveria preparar o markup final das linhas da tabela.');
+}
+
 echo "Helpers de view de relatorios validados com sucesso.\n";

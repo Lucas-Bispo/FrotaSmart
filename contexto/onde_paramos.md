@@ -40,6 +40,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - a normalizacao compartilhada dos filtros de manutencoes, viagens, disponibilidade e auditoria agora tambem usa um service dedicado em `src/Application/Services`, reduzindo repeticao dentro do `RelatorioOperacionalQueryService`
 - a view de relatorios agora tambem usa um service dedicado para capturar filtros da request e resolver a aba ativa, reduzindo preparacao local dentro de `relatorios.php`
 - a view de relatorios agora tambem delega a um helper dedicado a montagem do pacote principal de dados da tela, reduzindo mais atribuicoes locais em `relatorios.php`
+- a view de relatorios agora tambem delega ao helper o titulo da aba, o link de limpeza e a renderizacao final das linhas da tabela, reduzindo mais composicao local na pagina principal
 - o fluxo de auditoria do modulo de relatorios agora tambem usa um service dedicado em `src/Application/Services`, reunindo leitura, transformacao e resumo fora da fachada legacy
 - os fluxos de manutencoes, viagens e disponibilidade do modulo de relatorios agora tambem usam um service operacional dedicado em `src/Application/Services`, reunindo leitura e transformacoes fora da fachada legacy
 - a exportacao e a montagem das dependencias do modulo de relatorios agora tambem usam componentes dedicados em `src/`, reduzindo mais composicao e `new` espalhado dentro da fachada legacy
@@ -54,7 +55,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- revisar se a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` ja pode ser encerrada formalmente e escolher o proximo hotspot entre o fracionamento residual do dashboard, a view de relatorios e os controllers administrativos restantes
+- revisar se a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` ja pode ser encerrada formalmente e escolher o proximo hotspot entre os controllers administrativos restantes, contratos ainda dependentes de flags e algum residual pequeno de view
 
 ## O que ja esta concluido por ciclo
 

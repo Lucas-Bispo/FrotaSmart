@@ -93,6 +93,7 @@
 - `dashboard.php` agora tambem reaproveita o helper para preparar linhas prontas das tabelas executivas e de abastecimentos recentes, reduzindo mais formatacao inline na view
 - `relatorios.php` agora reaproveita `relatorios_view_helpers.php` para reduzir condicionais de apresentacao e centralizar variacoes por tipo de relatorio
 - `relatorios.php` tambem passou a reaproveitar helpers para campos de filtro, tabs de navegacao e query de exportacao
+- `relatorios.php` agora tambem reaproveita o helper para titulo da aba, link de limpeza e markup final das linhas, reduzindo mais composicao residual na view
 - Ja existem `src/` e `composer.json`
 - O ambiente possui PHP local funcional para validacao do projeto
 - O Composer foi baixado localmente como `composer.phar`

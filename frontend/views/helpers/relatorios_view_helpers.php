@@ -205,12 +205,15 @@ function relatorios_export_query(array $filters, string $report): string
  *     auditSummary:array<string, mixed>,
  *     auditTargetTypes:list<string>,
  *     rows:list<array<string, mixed>>,
+ *     rowMarkupList:list<string>,
  *     statusOptions:array<string, string>,
  *     summaryCards:list<array{title:string,value:string,value_class:string}>,
  *     tableHeaders:list<string>,
  *     filterFieldsMarkup:string,
  *     tabs:list<array{label:string,href:string,is_active:bool}>,
- *     exportQuery:string
+ *     exportQuery:string,
+ *     reportTitle:string,
+ *     clearHref:string
  * }
  */
 function relatorios_build_page_data($model, string $report, array $filters, array $reportLabels): array
@@ -230,6 +233,7 @@ function relatorios_build_page_data($model, string $report, array $filters, arra
         'auditSummary' => $auditSummary,
         'auditTargetTypes' => $auditTargetTypes,
         'rows' => $rows,
+        'rowMarkupList' => relatorios_row_markup_list($report, $rows),
         'statusOptions' => $statusOptions,
         'summaryCards' => relatorios_summary_cards($report, $summary, $auditSummary),
         'tableHeaders' => relatorios_table_headers($report),
@@ -243,6 +247,8 @@ function relatorios_build_page_data($model, string $report, array $filters, arra
         ),
         'tabs' => relatorios_tabs($report, $filters, $reportLabels),
         'exportQuery' => relatorios_export_query($filters, $report),
+        'reportTitle' => (string) ($reportLabels[$report] ?? 'Relatorio'),
+        'clearHref' => '/relatorios.php?relatorio=' . rawurlencode($report),
     ];
 }
 
@@ -290,6 +296,21 @@ function relatorios_row_markup(string $report, array $row): string
         'auditoria' => relatorios_auditoria_row($row),
         default => relatorios_disponibilidade_row($row),
     };
+}
+
+/**
+ * @param list<array<string, mixed>> $rows
+ * @return list<string>
+ */
+function relatorios_row_markup_list(string $report, array $rows): array
+{
+    $markupList = [];
+
+    foreach ($rows as $row) {
+        $markupList[] = relatorios_row_markup($report, $row);
+    }
+
+    return $markupList;
 }
 
 function relatorios_abastecimento_row(array $row): string
