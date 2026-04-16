@@ -6,9 +6,21 @@ require_once __DIR__ . '/../config/db.php';
 
 final class ParceiroOperacionalModel
 {
-    public function getAll(?string $tipo = null, ?string $status = null): array
+    private PDO $connection;
+
+    public function __construct(?PDO $connection = null)
     {
-        global $pdo;
+        $this->connection = $connection ?? $this->resolveLegacyConnection();
+    }
+
+    /**
+     * @param array{tipo?:?string,status?:?string} $filters
+     * @return list<array<string, mixed>>
+     */
+    public function listByFilters(array $filters = []): array
+    {
+        $tipo = $filters['tipo'] ?? null;
+        $status = $filters['status'] ?? null;
 
         $conditions = [];
         $params = [];
@@ -32,16 +44,18 @@ final class ParceiroOperacionalModel
 
         $sql .= ' ORDER BY nome_fantasia ASC, id ASC';
 
-        $stmt = $pdo->prepare($sql);
+        $stmt = $this->connection->prepare($sql);
         $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * @param list<string> $tipos
+     * @return list<array<string, mixed>>
+     */
     public function getActiveByTipos(array $tipos): array
     {
-        global $pdo;
-
         if ($tipos === []) {
             return [];
         }
@@ -49,7 +63,7 @@ final class ParceiroOperacionalModel
         $placeholders = implode(', ', array_fill(0, count($tipos), '?'));
         $params = array_merge($tipos, ['ativo']);
 
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             "SELECT *
              FROM parceiros_operacionais
              WHERE tipo IN ($placeholders)
@@ -61,11 +75,12 @@ final class ParceiroOperacionalModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function findById(int $id): ?array
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare('SELECT * FROM parceiros_operacionais WHERE id = :id LIMIT 1');
+        $stmt = $this->connection->prepare('SELECT * FROM parceiros_operacionais WHERE id = :id LIMIT 1');
         $stmt->execute([':id' => $id]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -74,9 +89,7 @@ final class ParceiroOperacionalModel
 
     public function create(array $data): int
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'INSERT INTO parceiros_operacionais (
                 nome_fantasia,
                 razao_social,
@@ -112,14 +125,12 @@ final class ParceiroOperacionalModel
             ':observacoes' => $data['observacoes'],
         ]);
 
-        return (int) $pdo->lastInsertId();
+        return (int) $this->connection->lastInsertId();
     }
 
     public function update(int $id, array $data): void
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'UPDATE parceiros_operacionais
              SET nome_fantasia = :nome_fantasia,
                  razao_social = :razao_social,
@@ -145,5 +156,16 @@ final class ParceiroOperacionalModel
             ':status' => $data['status'],
             ':observacoes' => $data['observacoes'],
         ]);
+    }
+
+    private function resolveLegacyConnection(): PDO
+    {
+        global $pdo;
+
+        if ($pdo instanceof PDO) {
+            return $pdo;
+        }
+
+        throw new RuntimeException('Conexao PDO indisponivel para ParceiroOperacionalModel.');
     }
 }

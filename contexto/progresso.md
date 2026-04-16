@@ -1019,6 +1019,23 @@
 - `php -l scripts/test-abastecimento-model.php`
 - `php scripts/test-abastecimento-model.php`
 
+## 2026-04-16 - Continuidade tecnica apos Task 24, etapa 5
+
+### Parceiros operacionais com criterio nomeado e PDO explicito
+- Refatorado [ParceiroOperacionalModel.php](../backend/models/ParceiroOperacionalModel.php) para trocar `getAll()` com parametros opcionais por `listByFilters()` com criterio nomeado e para aceitar `PDO` explicito
+- Ajustada [parceiros.php](../frontend/views/parceiros.php) para montar os filtros de tipo e status em uma estrutura clara e nomeada
+- Atualizado [test-parceiro-operacional-model.php](../scripts/test-parceiro-operacional-model.php) para validar o contrato novo sem depender da assinatura posicional antiga
+
+### Resultado tecnico
+- o modulo de parceiros reduz mais um ponto legacy guiado por parametros opcionais sobrecarregados e diminui tambem um residuo pequeno de dependencia direta de `global $pdo`
+- a intencao dos filtros de listagem ficou mais legivel na camada de persistencia e no entrypoint da view administrativa
+
+### Validacao realizada
+- `php -l backend/models/ParceiroOperacionalModel.php`
+- `php -l frontend/views/parceiros.php`
+- `php -l scripts/test-parceiro-operacional-model.php`
+- `php scripts/test-parceiro-operacional-model.php`
+
 ## 2026-04-16 - Task 24, auditoria desacoplada da fachada legacy
 
 ### Fluxo de auditoria reunido em service dedicado

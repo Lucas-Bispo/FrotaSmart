@@ -16,7 +16,10 @@ if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac
 $model = new ParceiroOperacionalModel();
 $filtroTipo = trim((string) ($_GET['tipo'] ?? ''));
 $filtroStatus = trim((string) ($_GET['status'] ?? ''));
-$parceiros = $model->getAll($filtroTipo !== '' ? $filtroTipo : null, $filtroStatus !== '' ? $filtroStatus : null);
+$parceiros = $model->listByFilters([
+    'tipo' => $filtroTipo !== '' ? $filtroTipo : null,
+    'status' => $filtroStatus !== '' ? $filtroStatus : null,
+]);
 $canManage = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);
 $successMessage = pull_flash('success');
 $errorMessage = pull_flash('error');

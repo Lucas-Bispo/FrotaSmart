@@ -46,6 +46,14 @@ if ($updated === null || $updated['tipo'] !== 'posto_combustivel' || $updated['s
     throw new RuntimeException('Parceiro operacional nao foi atualizado corretamente.');
 }
 
+$filtrados = $model->listByFilters([
+    'tipo' => 'posto_combustivel',
+    'status' => 'inativo',
+]);
+if (count($filtrados) !== 1 || (int) ($filtrados[0]['id'] ?? 0) !== $parceiroId) {
+    throw new RuntimeException('Filtro nomeado de parceiros nao retornou o registro esperado.');
+}
+
 $ativosPosto = $model->getActiveByTipos(['posto_combustivel']);
 if (count($ativosPosto) !== 0) {
     throw new RuntimeException('Parceiros inativos nao deveriam aparecer no filtro ativo.');
