@@ -13,6 +13,10 @@ final class RelatorioOperacionalModel
     private \FrotaSmart\Application\Services\RelatorioExecutiveSummaryService $executiveSummaries;
     private \FrotaSmart\Application\Services\RelatorioAuditSummaryService $auditSummaries;
     private \FrotaSmart\Application\Services\RelatorioCsvExporterService $csvExporter;
+    private \FrotaSmart\Application\Services\RelatorioOperationalSummaryService $operationalSummaries;
+    private \FrotaSmart\Application\Services\RelatorioDatasetSelectorService $datasetSelector;
+    private \FrotaSmart\Application\Services\RelatorioRowTransformerService $rowTransformer;
+    private \FrotaSmart\Application\Services\RelatorioAbastecimentoReportService $abastecimentoReport;
 
     public function __construct(?PDO $connection = null)
     {
@@ -27,6 +31,14 @@ final class RelatorioOperacionalModel
         );
         $this->auditSummaries = new \FrotaSmart\Application\Services\RelatorioAuditSummaryService();
         $this->csvExporter = new \FrotaSmart\Application\Services\RelatorioCsvExporterService();
+        $this->operationalSummaries = new \FrotaSmart\Application\Services\RelatorioOperationalSummaryService();
+        $this->datasetSelector = new \FrotaSmart\Application\Services\RelatorioDatasetSelectorService();
+        $this->rowTransformer = new \FrotaSmart\Application\Services\RelatorioRowTransformerService();
+        $this->abastecimentoReport = new \FrotaSmart\Application\Services\RelatorioAbastecimentoReportService(
+            $this->abastecimentos,
+            new \FrotaSmart\Application\Services\RelatorioAbastecimentoCriteriaService(),
+            new \FrotaSmart\Application\Services\RelatorioAbastecimentoFilterService()
+        );
     }
 
     public function getSecretarias(): array
@@ -41,26 +53,7 @@ final class RelatorioOperacionalModel
 
     public function getAbastecimentoReport(array $filters): array
     {
-        $rows = $this->abastecimentos->fetchAll(
-            $this->normalizeOptionalInt($filters['veiculo_id'] ?? null),
-            $this->normalizeOptionalString($filters['data_inicio'] ?? null),
-            $this->normalizeOptionalString($filters['data_fim'] ?? null)
-        );
-
-        $secretaria = $this->normalizeOptionalString($filters['secretaria'] ?? null);
-        $status = $this->normalizeOptionalString($filters['status'] ?? null);
-
-        return array_values(array_filter($rows, static function (array $row) use ($secretaria, $status): bool {
-            if ($secretaria !== null && (string) ($row['secretaria'] ?? '') !== $secretaria) {
-                return false;
-            }
-
-            if ($status !== null && (string) ($row['anomalia_status'] ?? 'normal') !== $status) {
-                return false;
-            }
-
-            return true;
-        }));
+        return $this->abastecimentoReport->generate($filters);
     }
 
     public function getManutencaoReport(array $filters): array
@@ -70,48 +63,22 @@ final class RelatorioOperacionalModel
 
     public function getViagemReport(array $filters): array
     {
-        $rows = $this->queries->fetchViagemReport($filters);
-
-        foreach ($rows as &$row) {
-            $kmSaida = (int) ($row['km_saida'] ?? 0);
-            $kmChegada = isset($row['km_chegada']) ? (int) $row['km_chegada'] : null;
-            $row['km_percorrido'] = ($kmChegada !== null && $kmChegada >= $kmSaida) ? $kmChegada - $kmSaida : null;
-        }
-        unset($row);
-
-        return $rows;
+        return $this->rowTransformer->withViagemMetrics($this->queries->fetchViagemReport($filters));
     }
 
     public function getDisponibilidadeReport(array $filters): array
     {
-        $rows = $this->queries->fetchDisponibilidadeReport($filters);
-
-        foreach ($rows as &$row) {
-            $row['situacao_disponibilidade'] = ! empty($row['deleted_at'])
-                ? 'arquivado'
-                : ((string) $row['status'] === 'manutencao' ? 'indisponivel_manutencao' : 'disponivel_operacao');
-        }
-        unset($row);
-
-        return $rows;
+        return $this->rowTransformer->withDisponibilidadeStatus($this->queries->fetchDisponibilidadeReport($filters));
     }
 
     public function getResumo(array $filters): array
     {
-        $abastecimentos = $this->getAbastecimentoReport($filters);
-        $manutencoes = $this->getManutencaoReport($filters);
-        $viagens = $this->getViagemReport($filters);
-        $disponibilidade = $this->getDisponibilidadeReport($filters);
-
-        return [
-            'abastecimentos' => count($abastecimentos),
-            'gasto_abastecimento' => round(array_sum(array_map(static fn (array $row): float => (float) ($row['valor_total'] ?? 0), $abastecimentos)), 2),
-            'manutencoes' => count($manutencoes),
-            'custo_manutencao' => round(array_sum(array_map(static fn (array $row): float => (float) (($row['custo_final'] ?? 0) > 0 ? $row['custo_final'] : ($row['custo_estimado'] ?? 0)), $manutencoes)), 2),
-            'viagens' => count($viagens),
-            'km_viagens' => array_sum(array_map(static fn (array $row): int => (int) ($row['km_percorrido'] ?? 0), $viagens)),
-            'veiculos_disponiveis' => count(array_filter($disponibilidade, static fn (array $row): bool => ($row['situacao_disponibilidade'] ?? '') === 'disponivel_operacao')),
-        ];
+        return $this->operationalSummaries->summarize(
+            $this->getAbastecimentoReport($filters),
+            $this->getManutencaoReport($filters),
+            $this->getViagemReport($filters),
+            $this->getDisponibilidadeReport($filters)
+        );
     }
 
     public function getExecutiveSummaryBySecretaria(?string $dataInicio = null, ?string $dataFim = null): array
@@ -144,35 +111,9 @@ final class RelatorioOperacionalModel
         return $this->csvExporter->export($this->resolveReportRows($report, $filters));
     }
 
-    private function normalizeOptionalString(mixed $value): ?string
-    {
-        $text = trim((string) ($value ?? ''));
-
-        return $text === '' ? null : $text;
-    }
-
-    private function normalizeOptionalInt(mixed $value): ?int
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $int = (int) $value;
-
-        return $int > 0 ? $int : null;
-    }
-
     private function fetchAuditRows(array $filters): array
     {
-        $rows = $this->queries->fetchAuditRows($filters);
-
-        foreach ($rows as &$row) {
-            $context = $this->decodeAuditContext($row['context_json'] ?? null);
-            $row['context_summary'] = $this->summarizeAuditContext($context);
-        }
-        unset($row);
-
-        return $rows;
+        return $this->rowTransformer->withAuditContextSummary($this->queries->fetchAuditRows($filters));
     }
 
     /**
@@ -181,67 +122,13 @@ final class RelatorioOperacionalModel
      */
     private function resolveReportRows(string $report, array $filters): array
     {
-        return match ($report) {
-            'abastecimentos' => $this->getAbastecimentoReport($filters),
-            'manutencoes' => $this->getManutencaoReport($filters),
-            'viagens' => $this->getViagemReport($filters),
-            'disponibilidade' => $this->getDisponibilidadeReport($filters),
-            'auditoria' => $this->getAuditReport($filters),
-            default => [],
-        };
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function decodeAuditContext(mixed $json): array
-    {
-        if (! is_string($json) || trim($json) === '') {
-            return [];
-        }
-
-        $decoded = json_decode($json, true);
-
-        return is_array($decoded) ? $decoded : [];
-    }
-
-    /**
-     * @param array<string, mixed> $context
-     */
-    private function summarizeAuditContext(array $context): string
-    {
-        if ($context === []) {
-            return 'Sem contexto adicional.';
-        }
-
-        $parts = [];
-        foreach ($context as $key => $value) {
-            if (in_array($key, ['request_uri'], true)) {
-                continue;
-            }
-
-            if (is_array($value)) {
-                $rendered = implode('; ', array_map(static fn (mixed $item): string => (string) $item, $value));
-            } elseif (is_bool($value)) {
-                $rendered = $value ? 'sim' : 'nao';
-            } elseif ($value === null) {
-                continue;
-            } else {
-                $rendered = trim((string) $value);
-            }
-
-            if ($rendered === '') {
-                continue;
-            }
-
-            $parts[] = str_replace('_', ' ', (string) $key) . ': ' . $rendered;
-
-            if (count($parts) >= 4) {
-                break;
-            }
-        }
-
-        return $parts === [] ? 'Sem contexto adicional.' : implode(' | ', $parts);
+        return $this->datasetSelector->select($report, [
+            'abastecimentos' => fn (): array => $this->getAbastecimentoReport($filters),
+            'manutencoes' => fn (): array => $this->getManutencaoReport($filters),
+            'viagens' => fn (): array => $this->getViagemReport($filters),
+            'disponibilidade' => fn (): array => $this->getDisponibilidadeReport($filters),
+            'auditoria' => fn (): array => $this->getAuditReport($filters),
+        ]);
     }
 
     private function resolveLegacyConnection(): PDO

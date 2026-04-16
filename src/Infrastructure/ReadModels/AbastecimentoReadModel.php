@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace FrotaSmart\Infrastructure\ReadModels;
 
+use FrotaSmart\Application\Contracts\AbastecimentoReportReadModelInterface;
 use PDO;
-use RuntimeException;
 
-final class AbastecimentoReadModel
+final class AbastecimentoReadModel implements AbastecimentoReportReadModelInterface
 {
     public function __construct(
         private readonly PDO $connection

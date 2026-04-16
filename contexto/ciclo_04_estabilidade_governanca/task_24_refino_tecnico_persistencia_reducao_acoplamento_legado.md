@@ -25,6 +25,25 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - simplificado novamente [RelatorioOperacionalModel.php](../../backend/models/RelatorioOperacionalModel.php) para delegar o painel executivo ao novo service, mantendo a fachada mais enxuta
 - criados [RelatorioAuditSummaryService.php](../../src/Application/Services/RelatorioAuditSummaryService.php) e [RelatorioCsvExporterService.php](../../src/Application/Services/RelatorioCsvExporterService.php) para deslocar do model legado a consolidacao do resumo de auditoria e a exportacao CSV
 - adicionado o teste [test-relatorio-support-services.php](../../scripts/test-relatorio-support-services.php) para validar o recorte novo em componentes menores e mais testaveis
+- criados [RelatorioOperationalSummaryService.php](../../src/Application/Services/RelatorioOperationalSummaryService.php) e [RelatorioDatasetSelectorService.php](../../src/Application/Services/RelatorioDatasetSelectorService.php) para deslocar do model legado o resumo operacional e a selecao do dataset por tipo de relatorio
+- adicionado o teste [test-relatorio-composition-services.php](../../scripts/test-relatorio-composition-services.php) para validar a composicao residual que saiu da fachada legacy
+- criado [RelatorioRowTransformerService.php](../../src/Application/Services/RelatorioRowTransformerService.php) para deslocar do model legado transformacoes de linhas de viagem, disponibilidade e auditoria
+- adicionado o teste [test-relatorio-row-transformer-service.php](../../scripts/test-relatorio-row-transformer-service.php) para validar o pos-processamento residual que saiu da fachada
+- criado [RelatorioAbastecimentoCriteriaService.php](../../src/Application/Services/RelatorioAbastecimentoCriteriaService.php) para normalizar criterios transacionais de abastecimento fora da fachada legacy
+- adicionado o teste [test-relatorio-abastecimento-criteria-service.php](../../scripts/test-relatorio-abastecimento-criteria-service.php) para validar a montagem desses criterios
+- criado [RelatorioAbastecimentoFilterService.php](../../src/Application/Services/RelatorioAbastecimentoFilterService.php) para concentrar o filtro residual por secretaria e status analitico do fluxo de abastecimentos
+- criado [RelatorioAbastecimentoReportService.php](../../src/Application/Services/RelatorioAbastecimentoReportService.php) para orquestrar criterios, leitura analitica e filtros do relatorio de abastecimentos fora da fachada legacy
+- simplificado [RelatorioOperacionalModel.php](../../backend/models/RelatorioOperacionalModel.php) para delegar o fluxo completo de abastecimentos ao novo service
+- adicionado o teste [test-relatorio-abastecimento-filter-service.php](../../scripts/test-relatorio-abastecimento-filter-service.php) para validar o filtro residual do recorte
+- adicionado o teste [test-relatorio-abastecimento-report-service.php](../../scripts/test-relatorio-abastecimento-report-service.php) para validar a orquestracao completa do relatorio de abastecimentos
+- criado [RelatorioQueryCriteriaService.php](../../src/Application/Services/RelatorioQueryCriteriaService.php) para concentrar a normalizacao compartilhada de filtros de manutencoes, viagens, disponibilidade e auditoria
+- simplificado [RelatorioOperacionalQueryService.php](../../src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php) para consumir criterios normalizados em vez de repetir validacoes locais por consulta
+- adicionado o teste [test-relatorio-query-criteria-service.php](../../scripts/test-relatorio-query-criteria-service.php) para validar esse recorte
+- criado [RelatorioRequestStateService.php](../../src/Application/Services/RelatorioRequestStateService.php) para concentrar a captura dos filtros da request, a resolucao da aba ativa e o payload de auditoria da view de relatorios
+- simplificado [relatorios.php](../../frontend/views/relatorios.php) para usar esse estado de request e um helper dedicado na resolucao das linhas do relatorio
+- adicionado o teste [test-relatorio-request-state-service.php](../../scripts/test-relatorio-request-state-service.php) para validar esse recorte
+- evoluido [relatorios_view_helpers.php](../../frontend/views/helpers/relatorios_view_helpers.php) para montar tambem o pacote principal de dados da tela, reduzindo mais preparacao local dentro da view
+- adicionado o teste [test-relatorio-view-helpers.php](../../scripts/test-relatorio-view-helpers.php) para validar essa composicao de apresentacao
 
 ## Resultado tecnico desta etapa
 - a leitura central da frota no dashboard deixou de depender do model legado de veiculos
@@ -40,6 +59,13 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - os relatorios executivos e operacionais agora leem abastecimentos e manutencoes por read models dedicados em `src/`, aproximando melhor o modulo do padrao arquitetural definido para o projeto
 - a montagem executiva do dashboard tambem passou a morar em `src/Application/Services`, reduzindo mais uma concentracao de regra dentro do model legado
 - o resumo de auditoria e a serializacao CSV do modulo de relatorios agora tambem ficaram em services dedicados, reduzindo mais responsabilidade local do `RelatorioOperacionalModel`
+- o resumo operacional e a selecao do dataset exportado ou exibido agora tambem usam services pequenos e nomeados, reduzindo mais pontos de decisao dentro do `RelatorioOperacionalModel`
+- as transformacoes de linhas transacionais e auditoria agora tambem passaram a usar um service dedicado, reduzindo mais pos-processamento local dentro da fachada legacy
+- os filtros base de abastecimento agora tambem passam por um service de criterios dedicado, reduzindo normalizacao transacional remanescente dentro do `RelatorioOperacionalModel`
+- o fluxo completo de abastecimentos agora tambem passa por um service dedicado em `src/Application/Services`, deixando a fachada legacy mais proxima de simples composicao
+- a normalizacao compartilhada dos filtros de consulta agora tambem saiu do `RelatorioOperacionalQueryService`, reduzindo repeticao entre manutencoes, viagens, disponibilidade e auditoria
+- a view `relatorios.php` agora tambem concentra menos preparacao de estado local, delegando filtros, aba ativa e carga principal de linhas para componentes mais nomeados
+- a view `relatorios.php` reduziu mais uma rodada de montagem local ao passar a consumir um pacote unico de view data preparado por helper dedicado
 
 ## Validacao esperada
 - `php -l src/Application/Services/VeiculoDashboardService.php`
@@ -69,11 +95,35 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - `php -l src/Application/Services/RelatorioExecutiveSummaryService.php`
 - `php -l src/Application/Services/RelatorioAuditSummaryService.php`
 - `php -l src/Application/Services/RelatorioCsvExporterService.php`
+- `php -l src/Application/Services/RelatorioOperationalSummaryService.php`
+- `php -l src/Application/Services/RelatorioDatasetSelectorService.php`
+- `php -l src/Application/Services/RelatorioRowTransformerService.php`
+- `php -l src/Application/Services/RelatorioAbastecimentoCriteriaService.php`
+- `php -l src/Application/Services/RelatorioAbastecimentoFilterService.php`
+- `php -l src/Application/Services/RelatorioAbastecimentoReportService.php`
+- `php -l src/Application/Services/RelatorioQueryCriteriaService.php`
+- `php -l src/Application/Services/RelatorioRequestStateService.php`
 - `php -l scripts/test-relatorio-support-services.php`
 - `php scripts/test-relatorio-support-services.php`
+- `php -l scripts/test-relatorio-composition-services.php`
+- `php scripts/test-relatorio-composition-services.php`
+- `php -l scripts/test-relatorio-row-transformer-service.php`
+- `php scripts/test-relatorio-row-transformer-service.php`
+- `php -l scripts/test-relatorio-abastecimento-criteria-service.php`
+- `php scripts/test-relatorio-abastecimento-criteria-service.php`
+- `php -l scripts/test-relatorio-abastecimento-filter-service.php`
+- `php scripts/test-relatorio-abastecimento-filter-service.php`
+- `php -l scripts/test-relatorio-abastecimento-report-service.php`
+- `php scripts/test-relatorio-abastecimento-report-service.php`
+- `php -l scripts/test-relatorio-query-criteria-service.php`
+- `php scripts/test-relatorio-query-criteria-service.php`
+- `php -l scripts/test-relatorio-request-state-service.php`
+- `php scripts/test-relatorio-request-state-service.php`
+- `php -l scripts/test-relatorio-view-helpers.php`
+- `php scripts/test-relatorio-view-helpers.php`
 
 ## Proximo recorte recomendado dentro da task
 - continuar deslocando agregacoes e regras de montagem ainda presas ao `RelatorioOperacionalModel`
 - avaliar se `AbastecimentoModel` e `ManutencaoModel` devem gradualmente delegar leituras compartilhadas para os novos read models, evitando duplicacao de regra analitica
-- continuar deslocando pos-processamentos e agregacoes restantes do `RelatorioOperacionalModel`, especialmente resumo operacional e exportacao, para componentes menores e mais testaveis
+- continuar deslocando pos-processamentos e agregacoes restantes do `RelatorioOperacionalModel`, especialmente os fluxos transacionais ainda nao cobertos por criterio dedicado fora da fachada
 - continuar o fracionamento de `relatorios.php` para reduzir responsabilidade de view e aproximar a apresentacao do padrao de Clean Code definido para o projeto

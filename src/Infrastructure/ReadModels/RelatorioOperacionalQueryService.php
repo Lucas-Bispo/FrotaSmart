@@ -9,9 +9,12 @@ use Throwable;
 
 final class RelatorioOperacionalQueryService
 {
+    private \FrotaSmart\Application\Services\RelatorioQueryCriteriaService $criteria;
+
     public function __construct(
         private readonly PDO $connection
     ) {
+        $this->criteria = new \FrotaSmart\Application\Services\RelatorioQueryCriteriaService();
     }
 
     /**
@@ -56,30 +59,31 @@ final class RelatorioOperacionalQueryService
      */
     public function fetchManutencaoReport(array $filters): array
     {
+        $criteria = $this->criteria->forOperationalReport($filters);
         $conditions = [];
         $params = [];
 
-        if (($dataInicio = $this->normalizeOptionalString($filters['data_inicio'] ?? null)) !== null) {
+        if (($dataInicio = $criteria['data_inicio']) !== null) {
             $conditions[] = 'm.data_abertura >= :data_inicio';
             $params[':data_inicio'] = $dataInicio;
         }
 
-        if (($dataFim = $this->normalizeOptionalString($filters['data_fim'] ?? null)) !== null) {
+        if (($dataFim = $criteria['data_fim']) !== null) {
             $conditions[] = 'm.data_abertura <= :data_fim';
             $params[':data_fim'] = $dataFim;
         }
 
-        if (($secretaria = $this->normalizeOptionalString($filters['secretaria'] ?? null)) !== null) {
+        if (($secretaria = $criteria['secretaria']) !== null) {
             $conditions[] = 'v.secretaria_lotada = :secretaria';
             $params[':secretaria'] = $secretaria;
         }
 
-        if (($veiculoId = $this->normalizeOptionalInt($filters['veiculo_id'] ?? null)) !== null) {
+        if (($veiculoId = $criteria['veiculo_id']) !== null) {
             $conditions[] = 'm.veiculo_id = :veiculo_id';
             $params[':veiculo_id'] = $veiculoId;
         }
 
-        if (($status = $this->normalizeOptionalString($filters['status'] ?? null)) !== null) {
+        if (($status = $criteria['status']) !== null) {
             $conditions[] = 'm.status = :status';
             $params[':status'] = $status;
         }
@@ -112,30 +116,31 @@ final class RelatorioOperacionalQueryService
      */
     public function fetchViagemReport(array $filters): array
     {
+        $criteria = $this->criteria->forOperationalReport($filters);
         $conditions = [];
         $params = [];
 
-        if (($dataInicio = $this->normalizeOptionalString($filters['data_inicio'] ?? null)) !== null) {
+        if (($dataInicio = $criteria['data_inicio']) !== null) {
             $conditions[] = 'DATE(v.data_saida) >= :data_inicio';
             $params[':data_inicio'] = $dataInicio;
         }
 
-        if (($dataFim = $this->normalizeOptionalString($filters['data_fim'] ?? null)) !== null) {
+        if (($dataFim = $criteria['data_fim']) !== null) {
             $conditions[] = 'DATE(v.data_saida) <= :data_fim';
             $params[':data_fim'] = $dataFim;
         }
 
-        if (($secretaria = $this->normalizeOptionalString($filters['secretaria'] ?? null)) !== null) {
+        if (($secretaria = $criteria['secretaria']) !== null) {
             $conditions[] = 'v.secretaria = :secretaria';
             $params[':secretaria'] = $secretaria;
         }
 
-        if (($veiculoId = $this->normalizeOptionalInt($filters['veiculo_id'] ?? null)) !== null) {
+        if (($veiculoId = $criteria['veiculo_id']) !== null) {
             $conditions[] = 'v.veiculo_id = :veiculo_id';
             $params[':veiculo_id'] = $veiculoId;
         }
 
-        if (($status = $this->normalizeOptionalString($filters['status'] ?? null)) !== null) {
+        if (($status = $criteria['status']) !== null) {
             $conditions[] = 'v.status = :status';
             $params[':status'] = $status;
         }
@@ -167,20 +172,21 @@ final class RelatorioOperacionalQueryService
      */
     public function fetchDisponibilidadeReport(array $filters): array
     {
+        $criteria = $this->criteria->forOperationalReport($filters);
         $conditions = [];
         $params = [];
 
-        if (($secretaria = $this->normalizeOptionalString($filters['secretaria'] ?? null)) !== null) {
+        if (($secretaria = $criteria['secretaria']) !== null) {
             $conditions[] = 'v.secretaria_lotada = :secretaria';
             $params[':secretaria'] = $secretaria;
         }
 
-        if (($veiculoId = $this->normalizeOptionalInt($filters['veiculo_id'] ?? null)) !== null) {
+        if (($veiculoId = $criteria['veiculo_id']) !== null) {
             $conditions[] = 'v.id = :veiculo_id';
             $params[':veiculo_id'] = $veiculoId;
         }
 
-        if (($status = $this->normalizeOptionalString($filters['status'] ?? null)) !== null) {
+        if (($status = $criteria['status']) !== null) {
             $conditions[] = 'v.status = :status';
             $params[':status'] = $status;
         }
@@ -347,35 +353,36 @@ final class RelatorioOperacionalQueryService
      */
     public function fetchAuditRows(array $filters): array
     {
+        $criteria = $this->criteria->forAuditReport($filters);
         $conditions = [];
         $params = [];
 
-        if (($dataInicio = $this->normalizeOptionalString($filters['data_inicio'] ?? null)) !== null) {
+        if (($dataInicio = $criteria['data_inicio']) !== null) {
             $conditions[] = 'DATE(occurred_at) >= :data_inicio';
             $params[':data_inicio'] = $dataInicio;
         }
 
-        if (($dataFim = $this->normalizeOptionalString($filters['data_fim'] ?? null)) !== null) {
+        if (($dataFim = $criteria['data_fim']) !== null) {
             $conditions[] = 'DATE(occurred_at) <= :data_fim';
             $params[':data_fim'] = $dataFim;
         }
 
-        if (($actor = $this->normalizeOptionalString($filters['ator'] ?? null)) !== null) {
+        if (($actor = $criteria['ator']) !== null) {
             $conditions[] = 'actor LIKE :actor';
             $params[':actor'] = '%' . $actor . '%';
         }
 
-        if (($event = $this->normalizeOptionalString($filters['evento'] ?? null)) !== null) {
+        if (($event = $criteria['evento']) !== null) {
             $conditions[] = 'event LIKE :event';
             $params[':event'] = '%' . $event . '%';
         }
 
-        if (($action = $this->normalizeOptionalString($filters['status'] ?? null)) !== null) {
+        if (($action = $criteria['status']) !== null) {
             $conditions[] = 'action = :action';
             $params[':action'] = $action;
         }
 
-        if (($targetType = $this->normalizeOptionalString($filters['tipo_alvo'] ?? null)) !== null) {
+        if (($targetType = $criteria['tipo_alvo']) !== null) {
             $conditions[] = 'target_type = :target_type';
             $params[':target_type'] = $targetType;
         }
@@ -431,21 +438,4 @@ final class RelatorioOperacionalQueryService
         }
     }
 
-    private function normalizeOptionalString(mixed $value): ?string
-    {
-        $text = trim((string) ($value ?? ''));
-
-        return $text === '' ? null : $text;
-    }
-
-    private function normalizeOptionalInt(mixed $value): ?int
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $int = (int) $value;
-
-        return $int > 0 ? $int : null;
-    }
 }

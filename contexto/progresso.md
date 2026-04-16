@@ -878,3 +878,121 @@
 - `php -l scripts/test-relatorio-support-services.php`
 - `php scripts/test-relatorio-support-services.php`
 - `php scripts/test-auditoria-relatorio.php`
+
+## 2026-04-14 - Task 24, composicao operacional mais enxuta
+
+### Resumo operacional e selecao de datasets fora da fachada legacy
+- Criados [RelatorioOperationalSummaryService.php](../src/Application/Services/RelatorioOperationalSummaryService.php) e [RelatorioDatasetSelectorService.php](../src/Application/Services/RelatorioDatasetSelectorService.php) para tirar do [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) o resumo operacional e a selecao do dataset por tipo de relatorio
+- Simplificado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para delegar mais uma etapa de composicao a services pequenos e nomeados
+- Criado o teste [test-relatorio-composition-services.php](../scripts/test-relatorio-composition-services.php) para validar o recorte novo
+
+### Resultado tecnico
+- o hotspot principal de relatorios ficou com menos responsabilidade local e menos condicionais internas
+- o fluxo de resumo e exportacao ficou mais previsivel para evolucao futura, sem exigir reescrita do modulo
+- a `Task 24` avancou mais um passo na direcao de fachada legacy fina e composicao concentrada em `src/`
+
+### Validacao realizada
+- `php -l src/Application/Services/RelatorioOperationalSummaryService.php`
+- `php -l src/Application/Services/RelatorioDatasetSelectorService.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php -l scripts/test-relatorio-composition-services.php`
+- `php scripts/test-relatorio-composition-services.php`
+- `php scripts/test-relatorio-support-services.php`
+- `php scripts/test-auditoria-relatorio.php`
+
+## 2026-04-14 - Task 24, transformacoes de linhas extraidas
+
+### Pos-processamento residual fora da fachada legacy
+- Criado [RelatorioRowTransformerService.php](../src/Application/Services/RelatorioRowTransformerService.php) para deslocar do [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) o calculo de `km_percorrido`, a classificacao de disponibilidade e o resumo textual do contexto de auditoria
+- Simplificado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para delegar esse pos-processamento ao novo service
+- Criado o teste [test-relatorio-row-transformer-service.php](../scripts/test-relatorio-row-transformer-service.php) para validar esse recorte
+
+### Resultado tecnico
+- o hotspot de relatorios perdeu mais um conjunto de loops e transformacoes locais
+- o modulo ficou mais alinhado ao guia de Clean Code ao separar leitura bruta de transformacao de linha
+- a continuidade da `Task 24` agora pode focar nos filtros e normalizacoes ainda remanescentes na fachada
+
+### Validacao realizada
+- `php -l src/Application/Services/RelatorioRowTransformerService.php`
+- `php -l backend/models/RelatorioOperacionalModel.php`
+- `php -l scripts/test-relatorio-row-transformer-service.php`
+- `php scripts/test-relatorio-row-transformer-service.php`
+- `php scripts/test-relatorio-composition-services.php`
+- `php scripts/test-relatorio-support-services.php`
+- `php scripts/test-auditoria-relatorio.php`
+
+## 2026-04-15 - Task 24, criterios de abastecimento extraidos
+
+### Normalizacao transacional menor fora da fachada legacy
+- Criado [RelatorioAbastecimentoCriteriaService.php](../src/Application/Services/RelatorioAbastecimentoCriteriaService.php) para centralizar a normalizacao de `veiculo_id`, periodo, secretaria e status do fluxo de abastecimentos
+- Simplificado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para consumir criterios ja prontos antes da leitura analitica e do filtro operacional
+- Criado o teste [test-relatorio-abastecimento-criteria-service.php](../scripts/test-relatorio-abastecimento-criteria-service.php) para validar o recorte novo
+
+### Resultado tecnico
+- o fluxo de abastecimentos reduziu mais uma responsabilidade remanescente dentro do hotspot de relatorios
+- a fachada legacy ficou mais proxima de orquestracao do que de normalizacao transacional
+- a continuidade da `Task 24` agora pode focar nas proximas agregacoes e leituras ainda presas ao model legado
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-16 - Task 24, fluxo de abastecimentos consolidado fora da fachada
+
+### Orquestracao completa do relatorio em service dedicado
+- Criado [RelatorioAbastecimentoFilterService.php](../src/Application/Services/RelatorioAbastecimentoFilterService.php) para concentrar o filtro residual por secretaria e anomalia no fluxo analitico
+- Criado [RelatorioAbastecimentoReportService.php](../src/Application/Services/RelatorioAbastecimentoReportService.php) para reunir criterios, leitura do read model e filtragem final do relatorio de abastecimentos
+- Simplificado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para delegar esse fluxo completo ao novo service
+- Criados os testes [test-relatorio-abastecimento-filter-service.php](../scripts/test-relatorio-abastecimento-filter-service.php) e [test-relatorio-abastecimento-report-service.php](../scripts/test-relatorio-abastecimento-report-service.php) para validar o recorte
+
+### Resultado tecnico
+- a fachada legacy de relatorios ficou menor ao deixar de combinar criterios, read model e filtro residual do fluxo de abastecimentos
+- o relatorio de abastecimentos agora pode evoluir em um ponto unico sem aumentar a complexidade do `RelatorioOperacionalModel`
+- a `Task 24` segue reduzindo o hotspot principal por extracoes pequenas, testaveis e compativeis com o legado
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-15 - Task 24, pacote principal de view data consolidado
+
+### Menos montagem local na pagina de relatorios
+- Evoluido [relatorios_view_helpers.php](../frontend/views/helpers/relatorios_view_helpers.php) para montar o pacote principal de dados da tela, incluindo linhas, cards, filtros, tabs e exportacao
+- Simplificado [relatorios.php](../frontend/views/relatorios.php) para consumir esse pacote unico em vez de espalhar a preparacao em varias atribuicoes locais
+- Criado o teste [test-relatorio-view-helpers.php](../scripts/test-relatorio-view-helpers.php) para validar esse recorte
+
+### Resultado tecnico
+- a tela de relatorios ficou mais declarativa e mais alinhada ao guia de Clean Code do projeto
+- a composicao de apresentacao agora ficou concentrada em um ponto mais facil de manter
+- a `Task 24` segue reduzindo o hotspot de relatorios tanto por persistencia quanto por apresentacao
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-15 - Task 24, estado da view de relatorios extraido
+
+### View mais declarativa e menos acoplada a request
+- Criado [RelatorioRequestStateService.php](../src/Application/Services/RelatorioRequestStateService.php) para centralizar captura de filtros da request, resolucao do relatorio ativo e preparo dos filtros auditaveis de exportacao
+- Simplificado [relatorios.php](../frontend/views/relatorios.php) para consumir esse estado pronto e usar um helper dedicado na carga das linhas
+- Criado o teste [test-relatorio-request-state-service.php](../scripts/test-relatorio-request-state-service.php) para validar esse recorte
+
+### Resultado tecnico
+- a view principal de relatorios ficou mais direta e menos carregada de condicionais e arrays de entrada
+- o fluxo de request do modulo agora tem um ponto mais claro para evoluir sem inflar a view
+- a `Task 24` avancou tambem pelo lado da apresentacao, sem quebrar a compatibilidade do modulo legado
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-15 - Task 24, criterios compartilhados de consulta extraidos
+
+### Normalizacao comum fora do read model
+- Criado [RelatorioQueryCriteriaService.php](../src/Application/Services/RelatorioQueryCriteriaService.php) para centralizar a normalizacao compartilhada dos filtros de manutencoes, viagens, disponibilidade e auditoria
+- Simplificado [RelatorioOperacionalQueryService.php](../src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php) para consumir criterios prontos e reduzir repeticao de validacoes locais por consulta
+- Criado o teste [test-relatorio-query-criteria-service.php](../scripts/test-relatorio-query-criteria-service.php) para validar o recorte novo
+
+### Resultado tecnico
+- o read model principal de relatorios ficou menor e mais previsivel ao remover normalizacoes duplicadas
+- os filtros compartilhados agora podem evoluir em um ponto unico, sem espalhar ajustes por quatro consultas diferentes
+- a `Task 24` ficou melhor posicionada para atacar a proxima rodada de montagem de SQL e apresentacao sem aumentar o hotspot legado
+
+### Validacao realizada
+- pendente executar nesta retomada

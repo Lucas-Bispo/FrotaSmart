@@ -14,33 +14,20 @@ if (! isset($_SESSION['user']) || ! user_can(\FrotaSmart\Application\Security\Rb
     exit;
 }
 
+$requestState = new \FrotaSmart\Application\Services\RelatorioRequestStateService();
 $model = new RelatorioOperacionalModel(
     \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make()
 );
-$report = (string) ($_GET['relatorio'] ?? 'abastecimentos');
-$export = (string) ($_GET['export'] ?? '');
-$filters = [
-    'data_inicio' => (string) ($_GET['data_inicio'] ?? ''),
-    'data_fim' => (string) ($_GET['data_fim'] ?? ''),
-    'secretaria' => (string) ($_GET['secretaria'] ?? ''),
-    'veiculo_id' => (string) ($_GET['veiculo_id'] ?? ''),
-    'status' => (string) ($_GET['status'] ?? ''),
-    'ator' => (string) ($_GET['ator'] ?? ''),
-    'evento' => (string) ($_GET['evento'] ?? ''),
-    'tipo_alvo' => (string) ($_GET['tipo_alvo'] ?? ''),
-];
-
 $reportLabels = relatorios_report_labels();
-
-if (! isset($reportLabels[$report])) {
-    $report = 'abastecimentos';
-}
+$report = $requestState->resolveReport((string) ($_GET['relatorio'] ?? 'abastecimentos'), $reportLabels);
+$export = (string) ($_GET['export'] ?? '');
+$filters = $requestState->captureFilters($_GET);
 
 if ($export === 'csv') {
     audit_log('relatorio.exported', [
         'target_id' => $report,
         'report' => $report,
-        'filters' => array_filter($filters, static fn (string $value): bool => trim($value) !== ''),
+        'filters' => $requestState->filtersForAudit($filters),
     ]);
 
     $filename = sprintf('relatorio_%s_%s.csv', $report, date('Ymd_His'));
@@ -50,32 +37,13 @@ if ($export === 'csv') {
     exit;
 }
 
-$secretarias = $model->getSecretarias();
-$veiculos = $model->getVeiculos();
-$summary = $model->getResumo($filters);
-$auditSummary = $model->getAuditSummary($filters);
-$auditTargetTypes = $model->getAuditTargetTypes();
-$rows = match ($report) {
-    'manutencoes' => $model->getManutencaoReport($filters),
-    'viagens' => $model->getViagemReport($filters),
-    'disponibilidade' => $model->getDisponibilidadeReport($filters),
-    'auditoria' => $model->getAuditReport($filters),
-    default => $model->getAbastecimentoReport($filters),
-};
-
-$statusOptions = relatorios_status_options($report);
-$summaryCards = relatorios_summary_cards($report, $summary, $auditSummary);
-$tableHeaders = relatorios_table_headers($report);
-$filterFieldsMarkup = relatorios_filter_fields_markup(
-    $report,
-    $filters,
-    $secretarias,
-    $veiculos,
-    $statusOptions,
-    $auditTargetTypes
-);
-$tabs = relatorios_tabs($report, $filters, $reportLabels);
-$exportQuery = relatorios_export_query($filters, $report);
+$pageData = relatorios_build_page_data($model, $report, $filters, $reportLabels);
+$rows = $pageData['rows'];
+$summaryCards = $pageData['summaryCards'];
+$tableHeaders = $pageData['tableHeaders'];
+$filterFieldsMarkup = $pageData['filterFieldsMarkup'];
+$tabs = $pageData['tabs'];
+$exportQuery = $pageData['exportQuery'];
 
 $pageTitle = 'Relatorios';
 require_once __DIR__ . '/../includes/header.php';

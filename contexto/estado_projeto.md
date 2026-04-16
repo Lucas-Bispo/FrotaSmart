@@ -39,6 +39,9 @@
 - O modulo de relatorios agora tambem usa read models dedicados para abastecimentos e manutencoes analiticas, reduzindo apoio direto dos models legados nesse fluxo
 - o painel executivo agora tambem possui montagem dedicada em `src/Application/Services/RelatorioExecutiveSummaryService.php`
 - o resumo de auditoria e a exportacao CSV dos relatorios agora tambem usam services dedicados em `src/Application/Services`
+- o resumo operacional e a selecao de datasets dos relatorios agora tambem usam services dedicados em `src/Application/Services`
+- as transformacoes de linhas de relatorios agora tambem usam service dedicado em `src/Application/Services`
+- o fluxo completo de abastecimentos do modulo de relatorios agora tambem usa um service dedicado em `src/Application/Services`
 - O projeto agora possui um guia formal de Clean Code em `engenharia/padrao_clean_code_frotasmart.md`
 - Os controllers operacionais principais ja comecaram a migrar para validacoes menores e mais nomeadas
 - O modulo de veiculos agora tambem usa contratos mais explicitos para separar leitura ativa de leitura historica
@@ -65,6 +68,13 @@
 - parte da leitura analitica reutilizada por relatorios saiu de `AbastecimentoModel` e `ManutencaoModel` e passou a ser atendida por read models dedicados em `src/Infrastructure/ReadModels`
 - a montagem do painel executivo tambem saiu do `RelatorioOperacionalModel` e passou a ser orquestrada por um service dedicado em `src/Application/Services`
 - a consolidacao do resumo de auditoria e a serializacao CSV tambem comecaram a sair do `RelatorioOperacionalModel`, reduzindo mais responsabilidade nessa fachada legada
+- o resumo operacional e a selecao do dataset por tipo de relatorio tambem comecaram a sair do `RelatorioOperacionalModel`, reduzindo mais ramificacao nesse hotspot legacy
+- o pos-processamento de linhas de viagem, disponibilidade e auditoria tambem comecou a sair do `RelatorioOperacionalModel`, reduzindo mais loops e transformacoes locais
+- a normalizacao de criterios base de abastecimento tambem comecou a sair do `RelatorioOperacionalModel`, reduzindo mais responsabilidade transacional nessa fachada legacy
+- a orquestracao completa do relatorio de abastecimentos tambem comecou a sair do `RelatorioOperacionalModel`, reduzindo mais acoplamento entre criterios, leitura e filtro residual
+- a normalizacao compartilhada dos filtros de consulta tambem comecou a sair do `RelatorioOperacionalQueryService`, reduzindo repeticao e ramificacao entre relatorios transacionais
+- a preparacao de estado da tela de relatorios tambem comecou a sair da propria view, reduzindo montagem de request e selecao de dataset dentro de `frontend/views/relatorios.php`
+- a view de relatorios tambem comecou a consolidar a composicao dos dados de apresentacao em helper dedicado, reduzindo mais variaveis locais e passos de montagem na pagina principal
 - `ViagemController` iniciou uma rodada de reducao de complexidade com extracao de validacoes em metodos menores
 - `ManutencaoController` e `AbastecimentoController` seguiram a mesma direcao para reduzir complexidade local
 - `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita

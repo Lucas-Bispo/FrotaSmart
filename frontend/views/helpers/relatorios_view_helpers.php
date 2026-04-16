@@ -198,6 +198,72 @@ function relatorios_export_query(array $filters, string $report): string
 /**
  * @param array<string, string> $filters
  * @param array<string, string> $reportLabels
+ * @return array{
+ *     secretarias:list<string>,
+ *     veiculos:list<array<string, mixed>>,
+ *     summary:array<string, mixed>,
+ *     auditSummary:array<string, mixed>,
+ *     auditTargetTypes:list<string>,
+ *     rows:list<array<string, mixed>>,
+ *     statusOptions:array<string, string>,
+ *     summaryCards:list<array{title:string,value:string,value_class:string}>,
+ *     tableHeaders:list<string>,
+ *     filterFieldsMarkup:string,
+ *     tabs:list<array{label:string,href:string,is_active:bool}>,
+ *     exportQuery:string
+ * }
+ */
+function relatorios_build_page_data($model, string $report, array $filters, array $reportLabels): array
+{
+    $secretarias = $model->getSecretarias();
+    $veiculos = $model->getVeiculos();
+    $summary = $model->getResumo($filters);
+    $auditSummary = $model->getAuditSummary($filters);
+    $auditTargetTypes = $model->getAuditTargetTypes();
+    $rows = relatorios_rows_for_report($model, $report, $filters);
+    $statusOptions = relatorios_status_options($report);
+
+    return [
+        'secretarias' => $secretarias,
+        'veiculos' => $veiculos,
+        'summary' => $summary,
+        'auditSummary' => $auditSummary,
+        'auditTargetTypes' => $auditTargetTypes,
+        'rows' => $rows,
+        'statusOptions' => $statusOptions,
+        'summaryCards' => relatorios_summary_cards($report, $summary, $auditSummary),
+        'tableHeaders' => relatorios_table_headers($report),
+        'filterFieldsMarkup' => relatorios_filter_fields_markup(
+            $report,
+            $filters,
+            $secretarias,
+            $veiculos,
+            $statusOptions,
+            $auditTargetTypes
+        ),
+        'tabs' => relatorios_tabs($report, $filters, $reportLabels),
+        'exportQuery' => relatorios_export_query($filters, $report),
+    ];
+}
+
+/**
+ * @param array<string, string> $filters
+ * @return list<array<string, mixed>>
+ */
+function relatorios_rows_for_report($model, string $report, array $filters): array
+{
+    return match ($report) {
+        'manutencoes' => $model->getManutencaoReport($filters),
+        'viagens' => $model->getViagemReport($filters),
+        'disponibilidade' => $model->getDisponibilidadeReport($filters),
+        'auditoria' => $model->getAuditReport($filters),
+        default => $model->getAbastecimentoReport($filters),
+    };
+}
+
+/**
+ * @param array<string, string> $filters
+ * @param array<string, string> $reportLabels
  * @return list<array{label:string,href:string,is_active:bool}>
  */
 function relatorios_tabs(string $currentReport, array $filters, array $reportLabels): array

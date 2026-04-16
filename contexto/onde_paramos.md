@@ -33,6 +33,13 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - as leituras analiticas e preventivas reaproveitadas pelos relatorios agora tambem vivem em `AbastecimentoReadModel` e `ManutencaoReadModel` dentro de `src/Infrastructure/ReadModels`
 - a consolidacao executiva do dashboard agora tambem saiu de dentro do `RelatorioOperacionalModel` e passou a ficar em `RelatorioExecutiveSummaryService` dentro de `src/Application/Services`
 - o resumo de auditoria e a exportacao CSV do modulo de relatorios agora tambem comecaram a sair do `RelatorioOperacionalModel` e passaram a usar services dedicados em `src/Application/Services`
+- o resumo operacional e a selecao de datasets por tipo de relatorio agora tambem usam services pequenos em `src/Application/Services`, reduzindo mais pontos de decisao dentro da fachada legacy
+- as transformacoes de linhas de viagem, disponibilidade e auditoria agora tambem usam um service dedicado em `src/Application/Services`, reduzindo mais pos-processamento dentro do `RelatorioOperacionalModel`
+- os criterios base do fluxo de abastecimentos agora tambem usam um service dedicado em `src/Application/Services`, reduzindo a normalizacao transacional restante dentro do `RelatorioOperacionalModel`
+- o fluxo completo do relatorio de abastecimentos agora tambem usa um service dedicado em `src/Application/Services`, reunindo criterios, leitura analitica e filtros residuais fora da fachada legacy
+- a normalizacao compartilhada dos filtros de manutencoes, viagens, disponibilidade e auditoria agora tambem usa um service dedicado em `src/Application/Services`, reduzindo repeticao dentro do `RelatorioOperacionalQueryService`
+- a view de relatorios agora tambem usa um service dedicado para capturar filtros da request e resolver a aba ativa, reduzindo preparacao local dentro de `relatorios.php`
+- a view de relatorios agora tambem delega a um helper dedicado a montagem do pacote principal de dados da tela, reduzindo mais atribuicoes locais em `relatorios.php`
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -40,7 +47,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` deslocando pos-processamentos residuais de relatorio, especialmente resumo operacional e selecao de datasets por tipo, para componentes menores e mais testaveis
+- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` deslocando os recortes transacionais restantes do `RelatorioOperacionalModel`, com prioridade para reduzir a orquestracao residual dos relatorios nao cobertos por service dedicado
 
 ## O que ja esta concluido por ciclo
 
