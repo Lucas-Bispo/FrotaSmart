@@ -48,6 +48,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - o `dashboard.php` agora tambem prepara no helper as linhas das tabelas executivas por secretaria, por veiculo e de abastecimentos recentes, reduzindo mais formatacao inline e composicao local
 - o `bootstrap-db.php` agora tambem separa a evolucao de schema por modulo e usa helpers pequenos para colunas, indices e statements, reduzindo mais ramificacao no script operacional
 - os modulos de motoristas e parceiros operacionais agora tambem delegam validacao e normalizacao de entrada para services dedicados em `src/Application/Services`, reduzindo validacoes cruas dentro dos controllers
+- o controller administrativo de usuarios agora tambem delega a validacao de cadastro para um service dedicado em `src/Application/Services`, reduzindo mais regra inline no nivel HTTP
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -55,7 +56,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- revisar se a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` ja pode ser encerrada formalmente e escolher o proximo hotspot entre os controllers administrativos restantes, contratos ainda dependentes de flags e algum residual pequeno de view
+- revisar se a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` ja pode ser encerrada formalmente e escolher o proximo hotspot entre contratos ainda dependentes de flags, pequenos residuais administrativos e algum residual final de view
 
 ## O que ja esta concluido por ciclo
 

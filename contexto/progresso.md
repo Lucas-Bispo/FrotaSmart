@@ -1141,3 +1141,21 @@
 - `php scripts/test-relatorio-view-helpers.php`
 - `php scripts/test-relatorio-request-state-service.php`
 - `php scripts/test-auditoria-relatorio.php`
+
+## 2026-04-16 - Clean Code no controller administrativo de usuarios
+
+### Validacao de cadastro extraida para service dedicado
+- Criado [UserRegistrationInputService.php](../src/Application/Services/UserRegistrationInputService.php) para validar username, senha forte e perfil antes do cadastro administrativo
+- Simplificado [UserController.php](../backend/controllers/UserController.php) para concentrar apenas CSRF, redirecionamento, auditoria e traducao de falhas em flash amigavel
+- Criado [test-user-registration-input-service.php](../scripts/test-user-registration-input-service.php) para cobrir esse recorte sem depender de fluxo HTTP ou banco
+
+### Resultado tecnico
+- o controller administrativo ficou mais alinhado ao padrao aplicado nos controllers operacionais recentes
+- a regra de username e senha forte agora pode evoluir em um ponto pequeno, nomeado e testavel
+- a `Task 24` avanca tambem na frente administrativa, reduzindo mais um controller que ainda estava cru em relacao ao restante do projeto
+
+### Validacao realizada
+- `php -l src/Application/Services/UserRegistrationInputService.php`
+- `php -l backend/controllers/UserController.php`
+- `php -l scripts/test-user-registration-input-service.php`
+- `php scripts/test-user-registration-input-service.php`
