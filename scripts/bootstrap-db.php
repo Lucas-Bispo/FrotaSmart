@@ -43,6 +43,184 @@ function table_has_index(PDO $pdo, string $table, string $indexName): bool
     return (int) $stmt->fetchColumn() > 0;
 }
 
+/**
+ * @param list<string> $statements
+ */
+function execute_statements(PDO $pdo, array $statements): void
+{
+    foreach ($statements as $statement) {
+        $pdo->exec($statement);
+    }
+}
+
+function ensure_column(PDO $pdo, string $table, string $column, string $definition): void
+{
+    if (table_has_column($pdo, $table, $column)) {
+        return;
+    }
+
+    $pdo->exec(sprintf('ALTER TABLE %s ADD COLUMN %s %s', $table, $column, $definition));
+}
+
+function ensure_index(PDO $pdo, string $table, string $indexName, string $definition): void
+{
+    if (table_has_index($pdo, $table, $indexName)) {
+        return;
+    }
+
+    $pdo->exec(sprintf('ALTER TABLE %s ADD %s', $table, $definition));
+}
+
+function bootstrap_veiculos_schema(PDO $pdo): void
+{
+    ensure_column($pdo, 'veiculos', 'renavam', 'VARCHAR(20) NULL AFTER modelo');
+    ensure_column($pdo, 'veiculos', 'chassi', 'VARCHAR(30) NULL AFTER renavam');
+    ensure_column($pdo, 'veiculos', 'ano_fabricacao', 'SMALLINT NULL AFTER chassi');
+    ensure_column($pdo, 'veiculos', 'tipo', 'VARCHAR(50) NULL AFTER ano_fabricacao');
+    ensure_column($pdo, 'veiculos', 'combustivel', 'VARCHAR(30) NULL AFTER tipo');
+    ensure_column($pdo, 'veiculos', 'secretaria_lotada', 'VARCHAR(100) NULL AFTER combustivel');
+    ensure_column($pdo, 'veiculos', 'quilometragem_inicial', 'INT NOT NULL DEFAULT 0 AFTER secretaria_lotada');
+    ensure_column($pdo, 'veiculos', 'data_aquisicao', 'DATE NULL AFTER quilometragem_inicial');
+    ensure_column($pdo, 'veiculos', 'documentos_observacoes', 'TEXT NULL AFTER data_aquisicao');
+    ensure_column($pdo, 'veiculos', 'deleted_at', 'TIMESTAMP NULL DEFAULT NULL AFTER status');
+
+    execute_statements($pdo, [
+        "UPDATE veiculos SET quilometragem_inicial = COALESCE(quilometragem_inicial, 0)",
+        "ALTER TABLE veiculos MODIFY quilometragem_inicial INT NOT NULL DEFAULT 0",
+        "ALTER TABLE veiculos MODIFY status ENUM('ativo', 'manutencao', 'em_viagem', 'reservado', 'baixado') NOT NULL DEFAULT 'ativo'",
+    ]);
+
+    ensure_index($pdo, 'veiculos', 'uk_veiculos_renavam', 'UNIQUE KEY uk_veiculos_renavam (renavam)');
+    ensure_index($pdo, 'veiculos', 'uk_veiculos_chassi', 'UNIQUE KEY uk_veiculos_chassi (chassi)');
+}
+
+function bootstrap_motoristas_schema(PDO $pdo): void
+{
+    ensure_column($pdo, 'motoristas', 'nome', 'VARCHAR(120) NULL AFTER id');
+    ensure_column($pdo, 'motoristas', 'cpf', 'VARCHAR(14) NULL AFTER nome');
+    ensure_column($pdo, 'motoristas', 'telefone', 'VARCHAR(20) NULL AFTER cpf');
+    ensure_column($pdo, 'motoristas', 'secretaria', 'VARCHAR(100) NULL AFTER telefone');
+    ensure_column($pdo, 'motoristas', 'user_id', 'INT NULL AFTER status');
+
+    execute_statements($pdo, [
+        "UPDATE motoristas SET nome = COALESCE(NULLIF(nome, ''), CONCAT('Motorista ', id))",
+        "UPDATE motoristas SET cpf = COALESCE(NULLIF(cpf, ''), LPAD(id, 11, '0'))",
+        "UPDATE motoristas SET secretaria = COALESCE(NULLIF(secretaria, ''), 'Secretaria nao informada')",
+        "ALTER TABLE motoristas MODIFY nome VARCHAR(120) NOT NULL",
+        "ALTER TABLE motoristas MODIFY cpf VARCHAR(14) NOT NULL",
+        "ALTER TABLE motoristas MODIFY secretaria VARCHAR(100) NOT NULL",
+        "ALTER TABLE motoristas MODIFY cnh_numero VARCHAR(20) NOT NULL",
+        "ALTER TABLE motoristas MODIFY cnh_categoria VARCHAR(5) NOT NULL",
+        "ALTER TABLE motoristas MODIFY cnh_vencimento DATE NOT NULL",
+        "ALTER TABLE motoristas MODIFY status ENUM('ativo', 'afastado', 'ferias', 'desligado') DEFAULT 'ativo'",
+        "ALTER TABLE motoristas MODIFY user_id INT NULL",
+    ]);
+
+    ensure_index($pdo, 'motoristas', 'uk_motoristas_cpf', 'UNIQUE KEY uk_motoristas_cpf (cpf)');
+}
+
+function bootstrap_manutencoes_schema(PDO $pdo): void
+{
+    ensure_column($pdo, 'manutencoes', 'data_abertura', 'DATE NULL AFTER veiculo_id');
+    ensure_column($pdo, 'manutencoes', 'data_conclusao', 'DATE NULL AFTER data_abertura');
+    ensure_column($pdo, 'manutencoes', 'status', 'VARCHAR(20) NULL AFTER tipo');
+    ensure_column($pdo, 'manutencoes', 'fornecedor', 'VARCHAR(120) NULL AFTER status');
+    ensure_column($pdo, 'manutencoes', 'parceiro_id', 'INT NULL AFTER fornecedor');
+    ensure_column($pdo, 'manutencoes', 'custo_estimado', 'DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER parceiro_id');
+    ensure_column($pdo, 'manutencoes', 'custo_final', 'DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER custo_estimado');
+    ensure_column($pdo, 'manutencoes', 'observacoes', 'TEXT NULL AFTER descricao');
+    ensure_column($pdo, 'manutencoes', 'km_referencia', 'INT NULL AFTER data_conclusao');
+    ensure_column($pdo, 'manutencoes', 'km_proxima_preventiva', 'INT NULL AFTER km_referencia');
+    ensure_column($pdo, 'manutencoes', 'data_proxima_preventiva', 'DATE NULL AFTER km_proxima_preventiva');
+    ensure_column($pdo, 'manutencoes', 'recorrencia_dias', 'INT NULL AFTER data_proxima_preventiva');
+    ensure_column($pdo, 'manutencoes', 'recorrencia_km', 'INT NULL AFTER recorrencia_dias');
+
+    if (table_has_column($pdo, 'manutencoes', 'data')) {
+        $pdo->exec("UPDATE manutencoes SET data_abertura = COALESCE(data_abertura, data)");
+    }
+
+    if (table_has_column($pdo, 'manutencoes', 'custo')) {
+        $pdo->exec("UPDATE manutencoes SET custo_estimado = COALESCE(custo_estimado, 0.00), custo_final = CASE WHEN custo_final = 0.00 THEN custo ELSE custo_final END");
+    }
+
+    execute_statements($pdo, [
+        "UPDATE manutencoes SET data_abertura = COALESCE(data_abertura, CURRENT_DATE())",
+        "UPDATE manutencoes SET status = COALESCE(NULLIF(status, ''), 'aberta')",
+        "ALTER TABLE manutencoes MODIFY data_abertura DATE NOT NULL",
+        "ALTER TABLE manutencoes MODIFY status ENUM('aberta', 'em_andamento', 'concluida', 'cancelada') NOT NULL DEFAULT 'aberta'",
+    ]);
+}
+
+function bootstrap_abastecimentos_schema(PDO $pdo): void
+{
+    ensure_column($pdo, 'abastecimentos', 'posto', 'VARCHAR(120) NULL AFTER data_abastecimento');
+    ensure_column($pdo, 'abastecimentos', 'parceiro_id', 'INT NULL AFTER motorista_id');
+    ensure_column($pdo, 'abastecimentos', 'tipo_combustivel', 'VARCHAR(20) NULL AFTER posto');
+    ensure_column($pdo, 'abastecimentos', 'litros', 'DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER tipo_combustivel');
+    ensure_column($pdo, 'abastecimentos', 'valor_total', 'DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER litros');
+    ensure_column($pdo, 'abastecimentos', 'km_atual', 'INT NOT NULL DEFAULT 0 AFTER valor_total');
+    ensure_column($pdo, 'abastecimentos', 'observacoes', 'TEXT NULL AFTER km_atual');
+
+    execute_statements($pdo, [
+        "UPDATE abastecimentos SET posto = COALESCE(NULLIF(posto, ''), 'Posto nao informado')",
+        "UPDATE abastecimentos SET tipo_combustivel = COALESCE(NULLIF(tipo_combustivel, ''), 'gasolina')",
+        "ALTER TABLE abastecimentos MODIFY posto VARCHAR(120) NOT NULL",
+        "ALTER TABLE abastecimentos MODIFY tipo_combustivel ENUM('gasolina', 'etanol', 'diesel', 'diesel_s10', 'gnv', 'flex') NOT NULL DEFAULT 'gasolina'",
+    ]);
+}
+
+function bootstrap_viagens_schema(PDO $pdo): void
+{
+    ensure_column($pdo, 'viagens', 'secretaria', 'VARCHAR(100) NULL AFTER secretaria_id');
+    ensure_column($pdo, 'viagens', 'solicitante', 'VARCHAR(120) NULL AFTER secretaria');
+    ensure_column($pdo, 'viagens', 'origem', 'VARCHAR(120) NULL AFTER solicitante');
+    ensure_column($pdo, 'viagens', 'finalidade', 'TEXT NULL AFTER destino');
+    ensure_column($pdo, 'viagens', 'observacoes', 'TEXT NULL AFTER status');
+
+    execute_statements($pdo, [
+        "UPDATE viagens v LEFT JOIN secretarias s ON s.id = v.secretaria_id SET v.secretaria = COALESCE(NULLIF(v.secretaria, ''), s.nome, 'Secretaria nao informada')",
+        "UPDATE viagens SET solicitante = COALESCE(NULLIF(solicitante, ''), 'Solicitante nao informado')",
+        "UPDATE viagens SET origem = COALESCE(NULLIF(origem, ''), 'Origem nao informada')",
+        "UPDATE viagens SET finalidade = COALESCE(NULLIF(finalidade, ''), 'Finalidade nao informada')",
+        "ALTER TABLE viagens MODIFY secretaria_id INT NULL",
+        "ALTER TABLE viagens MODIFY secretaria VARCHAR(100) NOT NULL",
+        "ALTER TABLE viagens MODIFY solicitante VARCHAR(120) NOT NULL",
+        "ALTER TABLE viagens MODIFY origem VARCHAR(120) NOT NULL",
+        "ALTER TABLE viagens MODIFY destino VARCHAR(160) NOT NULL",
+        "ALTER TABLE viagens MODIFY data_saida DATETIME NOT NULL",
+        "ALTER TABLE viagens MODIFY status ENUM('em_curso', 'concluida', 'cancelada') NOT NULL DEFAULT 'em_curso'",
+    ]);
+}
+
+function bootstrap_audit_logs_schema(PDO $pdo): void
+{
+    ensure_column($pdo, 'audit_logs', 'actor_role', 'VARCHAR(50) NULL AFTER actor');
+    ensure_column($pdo, 'audit_logs', 'context_json', 'LONGTEXT NULL AFTER occurred_at');
+
+    ensure_index($pdo, 'audit_logs', 'idx_audit_logs_occurred_at', 'INDEX idx_audit_logs_occurred_at (occurred_at)');
+    ensure_index($pdo, 'audit_logs', 'idx_audit_logs_event', 'INDEX idx_audit_logs_event (event)');
+    ensure_index($pdo, 'audit_logs', 'idx_audit_logs_action', 'INDEX idx_audit_logs_action (action)');
+    ensure_index($pdo, 'audit_logs', 'idx_audit_logs_actor', 'INDEX idx_audit_logs_actor (actor)');
+    ensure_index($pdo, 'audit_logs', 'idx_audit_logs_target', 'INDEX idx_audit_logs_target (target_type, target_id)');
+}
+
+function ensure_admin_user(PDO $pdo, string $adminUsername, string $adminPassword): void
+{
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = :username');
+    $stmt->execute([':username' => $adminUsername]);
+
+    if ((int) $stmt->fetchColumn() === 0) {
+        $hash = password_hash($adminPassword, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
+        $stmt->execute([$adminUsername, $hash, 'admin']);
+        echo "Bootstrap concluido. Usuario administrador criado.\n";
+
+        return;
+    }
+
+    echo "Bootstrap concluido. Usuario administrador ja existe.\n";
+}
+
 $adminUsername = $_ENV['ADMIN_DEFAULT_USER'] ?? 'admin_frota';
 $adminPassword = $_ENV['ADMIN_DEFAULT_PASS'] ?? '';
 
@@ -195,221 +373,14 @@ $statements = [
 ];
 
 try {
-    foreach ($statements as $statement) {
-        $pdo->exec($statement);
-    }
-
-    if (!table_has_column($pdo, 'veiculos', 'renavam')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN renavam VARCHAR(20) NULL AFTER modelo");
-    }
-    if (!table_has_column($pdo, 'veiculos', 'chassi')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN chassi VARCHAR(30) NULL AFTER renavam");
-    }
-    if (!table_has_column($pdo, 'veiculos', 'ano_fabricacao')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN ano_fabricacao SMALLINT NULL AFTER chassi");
-    }
-    if (!table_has_column($pdo, 'veiculos', 'tipo')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN tipo VARCHAR(50) NULL AFTER ano_fabricacao");
-    }
-    if (!table_has_column($pdo, 'veiculos', 'combustivel')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN combustivel VARCHAR(30) NULL AFTER tipo");
-    }
-    if (!table_has_column($pdo, 'veiculos', 'secretaria_lotada')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN secretaria_lotada VARCHAR(100) NULL AFTER combustivel");
-    }
-    if (!table_has_column($pdo, 'veiculos', 'quilometragem_inicial')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN quilometragem_inicial INT NOT NULL DEFAULT 0 AFTER secretaria_lotada");
-    }
-    if (!table_has_column($pdo, 'veiculos', 'data_aquisicao')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN data_aquisicao DATE NULL AFTER quilometragem_inicial");
-    }
-    if (!table_has_column($pdo, 'veiculos', 'documentos_observacoes')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN documentos_observacoes TEXT NULL AFTER data_aquisicao");
-    }
-    if (!table_has_column($pdo, 'veiculos', 'deleted_at')) {
-        $pdo->exec("ALTER TABLE veiculos ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL AFTER status");
-    }
-    $pdo->exec("UPDATE veiculos SET quilometragem_inicial = COALESCE(quilometragem_inicial, 0)");
-    $pdo->exec("ALTER TABLE veiculos MODIFY quilometragem_inicial INT NOT NULL DEFAULT 0");
-    $pdo->exec("ALTER TABLE veiculos MODIFY status ENUM('ativo', 'manutencao', 'em_viagem', 'reservado', 'baixado') NOT NULL DEFAULT 'ativo'");
-    if (!table_has_index($pdo, 'veiculos', 'uk_veiculos_renavam')) {
-        $pdo->exec("ALTER TABLE veiculos ADD UNIQUE KEY uk_veiculos_renavam (renavam)");
-    }
-    if (!table_has_index($pdo, 'veiculos', 'uk_veiculos_chassi')) {
-        $pdo->exec("ALTER TABLE veiculos ADD UNIQUE KEY uk_veiculos_chassi (chassi)");
-    }
-
-    if (!table_has_column($pdo, 'motoristas', 'nome')) {
-        $pdo->exec("ALTER TABLE motoristas ADD COLUMN nome VARCHAR(120) NULL AFTER id");
-    }
-    if (!table_has_column($pdo, 'motoristas', 'cpf')) {
-        $pdo->exec("ALTER TABLE motoristas ADD COLUMN cpf VARCHAR(14) NULL AFTER nome");
-    }
-    if (!table_has_column($pdo, 'motoristas', 'telefone')) {
-        $pdo->exec("ALTER TABLE motoristas ADD COLUMN telefone VARCHAR(20) NULL AFTER cpf");
-    }
-    if (!table_has_column($pdo, 'motoristas', 'secretaria')) {
-        $pdo->exec("ALTER TABLE motoristas ADD COLUMN secretaria VARCHAR(100) NULL AFTER telefone");
-    }
-    if (!table_has_column($pdo, 'motoristas', 'user_id')) {
-        $pdo->exec("ALTER TABLE motoristas ADD COLUMN user_id INT NULL AFTER status");
-    }
-
-    $pdo->exec("UPDATE motoristas SET nome = COALESCE(NULLIF(nome, ''), CONCAT('Motorista ', id))");
-    $pdo->exec("UPDATE motoristas SET cpf = COALESCE(NULLIF(cpf, ''), LPAD(id, 11, '0'))");
-    $pdo->exec("UPDATE motoristas SET secretaria = COALESCE(NULLIF(secretaria, ''), 'Secretaria nao informada')");
-    $pdo->exec("ALTER TABLE motoristas MODIFY nome VARCHAR(120) NOT NULL");
-    $pdo->exec("ALTER TABLE motoristas MODIFY cpf VARCHAR(14) NOT NULL");
-    $pdo->exec("ALTER TABLE motoristas MODIFY secretaria VARCHAR(100) NOT NULL");
-    $pdo->exec("ALTER TABLE motoristas MODIFY cnh_numero VARCHAR(20) NOT NULL");
-    $pdo->exec("ALTER TABLE motoristas MODIFY cnh_categoria VARCHAR(5) NOT NULL");
-    $pdo->exec("ALTER TABLE motoristas MODIFY cnh_vencimento DATE NOT NULL");
-    $pdo->exec("ALTER TABLE motoristas MODIFY status ENUM('ativo', 'afastado', 'ferias', 'desligado') DEFAULT 'ativo'");
-    $pdo->exec("ALTER TABLE motoristas MODIFY user_id INT NULL");
-    if (!table_has_index($pdo, 'motoristas', 'uk_motoristas_cpf')) {
-        $pdo->exec("ALTER TABLE motoristas ADD UNIQUE KEY uk_motoristas_cpf (cpf)");
-    }
-
-    if (!table_has_column($pdo, 'manutencoes', 'data_abertura')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN data_abertura DATE NULL AFTER veiculo_id");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'data_conclusao')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN data_conclusao DATE NULL AFTER data_abertura");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'status')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN status VARCHAR(20) NULL AFTER tipo");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'fornecedor')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN fornecedor VARCHAR(120) NULL AFTER status");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'parceiro_id')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN parceiro_id INT NULL AFTER fornecedor");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'custo_estimado')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN custo_estimado DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER parceiro_id");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'custo_final')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN custo_final DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER custo_estimado");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'observacoes')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN observacoes TEXT NULL AFTER descricao");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'km_referencia')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN km_referencia INT NULL AFTER data_conclusao");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'km_proxima_preventiva')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN km_proxima_preventiva INT NULL AFTER km_referencia");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'data_proxima_preventiva')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN data_proxima_preventiva DATE NULL AFTER km_proxima_preventiva");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'recorrencia_dias')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN recorrencia_dias INT NULL AFTER data_proxima_preventiva");
-    }
-    if (!table_has_column($pdo, 'manutencoes', 'recorrencia_km')) {
-        $pdo->exec("ALTER TABLE manutencoes ADD COLUMN recorrencia_km INT NULL AFTER recorrencia_dias");
-    }
-
-    if (table_has_column($pdo, 'manutencoes', 'data')) {
-        $pdo->exec("UPDATE manutencoes SET data_abertura = COALESCE(data_abertura, data)");
-    }
-    if (table_has_column($pdo, 'manutencoes', 'custo')) {
-        $pdo->exec("UPDATE manutencoes SET custo_estimado = COALESCE(custo_estimado, 0.00), custo_final = CASE WHEN custo_final = 0.00 THEN custo ELSE custo_final END");
-    }
-
-    $pdo->exec("UPDATE manutencoes SET data_abertura = COALESCE(data_abertura, CURRENT_DATE())");
-    $pdo->exec("UPDATE manutencoes SET status = COALESCE(NULLIF(status, ''), 'aberta')");
-    $pdo->exec("ALTER TABLE manutencoes MODIFY data_abertura DATE NOT NULL");
-    $pdo->exec("ALTER TABLE manutencoes MODIFY status ENUM('aberta', 'em_andamento', 'concluida', 'cancelada') NOT NULL DEFAULT 'aberta'");
-
-    if (!table_has_column($pdo, 'abastecimentos', 'posto')) {
-        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN posto VARCHAR(120) NULL AFTER data_abastecimento");
-    }
-    if (!table_has_column($pdo, 'abastecimentos', 'parceiro_id')) {
-        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN parceiro_id INT NULL AFTER motorista_id");
-    }
-    if (!table_has_column($pdo, 'abastecimentos', 'tipo_combustivel')) {
-        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN tipo_combustivel VARCHAR(20) NULL AFTER posto");
-    }
-    if (!table_has_column($pdo, 'abastecimentos', 'litros')) {
-        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN litros DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER tipo_combustivel");
-    }
-    if (!table_has_column($pdo, 'abastecimentos', 'valor_total')) {
-        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN valor_total DECIMAL(10, 2) NOT NULL DEFAULT 0.00 AFTER litros");
-    }
-    if (!table_has_column($pdo, 'abastecimentos', 'km_atual')) {
-        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN km_atual INT NOT NULL DEFAULT 0 AFTER valor_total");
-    }
-    if (!table_has_column($pdo, 'abastecimentos', 'observacoes')) {
-        $pdo->exec("ALTER TABLE abastecimentos ADD COLUMN observacoes TEXT NULL AFTER km_atual");
-    }
-
-    $pdo->exec("UPDATE abastecimentos SET posto = COALESCE(NULLIF(posto, ''), 'Posto nao informado')");
-    $pdo->exec("UPDATE abastecimentos SET tipo_combustivel = COALESCE(NULLIF(tipo_combustivel, ''), 'gasolina')");
-    $pdo->exec("ALTER TABLE abastecimentos MODIFY posto VARCHAR(120) NOT NULL");
-    $pdo->exec("ALTER TABLE abastecimentos MODIFY tipo_combustivel ENUM('gasolina', 'etanol', 'diesel', 'diesel_s10', 'gnv', 'flex') NOT NULL DEFAULT 'gasolina'");
-
-    if (!table_has_column($pdo, 'viagens', 'secretaria')) {
-        $pdo->exec("ALTER TABLE viagens ADD COLUMN secretaria VARCHAR(100) NULL AFTER secretaria_id");
-    }
-    if (!table_has_column($pdo, 'viagens', 'solicitante')) {
-        $pdo->exec("ALTER TABLE viagens ADD COLUMN solicitante VARCHAR(120) NULL AFTER secretaria");
-    }
-    if (!table_has_column($pdo, 'viagens', 'origem')) {
-        $pdo->exec("ALTER TABLE viagens ADD COLUMN origem VARCHAR(120) NULL AFTER solicitante");
-    }
-    if (!table_has_column($pdo, 'viagens', 'finalidade')) {
-        $pdo->exec("ALTER TABLE viagens ADD COLUMN finalidade TEXT NULL AFTER destino");
-    }
-    if (!table_has_column($pdo, 'viagens', 'observacoes')) {
-        $pdo->exec("ALTER TABLE viagens ADD COLUMN observacoes TEXT NULL AFTER status");
-    }
-
-    $pdo->exec("UPDATE viagens v LEFT JOIN secretarias s ON s.id = v.secretaria_id SET v.secretaria = COALESCE(NULLIF(v.secretaria, ''), s.nome, 'Secretaria nao informada')");
-    $pdo->exec("UPDATE viagens SET solicitante = COALESCE(NULLIF(solicitante, ''), 'Solicitante nao informado')");
-    $pdo->exec("UPDATE viagens SET origem = COALESCE(NULLIF(origem, ''), 'Origem nao informada')");
-    $pdo->exec("UPDATE viagens SET finalidade = COALESCE(NULLIF(finalidade, ''), 'Finalidade nao informada')");
-    $pdo->exec("ALTER TABLE viagens MODIFY secretaria_id INT NULL");
-    $pdo->exec("ALTER TABLE viagens MODIFY secretaria VARCHAR(100) NOT NULL");
-    $pdo->exec("ALTER TABLE viagens MODIFY solicitante VARCHAR(120) NOT NULL");
-    $pdo->exec("ALTER TABLE viagens MODIFY origem VARCHAR(120) NOT NULL");
-    $pdo->exec("ALTER TABLE viagens MODIFY destino VARCHAR(160) NOT NULL");
-    $pdo->exec("ALTER TABLE viagens MODIFY data_saida DATETIME NOT NULL");
-    $pdo->exec("ALTER TABLE viagens MODIFY status ENUM('em_curso', 'concluida', 'cancelada') NOT NULL DEFAULT 'em_curso'");
-
-    if (! table_has_column($pdo, 'audit_logs', 'actor_role')) {
-        $pdo->exec("ALTER TABLE audit_logs ADD COLUMN actor_role VARCHAR(50) NULL AFTER actor");
-    }
-    if (! table_has_column($pdo, 'audit_logs', 'context_json')) {
-        $pdo->exec("ALTER TABLE audit_logs ADD COLUMN context_json LONGTEXT NULL AFTER occurred_at");
-    }
-    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_occurred_at')) {
-        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_occurred_at (occurred_at)");
-    }
-    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_event')) {
-        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_event (event)");
-    }
-    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_action')) {
-        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_action (action)");
-    }
-    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_actor')) {
-        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_actor (actor)");
-    }
-    if (! table_has_index($pdo, 'audit_logs', 'idx_audit_logs_target')) {
-        $pdo->exec("ALTER TABLE audit_logs ADD INDEX idx_audit_logs_target (target_type, target_id)");
-    }
-
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = :username');
-    $stmt->execute([':username' => $adminUsername]);
-
-    if ((int) $stmt->fetchColumn() === 0) {
-        $hash = password_hash($adminPassword, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare('INSERT INTO users (username, password, role) VALUES (?, ?, ?)');
-        $stmt->execute([$adminUsername, $hash, 'admin']);
-        echo "Bootstrap concluido. Usuario administrador criado.\n";
-    } else {
-        echo "Bootstrap concluido. Usuario administrador ja existe.\n";
-    }
+    execute_statements($pdo, $statements);
+    bootstrap_veiculos_schema($pdo);
+    bootstrap_motoristas_schema($pdo);
+    bootstrap_manutencoes_schema($pdo);
+    bootstrap_abastecimentos_schema($pdo);
+    bootstrap_viagens_schema($pdo);
+    bootstrap_audit_logs_schema($pdo);
+    ensure_admin_user($pdo, $adminUsername, $adminPassword);
 } catch (PDOException $e) {
     error_log('Erro no bootstrap do banco: ' . $e->getMessage());
     exit("Erro ao executar bootstrap do banco. Consulte os logs.\n");

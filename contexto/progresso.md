@@ -1059,3 +1059,18 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-16 - Clean Code no bootstrap do banco
+
+### Script operacional com responsabilidades menores
+- Refatorado [bootstrap-db.php](../scripts/bootstrap-db.php) para separar a evolucao de schema por modulo (`veiculos`, `motoristas`, `manutencoes`, `abastecimentos`, `viagens` e `audit_logs`)
+- Criados helpers pequenos no proprio script para execucao de statements e garantia de colunas e indices, reduzindo repeticao local e ramificacao encadeada
+- Mantido o comportamento do bootstrap, inclusive a garantia do usuario administrador padrao
+
+### Resultado tecnico
+- o script operacional ficou mais alinhado ao guia [padrao_clean_code_frotasmart.md](../engenharia/padrao_clean_code_frotasmart.md) ao reduzir tamanho e responsabilidade do bloco principal
+- a leitura do bootstrap agora ficou mais previsivel porque cada parte do schema tem um ponto nomeado e isolado
+- o proximo ajuste de schema tende a ser mais seguro, porque o arquivo perdeu parte relevante do acoplamento estrutural local
+
+### Validacao realizada
+- pendente executar nesta retomada
