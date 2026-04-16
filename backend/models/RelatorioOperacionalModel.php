@@ -12,6 +12,7 @@ final class RelatorioOperacionalModel
     private \FrotaSmart\Infrastructure\ReadModels\ManutencaoReadModel $manutencoes;
     private \FrotaSmart\Application\Services\RelatorioExecutiveSummaryService $executiveSummaries;
     private \FrotaSmart\Application\Services\RelatorioAuditSummaryService $auditSummaries;
+    private \FrotaSmart\Application\Services\RelatorioAuditReportService $auditReport;
     private \FrotaSmart\Application\Services\RelatorioCsvExporterService $csvExporter;
     private \FrotaSmart\Application\Services\RelatorioOperationalSummaryService $operationalSummaries;
     private \FrotaSmart\Application\Services\RelatorioDatasetSelectorService $datasetSelector;
@@ -38,6 +39,11 @@ final class RelatorioOperacionalModel
             $this->abastecimentos,
             new \FrotaSmart\Application\Services\RelatorioAbastecimentoCriteriaService(),
             new \FrotaSmart\Application\Services\RelatorioAbastecimentoFilterService()
+        );
+        $this->auditReport = new \FrotaSmart\Application\Services\RelatorioAuditReportService(
+            $this->queries,
+            $this->rowTransformer,
+            $this->auditSummaries
         );
     }
 
@@ -93,27 +99,22 @@ final class RelatorioOperacionalModel
 
     public function getAuditReport(array $filters): array
     {
-        return $this->fetchAuditRows($filters);
+        return $this->auditReport->report($filters);
     }
 
     public function getAuditSummary(array $filters): array
     {
-        return $this->auditSummaries->summarize($this->fetchAuditRows($filters));
+        return $this->auditReport->summary($filters);
     }
 
     public function getAuditTargetTypes(): array
     {
-        return $this->queries->fetchAuditTargetTypes();
+        return $this->auditReport->targetTypes();
     }
 
     public function exportCsv(string $report, array $filters): string
     {
         return $this->csvExporter->export($this->resolveReportRows($report, $filters));
-    }
-
-    private function fetchAuditRows(array $filters): array
-    {
-        return $this->rowTransformer->withAuditContextSummary($this->queries->fetchAuditRows($filters));
     }
 
     /**

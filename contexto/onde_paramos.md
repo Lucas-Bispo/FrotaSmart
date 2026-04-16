@@ -40,6 +40,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - a normalizacao compartilhada dos filtros de manutencoes, viagens, disponibilidade e auditoria agora tambem usa um service dedicado em `src/Application/Services`, reduzindo repeticao dentro do `RelatorioOperacionalQueryService`
 - a view de relatorios agora tambem usa um service dedicado para capturar filtros da request e resolver a aba ativa, reduzindo preparacao local dentro de `relatorios.php`
 - a view de relatorios agora tambem delega a um helper dedicado a montagem do pacote principal de dados da tela, reduzindo mais atribuicoes locais em `relatorios.php`
+- o fluxo de auditoria do modulo de relatorios agora tambem usa um service dedicado em `src/Application/Services`, reunindo leitura, transformacao e resumo fora da fachada legacy
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -47,7 +48,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` deslocando os recortes transacionais restantes do `RelatorioOperacionalModel`, com prioridade para reduzir a orquestracao residual dos relatorios nao cobertos por service dedicado
+- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` deslocando os recortes restantes do `RelatorioOperacionalModel`, com prioridade para manutencoes, viagens e disponibilidade
 
 ## O que ja esta concluido por ciclo
 

@@ -996,3 +996,19 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-16 - Task 24, auditoria desacoplada da fachada legacy
+
+### Fluxo de auditoria reunido em service dedicado
+- Criado [AuditReportReadModelInterface.php](../src/Application/Contracts/AuditReportReadModelInterface.php) para explicitar o contrato minimo de leitura do relatorio de auditoria
+- Criado [RelatorioAuditReportService.php](../src/Application/Services/RelatorioAuditReportService.php) para reunir leitura, transformacao de contexto e resumo da auditoria em um componente unico
+- Simplificado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para delegar o fluxo de auditoria ao novo service
+- Criado o teste [test-relatorio-audit-report-service.php](../scripts/test-relatorio-audit-report-service.php) para validar esse recorte sem depender de banco real
+
+### Resultado tecnico
+- a fachada legacy de relatorios perdeu mais uma orquestracao residual e ficou mais proxima de um ponto de composicao fino
+- o relatorio de auditoria agora pode evoluir em um unico service, sem espalhar leitura, transformacao e resumo pelo model legado
+- a `Task 24` segue avancando em passos pequenos, testaveis e aderentes ao guia de Clean Code do projeto
+
+### Validacao realizada
+- pendente executar nesta retomada

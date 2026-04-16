@@ -42,6 +42,7 @@
 - o resumo operacional e a selecao de datasets dos relatorios agora tambem usam services dedicados em `src/Application/Services`
 - as transformacoes de linhas de relatorios agora tambem usam service dedicado em `src/Application/Services`
 - o fluxo completo de abastecimentos do modulo de relatorios agora tambem usa um service dedicado em `src/Application/Services`
+- o fluxo de auditoria do modulo de relatorios agora tambem usa um service dedicado em `src/Application/Services`
 - O projeto agora possui um guia formal de Clean Code em `engenharia/padrao_clean_code_frotasmart.md`
 - Os controllers operacionais principais ja comecaram a migrar para validacoes menores e mais nomeadas
 - O modulo de veiculos agora tambem usa contratos mais explicitos para separar leitura ativa de leitura historica
@@ -75,6 +76,7 @@
 - a normalizacao compartilhada dos filtros de consulta tambem comecou a sair do `RelatorioOperacionalQueryService`, reduzindo repeticao e ramificacao entre relatorios transacionais
 - a preparacao de estado da tela de relatorios tambem comecou a sair da propria view, reduzindo montagem de request e selecao de dataset dentro de `frontend/views/relatorios.php`
 - a view de relatorios tambem comecou a consolidar a composicao dos dados de apresentacao em helper dedicado, reduzindo mais variaveis locais e passos de montagem na pagina principal
+- a leitura, transformacao e sumarizacao da auditoria tambem comecaram a sair do `RelatorioOperacionalModel`, reduzindo mais composicao residual nessa fachada legacy
 - `ViagemController` iniciou uma rodada de reducao de complexidade com extracao de validacoes em metodos menores
 - `ManutencaoController` e `AbastecimentoController` seguiram a mesma direcao para reduzir complexidade local
 - `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita
