@@ -3,67 +3,73 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config/security.php';
+
 secure_session_start();
 require_same_origin_post();
 require_once __DIR__ . '/../models/UserModel.php';
 
-class AuthController {
-    public function login() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-                set_flash('error', 'Sessão inválida. Atualize a página e tente novamente.');
-                header('Location: /login.php');
-                exit;
-            }
+class AuthController
+{
+    private \FrotaSmart\Application\Services\AuthLoginInputService $inputService;
 
-            $username = trim((string) ($_POST['username'] ?? ''));
-            $password = (string) ($_POST['password'] ?? '');
-
-            if ($this->isLocked()) {
-                $remaining = max(1, ($_SESSION['auth_lock_until'] ?? time()) - time());
-                set_flash('error', "Muitas tentativas. Aguarde {$remaining} segundos e tente novamente.");
-                set_flash('old_username', $username);
-                audit_log('auth.login.rate_limited', ['username' => $username]);
-                header('Location: /login.php');
-                exit;
-            }
-
-            if ($username === '' || $password === '') {
-                set_flash('error', 'Informe usuário e senha.');
-                set_flash('old_username', $username);
-                header('Location: /login.php');
-                exit;
-            }
-
-            $model = new UserModel();
-            $user = $model->login($username, $password);
-
-            if ($user) {
-                session_regenerate_id(true);
-                $_SESSION['auth_attempts'] = 0;
-                unset($_SESSION['auth_lock_until']);
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user'] = $user['username'];
-                $_SESSION['role'] = $user['role'];
-                $_SESSION['session_fingerprint'] = session_fingerprint();
-                $_SESSION['last_activity_at'] = time();
-                $_SESSION['last_regenerated_at'] = time();
-                set_flash('success', 'Login realizado com sucesso.');
-                audit_log('auth.login.success', ['username' => $username, 'role' => $user['role']]);
-                header('Location: /dashboard.php');
-                exit;
-            } else {
-                $this->registerFailedAttempt();
-                audit_log('auth.login.failed', ['username' => $username]);
-                set_flash('error', 'Login falhou. Verifique suas credenciais.');
-                set_flash('old_username', $username);
-                header('Location: /login.php');
-                exit;
-            }
-        }
+    public function __construct()
+    {
+        $this->inputService = new \FrotaSmart\Application\Services\AuthLoginInputService();
     }
 
-    public function logout() {
+    public function login(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            return;
+        }
+
+        if (! verify_csrf_token($_POST['csrf_token'] ?? null)) {
+            $this->redirectToLogin('error', 'Sessao invalida. Atualize a pagina e tente novamente.');
+        }
+
+        $username = trim((string) ($_POST['username'] ?? ''));
+
+        if ($this->isLocked()) {
+            $remaining = max(1, ((int) ($_SESSION['auth_lock_until'] ?? time())) - time());
+            set_flash('old_username', $username);
+            audit_log('auth.login.rate_limited', ['username' => $username]);
+            $this->redirectToLogin('error', "Muitas tentativas. Aguarde {$remaining} segundos e tente novamente.");
+        }
+
+        try {
+            $payload = $this->inputService->validate($_POST);
+        } catch (\DomainException $exception) {
+            set_flash('old_username', $username);
+            $this->redirectToLogin('error', $exception->getMessage());
+        }
+
+        $model = new UserModel();
+        $user = $model->login($payload['username'], $payload['password']);
+
+        if ($user) {
+            session_regenerate_id(true);
+            $_SESSION['auth_attempts'] = 0;
+            unset($_SESSION['auth_lock_until']);
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user'] = $user['username'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['session_fingerprint'] = session_fingerprint();
+            $_SESSION['last_activity_at'] = time();
+            $_SESSION['last_regenerated_at'] = time();
+            set_flash('success', 'Login realizado com sucesso.');
+            audit_log('auth.login.success', ['username' => $payload['username'], 'role' => $user['role']]);
+            header('Location: /dashboard.php');
+            exit;
+        }
+
+        $this->registerFailedAttempt();
+        audit_log('auth.login.failed', ['username' => $payload['username']]);
+        set_flash('old_username', $payload['username']);
+        $this->redirectToLogin('error', 'Login falhou. Verifique suas credenciais.');
+    }
+
+    public function logout(): void
+    {
         audit_log('auth.logout');
         destroy_authenticated_session();
         secure_session_start();
@@ -73,9 +79,9 @@ class AuthController {
 
     private function registerFailedAttempt(): void
     {
-        $_SESSION['auth_attempts'] = ($_SESSION['auth_attempts'] ?? 0) + 1;
+        $_SESSION['auth_attempts'] = ((int) ($_SESSION['auth_attempts'] ?? 0)) + 1;
 
-        if ($_SESSION['auth_attempts'] >= 5) {
+        if ((int) $_SESSION['auth_attempts'] >= 5) {
             $_SESSION['auth_lock_until'] = time() + 60;
             $_SESSION['auth_attempts'] = 0;
         }
@@ -83,26 +89,35 @@ class AuthController {
 
     private function isLocked(): bool
     {
-        if (!isset($_SESSION['auth_lock_until'])) {
+        if (! isset($_SESSION['auth_lock_until'])) {
             return false;
         }
 
-        if ($_SESSION['auth_lock_until'] <= time()) {
+        if ((int) $_SESSION['auth_lock_until'] <= time()) {
             unset($_SESSION['auth_lock_until']);
             return false;
         }
 
         return true;
     }
+
+    private function redirectToLogin(string $level, string $message): void
+    {
+        set_flash($level, $message);
+        header('Location: /login.php');
+        exit;
+    }
 }
 
 $controller = new AuthController();
-if (($_SERVER['REQUEST_METHOD'] === 'POST') && (($_POST['action'] ?? '') === 'logout')) {
-    if (!verify_csrf_token($_POST['csrf_token'] ?? null)) {
-        set_flash('error', 'Requisição inválida. Atualize a página e tente novamente.');
+
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && (($_POST['action'] ?? '') === 'logout')) {
+    if (! verify_csrf_token($_POST['csrf_token'] ?? null)) {
+        set_flash('error', 'Requisicao invalida. Atualize a pagina e tente novamente.');
         header('Location: /dashboard.php');
         exit;
     }
+
     $controller->logout();
 } else {
     $controller->login();

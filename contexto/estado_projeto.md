@@ -89,6 +89,7 @@
 - `ManutencaoController` e `AbastecimentoController` seguiram a mesma direcao para reduzir complexidade local
 - `MotoristaController` e `ParceiroOperacionalController` agora tambem delegam normalizacao e validacao de entrada para services pequenos e testaveis em `src/Application/Services`
 - `UserController` agora tambem delega a validacao de cadastro administrativo para um service pequeno e testavel em `src/Application/Services`
+- `AuthController` agora tambem delega a validacao basica de login para um service pequeno e testavel em `src/Application/Services`
 - `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita
 - `dashboard.php` agora reaproveita `dashboard_view_helpers.php` para organizar parte da camada de apresentacao em funcoes puras e estruturas declarativas
 - `dashboard.php` agora tambem reaproveita o helper para preparar linhas prontas das tabelas executivas e de abastecimentos recentes, reduzindo mais formatacao inline na view

@@ -1159,3 +1159,21 @@
 - `php -l backend/controllers/UserController.php`
 - `php -l scripts/test-user-registration-input-service.php`
 - `php scripts/test-user-registration-input-service.php`
+
+## 2026-04-16 - Clean Code no fluxo administrativo de autenticacao
+
+### Validacao de login extraida para service dedicado
+- Criado [AuthLoginInputService.php](../src/Application/Services/AuthLoginInputService.php) para validar as credenciais basicas do login antes da autenticacao
+- Simplificado [AuthController.php](../backend/controllers/AuthController.php) para concentrar lockout, sessao, auditoria e redirecionamento, reduzindo validacao inline no fluxo HTTP
+- Criado [test-auth-login-input-service.php](../scripts/test-auth-login-input-service.php) para cobrir esse recorte sem depender de banco ou sessao real
+
+### Resultado tecnico
+- o fluxo administrativo de autenticacao ficou mais alinhado ao mesmo padrao aplicado nos demais controllers refatorados
+- a validacao de entrada do login agora pode evoluir em um ponto pequeno e testavel, sem acoplar regra simples ao controller
+- a `Task 24` segue limpando hotspots residuais sem alterar o comportamento esperado do acesso ao sistema
+
+### Validacao realizada
+- `php -l src/Application/Services/AuthLoginInputService.php`
+- `php -l backend/controllers/AuthController.php`
+- `php -l scripts/test-auth-login-input-service.php`
+- `php scripts/test-auth-login-input-service.php`
