@@ -30,18 +30,13 @@ require_once __DIR__ . '/../includes/header.php';
 
 $totalMotoristas = count($motoristas);
 $motoristasAtivos = 0;
-$cnhsVencendo = 0;
+$cnhsVencendo = $model->countCnhsVencendo();
 $today = new DateTimeImmutable('today');
 $alertLimit = $today->modify('+30 days');
 
 foreach ($motoristas as $motorista) {
     if (($motorista['status'] ?? '') === 'ativo') {
         $motoristasAtivos++;
-    }
-
-    $vencimento = DateTimeImmutable::createFromFormat('Y-m-d', (string) ($motorista['cnh_vencimento'] ?? ''));
-    if ($vencimento instanceof DateTimeImmutable && $vencimento >= $today && $vencimento <= $alertLimit) {
-        $cnhsVencendo++;
     }
 }
 

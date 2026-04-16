@@ -1036,6 +1036,23 @@
 - `php -l scripts/test-parceiro-operacional-model.php`
 - `php scripts/test-parceiro-operacional-model.php`
 
+## 2026-04-16 - Continuidade tecnica apos Task 24, etapa 6
+
+### Motoristas com PDO explicito e resumo reaproveitado na view
+- Refatorado [MotoristaModel.php](../backend/models/MotoristaModel.php) para aceitar `PDO` explicito e reduzir a dependencia direta de `global $pdo`
+- Ajustada [motoristas.php](../frontend/views/motoristas.php) para reaproveitar `countCnhsVencendo()` no card executivo da tela, reduzindo regra duplicada na view
+- Atualizado [test-motorista-model.php](../scripts/test-motorista-model.php) para validar a contagem de CNHs vencendo apenas para motoristas com status `ativo`
+
+### Resultado tecnico
+- o modulo de motoristas reduz mais um hotspot pequeno de persistencia legacy, alinhando o model ao mesmo padrao de conexao explicita adotado em outros modulos
+- a view administrativa ficou um pouco mais declarativa ao reutilizar um comportamento que ja pertencia ao model, mantendo a regra de contagem consistente com o dominio
+
+### Validacao realizada
+- `php -l backend/models/MotoristaModel.php`
+- `php -l frontend/views/motoristas.php`
+- `php -l scripts/test-motorista-model.php`
+- `php scripts/test-motorista-model.php`
+
 ## 2026-04-16 - Task 24, auditoria desacoplada da fachada legacy
 
 ### Fluxo de auditoria reunido em service dedicado

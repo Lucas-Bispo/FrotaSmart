@@ -37,6 +37,11 @@ if ($created === null) {
     throw new RuntimeException('Motorista de teste nao foi encontrado apos cadastro.');
 }
 
+$vencendoAtivo = $model->countCnhsVencendo(3650);
+if ($vencendoAtivo < 1) {
+    throw new RuntimeException('Contagem de CNHs vencendo deveria considerar o motorista de teste ativo.');
+}
+
 $model->update((int) $created['id'], [
     'nome' => 'Motorista Teste Atualizado',
     'cpf' => $cpf,
@@ -52,6 +57,11 @@ $updated = $model->findById((int) $created['id']);
 
 if ($updated === null || $updated['nome'] !== 'Motorista Teste Atualizado' || $updated['status'] !== 'ferias') {
     throw new RuntimeException('Motorista nao foi atualizado corretamente.');
+}
+
+$vencendoAfastado = $model->countCnhsVencendo(3650);
+if ($vencendoAfastado !== 0) {
+    throw new RuntimeException('Contagem de CNHs vencendo nao deveria considerar motorista fora do status ativo.');
 }
 
 $pdo->prepare('DELETE FROM motoristas WHERE id = ?')->execute([(int) $created['id']]);
