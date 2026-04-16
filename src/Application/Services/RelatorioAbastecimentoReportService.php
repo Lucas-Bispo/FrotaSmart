@@ -24,11 +24,7 @@ final class RelatorioAbastecimentoReportService
         $criteria = $this->criteria->fromFilters($inputFilters);
 
         return $this->filters->filter(
-            $this->readModel->fetchAll(
-                $criteria['veiculo_id'],
-                $criteria['data_inicio'],
-                $criteria['data_fim']
-            ),
+            $this->readModel->fetchByCriteria($criteria),
             $criteria['secretaria'],
             $criteria['status']
         );

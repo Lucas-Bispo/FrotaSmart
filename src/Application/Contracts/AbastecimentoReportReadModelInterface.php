@@ -7,7 +7,8 @@ namespace FrotaSmart\Application\Contracts;
 interface AbastecimentoReportReadModelInterface
 {
     /**
+     * @param array{veiculo_id:?int,data_inicio:?string,data_fim:?string} $criteria
      * @return list<array<string, mixed>>
      */
-    public function fetchAll(?int $veiculoId = null, ?string $dataInicio = null, ?string $dataFim = null): array;
+    public function fetchByCriteria(array $criteria): array;
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $abastecimentoReadModel = new class () implements \FrotaSmart\Application\Contracts\AbastecimentoReportReadModelInterface {
-    public function fetchAll(?int $veiculoId = null, ?string $dataInicio = null, ?string $dataFim = null): array
+    public function fetchByCriteria(array $criteria): array
     {
         return [
             ['tipo' => 'abastecimento', 'secretaria' => 'Saude', 'anomalia_status' => 'critico'],

@@ -5,15 +5,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $readModel = new class () implements \FrotaSmart\Application\Contracts\AbastecimentoReportReadModelInterface {
-    public ?int $lastVeiculoId = null;
-    public ?string $lastDataInicio = null;
-    public ?string $lastDataFim = null;
+    /** @var array<string, int|string|null> */
+    public array $lastCriteria = [];
 
-    public function fetchAll(?int $veiculoId = null, ?string $dataInicio = null, ?string $dataFim = null): array
+    public function fetchByCriteria(array $criteria): array
     {
-        $this->lastVeiculoId = $veiculoId;
-        $this->lastDataInicio = $dataInicio;
-        $this->lastDataFim = $dataFim;
+        $this->lastCriteria = $criteria;
 
         return [
             ['id' => 1, 'placa' => 'AAA1A11', 'secretaria' => 'Saude', 'anomalia_status' => 'normal'],
@@ -55,9 +52,9 @@ if (count($veiculoPeriodo) !== 3) {
     throw new RuntimeException('Relatorio de abastecimento deveria preservar as linhas retornadas pelo read model quando nao houver filtro residual.');
 }
 
-if ($readModel->lastVeiculoId !== 1
-    || $readModel->lastDataInicio !== '2026-04-02'
-    || $readModel->lastDataFim !== '2026-04-30') {
+if (($readModel->lastCriteria['veiculo_id'] ?? null) !== 1
+    || ($readModel->lastCriteria['data_inicio'] ?? null) !== '2026-04-02'
+    || ($readModel->lastCriteria['data_fim'] ?? null) !== '2026-04-30') {
     throw new RuntimeException('Relatorio de abastecimento deveria repassar criterios normalizados ao read model.');
 }
 

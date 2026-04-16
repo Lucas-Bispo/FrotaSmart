@@ -1208,3 +1208,25 @@
 - `php scripts/test-repository-contract.php`
 - `php scripts/test-repository-pdo.php`
 - `php scripts/test-veiculo-service.php`
+
+## 2026-04-16 - Continuidade tecnica apos Task 24, etapa 2
+
+### Contrato de leitura de abastecimentos sem assinatura sobrecarregada
+- Refatorado [AbastecimentoReportReadModelInterface.php](../src/Application/Contracts/AbastecimentoReportReadModelInterface.php) para trocar a assinatura com parametros opcionais por um criterio nomeado
+- Atualizados [AbastecimentoReadModel.php](../src/Infrastructure/ReadModels/AbastecimentoReadModel.php), [RelatorioAbastecimentoReportService.php](../src/Application/Services/RelatorioAbastecimentoReportService.php) e [RelatorioExecutiveSummaryService.php](../src/Application/Services/RelatorioExecutiveSummaryService.php) para consumir o contrato explicito
+- Ajustados [test-relatorio-abastecimento-report-service.php](../scripts/test-relatorio-abastecimento-report-service.php) e [test-relatorio-export-service.php](../scripts/test-relatorio-export-service.php) para validar o contrato novo
+
+### Resultado tecnico
+- o projeto reduz mais um uso de assinatura sobrecarregada por nulos em um ponto central da leitura analitica
+- a leitura de abastecimentos ficou mais aderente ao padrao de criterios nomeados que ja vinha sendo adotado no modulo de relatorios
+
+### Validacao realizada
+- `php -l src/Application/Contracts/AbastecimentoReportReadModelInterface.php`
+- `php -l src/Infrastructure/ReadModels/AbastecimentoReadModel.php`
+- `php -l src/Application/Services/RelatorioAbastecimentoReportService.php`
+- `php -l src/Application/Services/RelatorioExecutiveSummaryService.php`
+- `php -l scripts/test-relatorio-abastecimento-report-service.php`
+- `php -l scripts/test-relatorio-export-service.php`
+- `php scripts/test-relatorio-abastecimento-report-service.php`
+- `php scripts/test-relatorio-export-service.php`
+- `php scripts/test-relatorio-executivo.php`

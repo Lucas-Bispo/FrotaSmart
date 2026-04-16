@@ -48,7 +48,11 @@ final class RelatorioExecutiveSummaryService
             $summaries[$name]['km_viagens_periodo'] = (int) ($row['km_viagens_periodo'] ?? 0);
         }
 
-        foreach ($this->abastecimentos->fetchAll(null, $dataInicio, $dataFim) as $row) {
+        foreach ($this->abastecimentos->fetchByCriteria([
+            'veiculo_id' => null,
+            'data_inicio' => $dataInicio,
+            'data_fim' => $dataFim,
+        ]) as $row) {
             $name = $this->touchSecretariaSummary(
                 $summaries,
                 $row['veiculo_secretaria_lotada'] ?? $row['secretaria'] ?? null
@@ -159,7 +163,11 @@ final class RelatorioExecutiveSummaryService
             $summaries[$veiculoId]['km_viagens_periodo'] = (int) ($row['km_viagens_periodo'] ?? 0);
         }
 
-        foreach ($this->abastecimentos->fetchAll(null, $dataInicio, $dataFim) as $row) {
+        foreach ($this->abastecimentos->fetchByCriteria([
+            'veiculo_id' => null,
+            'data_inicio' => $dataInicio,
+            'data_fim' => $dataFim,
+        ]) as $row) {
             $veiculoId = (int) ($row['veiculo_id'] ?? 0);
             if (! isset($summaries[$veiculoId])) {
                 continue;
