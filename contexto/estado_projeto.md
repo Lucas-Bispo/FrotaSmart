@@ -87,6 +87,7 @@
 - o `bootstrap-db.php` tambem comecou a quebrar sua evolucao de schema em funcoes menores por modulo, reduzindo a concentracao de condicionais no script de ambiente
 - `ViagemController` iniciou uma rodada de reducao de complexidade com extracao de validacoes em metodos menores
 - `ManutencaoController` e `AbastecimentoController` seguiram a mesma direcao para reduzir complexidade local
+- `MotoristaController` e `ParceiroOperacionalController` agora tambem delegam normalizacao e validacao de entrada para services pequenos e testaveis em `src/Application/Services`
 - `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita
 - `dashboard.php` agora reaproveita `dashboard_view_helpers.php` para organizar parte da camada de apresentacao em funcoes puras e estruturas declarativas
 - `relatorios.php` agora reaproveita `relatorios_view_helpers.php` para reduzir condicionais de apresentacao e centralizar variacoes por tipo de relatorio

@@ -1074,3 +1074,28 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-16 - Clean Code nos controllers de cadastro operacional
+
+### Validacao de entrada extraida para services dedicados
+- Criado [MotoristaInputService.php](../src/Application/Services/MotoristaInputService.php) para normalizar e validar o payload de motoristas fora do controller
+- Criado [ParceiroOperacionalInputService.php](../src/Application/Services/ParceiroOperacionalInputService.php) para normalizar e validar o payload de parceiros operacionais fora do controller
+- Simplificados [MotoristaController.php](../backend/controllers/MotoristaController.php) e [ParceiroOperacionalController.php](../backend/controllers/ParceiroOperacionalController.php) para delegar a esses services e apenas converter falhas em flash amigavel
+- Criados [test-motorista-input-service.php](../scripts/test-motorista-input-service.php) e [test-parceiro-operacional-input-service.php](../scripts/test-parceiro-operacional-input-service.php) para cobrir esse recorte sem depender de fluxo HTTP
+
+### Resultado tecnico
+- os controllers operacionais perderam mais uma camada de validacao extensa inline e ficaram mais proximos do papel de orquestracao HTTP definido no guia de Clean Code
+- a normalizacao de entrada de motoristas e parceiros agora pode evoluir de forma isolada, com feedback rapido em testes pequenos
+- a `Task 24` avanca tambem no hotspot de controllers, sem interromper a compatibilidade do legado
+
+### Validacao realizada
+- `php -l src/Application/Services/MotoristaInputService.php`
+- `php -l src/Application/Services/ParceiroOperacionalInputService.php`
+- `php -l backend/controllers/MotoristaController.php`
+- `php -l backend/controllers/ParceiroOperacionalController.php`
+- `php -l scripts/test-motorista-input-service.php`
+- `php -l scripts/test-parceiro-operacional-input-service.php`
+- `php scripts/test-motorista-input-service.php`
+- `php scripts/test-parceiro-operacional-input-service.php`
+- `php scripts/test-motorista-model.php`
+- `php scripts/test-parceiro-operacional-model.php`

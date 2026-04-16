@@ -8,11 +8,13 @@ require_once __DIR__ . '/../models/MotoristaModel.php';
 final class MotoristaController
 {
     private MotoristaModel $model;
+    private \FrotaSmart\Application\Services\MotoristaInputService $inputService;
 
     public function __construct()
     {
         secure_session_start();
         $this->model = new MotoristaModel();
+        $this->inputService = new \FrotaSmart\Application\Services\MotoristaInputService();
     }
 
     public function handle(): void
@@ -35,6 +37,8 @@ final class MotoristaController
                 'update_motorista' => $this->update(),
                 default => $this->flashAndRedirect('error', 'Acao de motorista nao suportada.'),
             };
+        } catch (\DomainException $exception) {
+            $this->flashAndRedirect('error', $exception->getMessage());
         } catch (PDOException $exception) {
             if ($exception->getCode() === '23000') {
                 $this->flashAndRedirect('error', 'CPF ou CNH ja cadastrados para outro motorista.');
@@ -82,59 +86,12 @@ final class MotoristaController
      */
     private function validatedPayload(): array
     {
-        $nome = trim((string) ($_POST['nome'] ?? ''));
-        $cpf = preg_replace('/\D+/', '', (string) ($_POST['cpf'] ?? '')) ?? '';
-        $telefone = trim((string) ($_POST['telefone'] ?? ''));
-        $secretaria = trim((string) ($_POST['secretaria'] ?? ''));
-        $cnhNumero = preg_replace('/\s+/', '', trim((string) ($_POST['cnh_numero'] ?? ''))) ?? '';
-        $cnhCategoria = strtoupper(trim((string) ($_POST['cnh_categoria'] ?? '')));
-        $cnhVencimento = (string) ($_POST['cnh_vencimento'] ?? '');
-        $status = (string) ($_POST['status'] ?? '');
-
-        if ($nome === '' || mb_strlen($nome) < 3) {
-            $this->flashAndRedirect('error', 'Informe um nome valido para o motorista.');
-        }
-
-        if (!preg_match('/^\d{11}$/', $cpf)) {
-            $this->flashAndRedirect('error', 'Informe um CPF valido com 11 digitos.');
-        }
-
-        if ($secretaria === '') {
-            $this->flashAndRedirect('error', 'Informe a secretaria de lotacao do motorista.');
-        }
-
-        if ($cnhNumero === '' || !preg_match('/^[A-Z0-9]{5,20}$/i', $cnhNumero)) {
-            $this->flashAndRedirect('error', 'Informe um numero de CNH valido.');
-        }
-
-        if (!in_array($cnhCategoria, ['A', 'B', 'C', 'D', 'E', 'AB', 'AC', 'AD', 'AE'], true)) {
-            $this->flashAndRedirect('error', 'Informe uma categoria de CNH valida.');
-        }
-
-        $date = \DateTimeImmutable::createFromFormat('Y-m-d', $cnhVencimento);
-        if (!($date instanceof \DateTimeImmutable) || $date->format('Y-m-d') !== $cnhVencimento) {
-            $this->flashAndRedirect('error', 'Informe uma data de vencimento valida para a CNH.');
-        }
-
-        if (!in_array($status, ['ativo', 'afastado', 'ferias', 'desligado'], true)) {
-            $this->flashAndRedirect('error', 'Informe um status operacional valido.');
-        }
-
-        return [
-            'nome' => $nome,
-            'cpf' => $cpf,
-            'telefone' => $telefone,
-            'secretaria' => $secretaria,
-            'cnh_numero' => strtoupper($cnhNumero),
-            'cnh_categoria' => $cnhCategoria,
-            'cnh_vencimento' => $cnhVencimento,
-            'status' => $status,
-        ];
+        return $this->inputService->validate($_POST);
     }
 
     private function assertCanManage(): void
     {
-        if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE)) {
+        if (! isset($_SESSION['user']) || ! user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE)) {
             set_flash('error', 'Acesso negado ao modulo de motoristas.');
             header('Location: /dashboard.php');
             exit;

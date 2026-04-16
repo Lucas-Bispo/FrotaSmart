@@ -151,6 +151,7 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - `php scripts/test-relatorio-export-service.php`
 
 ## Proximo recorte recomendado dentro da task
+- consolidar o encerramento formal da task caso o hotspot principal ja esteja reduzido o suficiente para migrar o foco
 - continuar deslocando agregacoes e regras de montagem ainda presas ao `RelatorioOperacionalModel`
 - avaliar se `AbastecimentoModel` e `ManutencaoModel` devem gradualmente delegar leituras compartilhadas para os novos read models, evitando duplicacao de regra analitica
 - continuar deslocando pos-processamentos e agregacoes restantes do `RelatorioOperacionalModel`, especialmente os fluxos transacionais ainda nao cobertos por criterio dedicado fora da fachada

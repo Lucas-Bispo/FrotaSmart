@@ -8,11 +8,13 @@ require_once __DIR__ . '/../models/ParceiroOperacionalModel.php';
 final class ParceiroOperacionalController
 {
     private ParceiroOperacionalModel $model;
+    private \FrotaSmart\Application\Services\ParceiroOperacionalInputService $inputService;
 
     public function __construct()
     {
         secure_session_start();
         $this->model = new ParceiroOperacionalModel();
+        $this->inputService = new \FrotaSmart\Application\Services\ParceiroOperacionalInputService();
     }
 
     public function handle(): void
@@ -35,6 +37,8 @@ final class ParceiroOperacionalController
                 'update_parceiro' => $this->update(),
                 default => $this->flashAndRedirect('error', 'Acao de parceiro nao suportada.'),
             };
+        } catch (\DomainException $exception) {
+            $this->flashAndRedirect('error', $exception->getMessage());
         } catch (PDOException $exception) {
             if ($exception->getCode() === '23000') {
                 $this->flashAndRedirect('error', 'CNPJ ja cadastrado para outro parceiro.');
@@ -80,50 +84,17 @@ final class ParceiroOperacionalController
         $this->flashAndRedirect('success', 'Parceiro operacional atualizado com sucesso.');
     }
 
+    /**
+     * @return array<string, string|null>
+     */
     private function validatedPayload(): array
     {
-        $nomeFantasia = trim((string) ($_POST['nome_fantasia'] ?? ''));
-        $razaoSocial = trim((string) ($_POST['razao_social'] ?? ''));
-        $cnpj = preg_replace('/\D+/', '', (string) ($_POST['cnpj'] ?? '')) ?? '';
-        $tipo = (string) ($_POST['tipo'] ?? '');
-        $telefone = trim((string) ($_POST['telefone'] ?? ''));
-        $endereco = trim((string) ($_POST['endereco'] ?? ''));
-        $contatoResponsavel = trim((string) ($_POST['contato_responsavel'] ?? ''));
-        $status = (string) ($_POST['status'] ?? '');
-        $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
-
-        if ($nomeFantasia === '') {
-            $this->flashAndRedirect('error', 'Informe o nome fantasia do parceiro.');
-        }
-        if ($razaoSocial === '') {
-            $this->flashAndRedirect('error', 'Informe a razao social do parceiro.');
-        }
-        if (!preg_match('/^\d{14}$/', $cnpj)) {
-            $this->flashAndRedirect('error', 'Informe um CNPJ valido com 14 digitos.');
-        }
-        if (!in_array($tipo, ['oficina', 'posto_combustivel', 'fornecedor_pecas', 'prestador_servico'], true)) {
-            $this->flashAndRedirect('error', 'Informe um tipo de parceiro valido.');
-        }
-        if (!in_array($status, ['ativo', 'inativo'], true)) {
-            $this->flashAndRedirect('error', 'Informe um status valido para o parceiro.');
-        }
-
-        return [
-            'nome_fantasia' => $nomeFantasia,
-            'razao_social' => $razaoSocial,
-            'cnpj' => $cnpj,
-            'tipo' => $tipo,
-            'telefone' => $telefone !== '' ? $telefone : null,
-            'endereco' => $endereco !== '' ? $endereco : null,
-            'contato_responsavel' => $contatoResponsavel !== '' ? $contatoResponsavel : null,
-            'status' => $status,
-            'observacoes' => $observacoes !== '' ? $observacoes : null,
-        ];
+        return $this->inputService->validate($_POST);
     }
 
     private function assertCanManage(): void
     {
-        if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE)) {
+        if (! isset($_SESSION['user']) || ! user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE)) {
             set_flash('error', 'Acesso negado ao modulo de parceiros operacionais.');
             header('Location: /dashboard.php');
             exit;
