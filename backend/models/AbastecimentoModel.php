@@ -13,8 +13,14 @@ final class AbastecimentoModel
         $this->connection = $connection ?? $this->resolveLegacyConnection();
     }
 
-    public function getAll(?int $veiculoId = null, ?string $dataInicio = null, ?string $dataFim = null): array
+    /**
+     * @param array{veiculo_id?:?int,data_inicio?:?string,data_fim?:?string} $filters
+     */
+    public function listByFilters(array $filters = []): array
     {
+        $veiculoId = $filters['veiculo_id'] ?? null;
+        $dataInicio = $filters['data_inicio'] ?? null;
+        $dataFim = $filters['data_fim'] ?? null;
         $conditions = [];
         $params = [];
 
@@ -69,7 +75,9 @@ final class AbastecimentoModel
             return null;
         }
 
-        $rows = $this->getAll((int) $result['veiculo_id']);
+        $rows = $this->listByFilters([
+            'veiculo_id' => (int) $result['veiculo_id'],
+        ]);
 
         foreach ($rows as $row) {
             if ((int) ($row['id'] ?? 0) === $id) {
@@ -201,7 +209,11 @@ final class AbastecimentoModel
 
     public function getConsumptionSummary(?string $dataInicio = null, ?string $dataFim = null): array
     {
-        $rows = $this->getAll(null, $dataInicio, $dataFim);
+        $rows = $this->listByFilters([
+            'veiculo_id' => null,
+            'data_inicio' => $dataInicio,
+            'data_fim' => $dataFim,
+        ]);
         $alertas = array_values(array_filter(
             $rows,
             static fn (array $row): bool => ($row['anomalia_status'] ?? 'normal') !== 'normal'
@@ -227,7 +239,11 @@ final class AbastecimentoModel
 
     public function getVehicleEfficiencyRanking(int $limit = 5, ?string $dataInicio = null, ?string $dataFim = null): array
     {
-        $rows = $this->getAll(null, $dataInicio, $dataFim);
+        $rows = $this->listByFilters([
+            'veiculo_id' => null,
+            'data_inicio' => $dataInicio,
+            'data_fim' => $dataFim,
+        ]);
         $grouped = [];
 
         foreach ($rows as $row) {

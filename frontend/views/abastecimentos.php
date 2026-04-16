@@ -25,7 +25,11 @@ $filtroVeiculoId = isset($_GET['veiculo_id']) ? (int) $_GET['veiculo_id'] : null
 $filtroInicio = trim((string) ($_GET['data_inicio'] ?? ''));
 $filtroFim = trim((string) ($_GET['data_fim'] ?? ''));
 
-$abastecimentos = $abastecimentoModel->getAll($filtroVeiculoId, $filtroInicio !== '' ? $filtroInicio : null, $filtroFim !== '' ? $filtroFim : null);
+$abastecimentos = $abastecimentoModel->listByFilters([
+    'veiculo_id' => $filtroVeiculoId,
+    'data_inicio' => $filtroInicio !== '' ? $filtroInicio : null,
+    'data_fim' => $filtroFim !== '' ? $filtroFim : null,
+]);
 $consumoResumo = $abastecimentoModel->getConsumptionSummary($filtroInicio !== '' ? $filtroInicio : null, $filtroFim !== '' ? $filtroFim : null);
 $rankingEficiencia = $abastecimentoModel->getVehicleEfficiencyRanking(5, $filtroInicio !== '' ? $filtroInicio : null, $filtroFim !== '' ? $filtroFim : null);
 $parceirosPosto = $parceiroModel->getActiveByTipos(['posto_combustivel', 'prestador_servico']);

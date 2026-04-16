@@ -91,7 +91,11 @@ if (($updated['consumo_km_l'] ?? null) === null || (float) $updated['consumo_km_
     throw new RuntimeException('Abastecimento deveria calcular consumo medio por km/L.');
 }
 
-$historico = $abastecimentoModel->getAll($veiculoId, '2026-04-01', '2026-04-30');
+$historico = $abastecimentoModel->listByFilters([
+    'veiculo_id' => $veiculoId,
+    'data_inicio' => '2026-04-01',
+    'data_fim' => '2026-04-30',
+]);
 if (count($historico) !== 2) {
     throw new RuntimeException('Historico filtrado de abastecimentos nao retornou o volume esperado.');
 }

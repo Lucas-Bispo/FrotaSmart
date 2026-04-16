@@ -996,7 +996,10 @@
 - a `Task 24` avancou tambem pelo lado da apresentacao, sem quebrar a compatibilidade do modulo legado
 
 ### Validacao realizada
-- pendente executar nesta retomada
+- `php -l src/Application/Services/RelatorioRequestStateService.php`
+- `php -l frontend/views/relatorios.php`
+- `php -l scripts/test-relatorio-request-state-service.php`
+- `php scripts/test-relatorio-request-state-service.php`
 
 ## 2026-04-15 - Task 24, criterios compartilhados de consulta extraidos
 
@@ -1011,7 +1014,10 @@
 - a `Task 24` ficou melhor posicionada para atacar a proxima rodada de montagem de SQL e apresentacao sem aumentar o hotspot legado
 
 ### Validacao realizada
-- pendente executar nesta retomada
+- `php -l backend/models/AbastecimentoModel.php`
+- `php -l frontend/views/abastecimentos.php`
+- `php -l scripts/test-abastecimento-model.php`
+- `php scripts/test-abastecimento-model.php`
 
 ## 2026-04-16 - Task 24, auditoria desacoplada da fachada legacy
 
@@ -1263,3 +1269,17 @@
 - `php -l frontend/views/viagens.php`
 - `php -l scripts/test-viagem-model.php`
 - `php scripts/test-viagem-model.php`
+
+## 2026-04-16 - Continuidade tecnica apos Task 24, etapa 4
+
+### Filtros de abastecimentos com criterio nomeado
+- Refatorado [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) para trocar a assinatura posicional de filtros opcionais por `listByFilters()` com criterio nomeado
+- Ajustada [abastecimentos.php](../frontend/views/abastecimentos.php) para montar o filtro de veiculo e periodo em uma estrutura explicita
+- Atualizado [test-abastecimento-model.php](../scripts/test-abastecimento-model.php) para validar o contrato novo sem depender de ordem de parametros
+
+### Resultado tecnico
+- o modulo de abastecimentos reduz mais um ponto legado guiado por parametros opcionais posicionais, alinhando a leitura transacional ao mesmo padrao explicito que ja vem sendo adotado no projeto
+- a intencao dos filtros de listagem fica mais clara no model, na view e no teste integrado do modulo
+
+### Validacao realizada
+- pendente executar nesta retomada

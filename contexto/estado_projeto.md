@@ -94,6 +94,7 @@
 - `PdoVeiculoRepository` agora tambem removeu flags booleanas residuais no detalhe privado de implementacao, usando metodos explicitos para leitura ativa e historica
 - `AbastecimentoReportReadModelInterface` agora tambem usa criterio nomeado em vez de parametros opcionais sobrecarregados, reduzindo mais um contrato guiado por nulos
 - `ViagemModel` agora tambem usa criterio nomeado para listagem filtrada, reduzindo mais uma assinatura legacy guiada por parametros opcionais posicionais
+- `AbastecimentoModel` agora tambem usa criterio nomeado para listagem filtrada, reduzindo mais uma assinatura legacy guiada por parametros opcionais posicionais
 - `dashboard.php` agora reaproveita `dashboard_view_helpers.php` para organizar parte da camada de apresentacao em funcoes puras e estruturas declarativas
 - `dashboard.php` agora tambem reaproveita o helper para preparar linhas prontas das tabelas executivas e de abastecimentos recentes, reduzindo mais formatacao inline na view
 - `relatorios.php` agora reaproveita `relatorios_view_helpers.php` para reduzir condicionais de apresentacao e centralizar variacoes por tipo de relatorio
