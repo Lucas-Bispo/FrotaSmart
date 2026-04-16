@@ -8,48 +8,26 @@ final class RelatorioOperacionalModel
 {
     private PDO $connection;
     private \FrotaSmart\Infrastructure\ReadModels\RelatorioOperacionalQueryService $queries;
-    private \FrotaSmart\Infrastructure\ReadModels\AbastecimentoReadModel $abastecimentos;
-    private \FrotaSmart\Infrastructure\ReadModels\ManutencaoReadModel $manutencoes;
     private \FrotaSmart\Application\Services\RelatorioExecutiveSummaryService $executiveSummaries;
-    private \FrotaSmart\Application\Services\RelatorioAuditSummaryService $auditSummaries;
     private \FrotaSmart\Application\Services\RelatorioAuditReportService $auditReport;
-    private \FrotaSmart\Application\Services\RelatorioCsvExporterService $csvExporter;
     private \FrotaSmart\Application\Services\RelatorioOperationalSummaryService $operationalSummaries;
     private \FrotaSmart\Application\Services\RelatorioOperationalReportService $operationalReports;
-    private \FrotaSmart\Application\Services\RelatorioDatasetSelectorService $datasetSelector;
-    private \FrotaSmart\Application\Services\RelatorioRowTransformerService $rowTransformer;
     private \FrotaSmart\Application\Services\RelatorioAbastecimentoReportService $abastecimentoReport;
+    private \FrotaSmart\Application\Services\RelatorioExportService $exportService;
 
     public function __construct(?PDO $connection = null)
     {
         $this->connection = $connection ?? $this->resolveLegacyConnection();
-        $this->queries = new \FrotaSmart\Infrastructure\ReadModels\RelatorioOperacionalQueryService($this->connection);
-        $this->abastecimentos = new \FrotaSmart\Infrastructure\ReadModels\AbastecimentoReadModel($this->connection);
-        $this->manutencoes = new \FrotaSmart\Infrastructure\ReadModels\ManutencaoReadModel($this->connection);
-        $this->executiveSummaries = new \FrotaSmart\Application\Services\RelatorioExecutiveSummaryService(
-            $this->queries,
-            $this->abastecimentos,
-            $this->manutencoes
-        );
-        $this->auditSummaries = new \FrotaSmart\Application\Services\RelatorioAuditSummaryService();
-        $this->csvExporter = new \FrotaSmart\Application\Services\RelatorioCsvExporterService();
-        $this->operationalSummaries = new \FrotaSmart\Application\Services\RelatorioOperationalSummaryService();
-        $this->rowTransformer = new \FrotaSmart\Application\Services\RelatorioRowTransformerService();
-        $this->operationalReports = new \FrotaSmart\Application\Services\RelatorioOperationalReportService(
-            $this->queries,
-            $this->rowTransformer
-        );
-        $this->datasetSelector = new \FrotaSmart\Application\Services\RelatorioDatasetSelectorService();
-        $this->abastecimentoReport = new \FrotaSmart\Application\Services\RelatorioAbastecimentoReportService(
-            $this->abastecimentos,
-            new \FrotaSmart\Application\Services\RelatorioAbastecimentoCriteriaService(),
-            new \FrotaSmart\Application\Services\RelatorioAbastecimentoFilterService()
-        );
-        $this->auditReport = new \FrotaSmart\Application\Services\RelatorioAuditReportService(
-            $this->queries,
-            $this->rowTransformer,
-            $this->auditSummaries
-        );
+        $dependencies = (new \FrotaSmart\Infrastructure\Factories\RelatorioOperacionalDependenciesFactory())
+            ->make($this->connection);
+
+        $this->queries = $dependencies->queries;
+        $this->executiveSummaries = $dependencies->executiveSummaries;
+        $this->auditReport = $dependencies->auditReport;
+        $this->abastecimentoReport = $dependencies->abastecimentoReport;
+        $this->operationalReports = $dependencies->operationalReports;
+        $this->operationalSummaries = $dependencies->operationalSummaries;
+        $this->exportService = $dependencies->exportService;
     }
 
     public function getSecretarias(): array
@@ -119,22 +97,7 @@ final class RelatorioOperacionalModel
 
     public function exportCsv(string $report, array $filters): string
     {
-        return $this->csvExporter->export($this->resolveReportRows($report, $filters));
-    }
-
-    /**
-     * @param array<string, mixed> $filters
-     * @return list<array<string, mixed>>
-     */
-    private function resolveReportRows(string $report, array $filters): array
-    {
-        return $this->datasetSelector->select($report, [
-            'abastecimentos' => fn (): array => $this->getAbastecimentoReport($filters),
-            'manutencoes' => fn (): array => $this->getManutencaoReport($filters),
-            'viagens' => fn (): array => $this->getViagemReport($filters),
-            'disponibilidade' => fn (): array => $this->getDisponibilidadeReport($filters),
-            'auditoria' => fn (): array => $this->getAuditReport($filters),
-        ]);
+        return $this->exportService->export($report, $filters);
     }
 
     private function resolveLegacyConnection(): PDO

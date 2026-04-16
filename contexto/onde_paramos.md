@@ -42,6 +42,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - a view de relatorios agora tambem delega a um helper dedicado a montagem do pacote principal de dados da tela, reduzindo mais atribuicoes locais em `relatorios.php`
 - o fluxo de auditoria do modulo de relatorios agora tambem usa um service dedicado em `src/Application/Services`, reunindo leitura, transformacao e resumo fora da fachada legacy
 - os fluxos de manutencoes, viagens e disponibilidade do modulo de relatorios agora tambem usam um service operacional dedicado em `src/Application/Services`, reunindo leitura e transformacoes fora da fachada legacy
+- a exportacao e a montagem das dependencias do modulo de relatorios agora tambem usam componentes dedicados em `src/`, reduzindo mais composicao e `new` espalhado dentro da fachada legacy
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -49,7 +50,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` deslocando os recortes finais do `RelatorioOperacionalModel`, com prioridade para a composicao de exportacao e instanciacao dos services
+- continuar a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` revisando se a fachada legacy ja ficou fina o suficiente para encerrar a task e partir para o proximo hotspot
 
 ## O que ja esta concluido por ciclo
 

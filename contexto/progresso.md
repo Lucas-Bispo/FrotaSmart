@@ -1028,3 +1028,19 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-16 - Task 24, exportacao e composicao final desacopladas
+
+### Exportacao e montagem de dependencias fora da fachada
+- Criado [RelatorioExportService.php](../src/Application/Services/RelatorioExportService.php) para reunir selecao de dataset e serializacao CSV fora do model legado
+- Criado [RelatorioOperacionalFacadeDependencies.php](../src/Application/Services/RelatorioOperacionalFacadeDependencies.php) e a factory [RelatorioOperacionalDependenciesFactory.php](../src/Infrastructure/Factories/RelatorioOperacionalDependenciesFactory.php) para concentrar a montagem das dependencias do modulo de relatorios
+- Simplificado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para consumir dependencias prontas e delegar a exportacao ao novo service
+- Criado o teste [test-relatorio-export-service.php](../scripts/test-relatorio-export-service.php) para validar esse recorte sem depender de banco real
+
+### Resultado tecnico
+- a fachada legacy de relatorios deixou de concentrar a selecao de dataset para exportacao e grande parte das instanciações locais de services
+- o modulo ficou mais proximo de uma fachada fina, com composicao centralizada em factory dedicada e responsabilidades mais nomeadas
+- a `Task 24` fica muito mais perto do encerramento do hotspot principal de relatorios
+
+### Validacao realizada
+- pendente executar nesta retomada
