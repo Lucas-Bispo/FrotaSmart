@@ -48,6 +48,10 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - criado [RelatorioAuditReportService.php](../../src/Application/Services/RelatorioAuditReportService.php) para reunir leitura, transformacao e resumo do relatorio de auditoria fora da fachada legacy
 - simplificado [RelatorioOperacionalModel.php](../../backend/models/RelatorioOperacionalModel.php) para delegar o fluxo de auditoria ao novo service
 - adicionado o teste [test-relatorio-audit-report-service.php](../../scripts/test-relatorio-audit-report-service.php) para validar a orquestracao desacoplada do relatorio de auditoria
+- criado [RelatorioOperationalReadModelInterface.php](../../src/Application/Contracts/RelatorioOperationalReadModelInterface.php) para explicitar a porta minima de leitura dos fluxos de manutencoes, viagens e disponibilidade
+- criado [RelatorioOperationalReportService.php](../../src/Application/Services/RelatorioOperationalReportService.php) para reunir leitura e transformacoes operacionais fora da fachada legacy
+- simplificado [RelatorioOperacionalModel.php](../../backend/models/RelatorioOperacionalModel.php) para delegar manutencoes, viagens e disponibilidade ao novo service
+- adicionado o teste [test-relatorio-operational-report-service.php](../../scripts/test-relatorio-operational-report-service.php) para validar essa orquestracao operacional desacoplada
 
 ## Resultado tecnico desta etapa
 - a leitura central da frota no dashboard deixou de depender do model legado de veiculos
@@ -71,6 +75,7 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - a view `relatorios.php` agora tambem concentra menos preparacao de estado local, delegando filtros, aba ativa e carga principal de linhas para componentes mais nomeados
 - a view `relatorios.php` reduziu mais uma rodada de montagem local ao passar a consumir um pacote unico de view data preparado por helper dedicado
 - o fluxo de auditoria agora tambem passa por um service dedicado em `src/Application/Services`, deixando a fachada legacy mais proxima de simples roteamento entre componentes menores
+- os fluxos de manutencoes, viagens e disponibilidade agora tambem passam por um service operacional dedicado em `src/Application/Services`, reduzindo mais leituras e transformacoes residuais dentro do model legacy
 
 ## Validacao esperada
 - `php -l src/Application/Services/VeiculoDashboardService.php`
@@ -109,7 +114,9 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - `php -l src/Application/Services/RelatorioQueryCriteriaService.php`
 - `php -l src/Application/Services/RelatorioRequestStateService.php`
 - `php -l src/Application/Contracts/AuditReportReadModelInterface.php`
+- `php -l src/Application/Contracts/RelatorioOperationalReadModelInterface.php`
 - `php -l src/Application/Services/RelatorioAuditReportService.php`
+- `php -l src/Application/Services/RelatorioOperationalReportService.php`
 - `php -l scripts/test-relatorio-support-services.php`
 - `php scripts/test-relatorio-support-services.php`
 - `php -l scripts/test-relatorio-composition-services.php`
@@ -130,6 +137,8 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - `php scripts/test-relatorio-view-helpers.php`
 - `php -l scripts/test-relatorio-audit-report-service.php`
 - `php scripts/test-relatorio-audit-report-service.php`
+- `php -l scripts/test-relatorio-operational-report-service.php`
+- `php scripts/test-relatorio-operational-report-service.php`
 
 ## Proximo recorte recomendado dentro da task
 - continuar deslocando agregacoes e regras de montagem ainda presas ao `RelatorioOperacionalModel`

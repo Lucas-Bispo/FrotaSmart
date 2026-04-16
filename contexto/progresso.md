@@ -1012,3 +1012,19 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-16 - Task 24, fluxo operacional desacoplado da fachada legacy
+
+### Leitura e transformacoes operacionais reunidas em service dedicado
+- Criado [RelatorioOperationalReadModelInterface.php](../src/Application/Contracts/RelatorioOperationalReadModelInterface.php) para explicitar a porta minima de leitura dos relatorios de manutencoes, viagens e disponibilidade
+- Criado [RelatorioOperationalReportService.php](../src/Application/Services/RelatorioOperationalReportService.php) para reunir a leitura operacional e as transformacoes desses fluxos em um componente unico
+- Simplificado [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para delegar manutencoes, viagens e disponibilidade ao novo service
+- Criado o teste [test-relatorio-operational-report-service.php](../scripts/test-relatorio-operational-report-service.php) para validar esse recorte sem depender de banco real
+
+### Resultado tecnico
+- a fachada legacy de relatorios perdeu mais uma camada de leitura e transformacao operacional
+- os relatorios transacionais restantes agora podem evoluir em um ponto unico sem espalhar regras entre query service, transformer e model legado
+- a `Task 24` se aproxima do fechamento do hotspot principal com recortes pequenos, seguros e testaveis
+
+### Validacao realizada
+- pendente executar nesta retomada

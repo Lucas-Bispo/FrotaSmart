@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace FrotaSmart\Infrastructure\ReadModels;
 
 use FrotaSmart\Application\Contracts\AuditReportReadModelInterface;
+use FrotaSmart\Application\Contracts\RelatorioOperationalReadModelInterface;
 use PDO;
 use Throwable;
 
-final class RelatorioOperacionalQueryService implements AuditReportReadModelInterface
+final class RelatorioOperacionalQueryService implements AuditReportReadModelInterface, RelatorioOperationalReadModelInterface
 {
     private \FrotaSmart\Application\Services\RelatorioQueryCriteriaService $criteria;
 

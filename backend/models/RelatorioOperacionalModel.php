@@ -15,6 +15,7 @@ final class RelatorioOperacionalModel
     private \FrotaSmart\Application\Services\RelatorioAuditReportService $auditReport;
     private \FrotaSmart\Application\Services\RelatorioCsvExporterService $csvExporter;
     private \FrotaSmart\Application\Services\RelatorioOperationalSummaryService $operationalSummaries;
+    private \FrotaSmart\Application\Services\RelatorioOperationalReportService $operationalReports;
     private \FrotaSmart\Application\Services\RelatorioDatasetSelectorService $datasetSelector;
     private \FrotaSmart\Application\Services\RelatorioRowTransformerService $rowTransformer;
     private \FrotaSmart\Application\Services\RelatorioAbastecimentoReportService $abastecimentoReport;
@@ -33,8 +34,12 @@ final class RelatorioOperacionalModel
         $this->auditSummaries = new \FrotaSmart\Application\Services\RelatorioAuditSummaryService();
         $this->csvExporter = new \FrotaSmart\Application\Services\RelatorioCsvExporterService();
         $this->operationalSummaries = new \FrotaSmart\Application\Services\RelatorioOperationalSummaryService();
-        $this->datasetSelector = new \FrotaSmart\Application\Services\RelatorioDatasetSelectorService();
         $this->rowTransformer = new \FrotaSmart\Application\Services\RelatorioRowTransformerService();
+        $this->operationalReports = new \FrotaSmart\Application\Services\RelatorioOperationalReportService(
+            $this->queries,
+            $this->rowTransformer
+        );
+        $this->datasetSelector = new \FrotaSmart\Application\Services\RelatorioDatasetSelectorService();
         $this->abastecimentoReport = new \FrotaSmart\Application\Services\RelatorioAbastecimentoReportService(
             $this->abastecimentos,
             new \FrotaSmart\Application\Services\RelatorioAbastecimentoCriteriaService(),
@@ -64,17 +69,17 @@ final class RelatorioOperacionalModel
 
     public function getManutencaoReport(array $filters): array
     {
-        return $this->queries->fetchManutencaoReport($filters);
+        return $this->operationalReports->manutencoes($filters);
     }
 
     public function getViagemReport(array $filters): array
     {
-        return $this->rowTransformer->withViagemMetrics($this->queries->fetchViagemReport($filters));
+        return $this->operationalReports->viagens($filters);
     }
 
     public function getDisponibilidadeReport(array $filters): array
     {
-        return $this->rowTransformer->withDisponibilidadeStatus($this->queries->fetchDisponibilidadeReport($filters));
+        return $this->operationalReports->disponibilidade($filters);
     }
 
     public function getResumo(array $filters): array
