@@ -90,6 +90,7 @@
 - `MotoristaController` e `ParceiroOperacionalController` agora tambem delegam normalizacao e validacao de entrada para services pequenos e testaveis em `src/Application/Services`
 - `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita
 - `dashboard.php` agora reaproveita `dashboard_view_helpers.php` para organizar parte da camada de apresentacao em funcoes puras e estruturas declarativas
+- `dashboard.php` agora tambem reaproveita o helper para preparar linhas prontas das tabelas executivas e de abastecimentos recentes, reduzindo mais formatacao inline na view
 - `relatorios.php` agora reaproveita `relatorios_view_helpers.php` para reduzir condicionais de apresentacao e centralizar variacoes por tipo de relatorio
 - `relatorios.php` tambem passou a reaproveitar helpers para campos de filtro, tabs de navegacao e query de exportacao
 - Ja existem `src/` e `composer.json`

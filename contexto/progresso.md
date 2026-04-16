@@ -1099,3 +1099,24 @@
 - `php scripts/test-parceiro-operacional-input-service.php`
 - `php scripts/test-motorista-model.php`
 - `php scripts/test-parceiro-operacional-model.php`
+
+## 2026-04-16 - Clean Code no dashboard, etapa 3
+
+### Tabelas executivas preparadas no helper
+- Evoluido [dashboard_view_helpers.php](../frontend/views/helpers/dashboard_view_helpers.php) para preparar linhas prontas do painel por secretaria, do painel por veiculo e da tabela de abastecimentos recentes
+- Simplificado [dashboard.php](../frontend/views/dashboard.php) para consumir essas estruturas prontas em vez de manter formatacao e composicao espalhadas na view principal
+- Criado o teste [test-dashboard-table-view-helpers.php](../scripts/test-dashboard-table-view-helpers.php) para validar a nova camada de preparacao de tabelas
+
+### Resultado tecnico
+- o dashboard perdeu mais uma rodada de formatacao inline e ficou mais consistente com o padrao de helper puro ja adotado na tela
+- a view principal ficou mais declarativa nas tabelas executivas, com menos `number_format`, `str_replace` e condicionais de apresentacao misturados ao markup
+- a `Task 24` continua reduzindo o hotspot de interface por recortes pequenos, seguros e testaveis
+
+### Validacao realizada
+- `php -l frontend/views/helpers/dashboard_view_helpers.php`
+- `php -l frontend/views/dashboard.php`
+- `php -l scripts/test-dashboard-table-view-helpers.php`
+- `php -l scripts/test-dashboard-view-helpers.php`
+- `php scripts/test-dashboard-table-view-helpers.php`
+- `php scripts/test-dashboard-view-helpers.php`
+- `php scripts/test-relatorio-executivo.php`

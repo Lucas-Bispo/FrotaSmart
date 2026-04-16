@@ -56,6 +56,9 @@ $secondaryMetricCards = [];
 $quickActions = [];
 $executiveOverviewCards = [];
 $fleetFilterTabs = [];
+$secretariaRows = [];
+$executiveVehicleRows = [];
+$recentRefuelRows = [];
 
 try {
     $veiculoDashboardService = new \FrotaSmart\Application\Services\VeiculoDashboardService(
@@ -116,6 +119,9 @@ $secondaryMetricCards = $pageData['secondary_metric_cards'];
 $quickActions = $pageData['quick_actions'];
 $executiveOverviewCards = $pageData['executive_overview_cards'];
 $fleetFilterTabs = $pageData['fleet_filter_tabs'];
+$secretariaRows = $pageData['secretaria_rows'];
+$executiveVehicleRows = $pageData['executive_vehicle_rows'];
+$recentRefuelRows = $pageData['recent_refuel_rows'];
 ?>
 <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-8">
     <div>
@@ -308,42 +314,38 @@ $fleetFilterTabs = $pageData['fleet_filter_tabs'];
             <p class="text-sm text-slate-500 mb-5">Leitura consolidada de disponibilidade, uso, custo e risco por orgao no periodo atual.</p>
 
             <div class="space-y-3">
-                <?php if ($painelSecretarias === []): ?>
+                <?php if ($secretariaRows === []): ?>
                     <p class="text-sm text-slate-500">Ainda nao ha massa suficiente para o painel executivo por secretaria.</p>
                 <?php endif; ?>
 
-                <?php foreach (array_slice($painelSecretarias, 0, 6) as $secretariaResumo): ?>
+                <?php foreach ($secretariaRows as $secretariaRow): ?>
                     <div class="rounded-2xl border border-slate-200 p-4">
                         <div class="flex items-start justify-between gap-4">
                             <div>
-                                <h3 class="text-sm font-semibold text-slate-800"><?php echo htmlspecialchars((string) $secretariaResumo['secretaria'], ENT_QUOTES, 'UTF-8'); ?></h3>
-                                <p class="text-xs text-slate-500 mt-1">
-                                    Frota ativa: <?php echo (int) $secretariaResumo['frota_ativa']; ?> |
-                                    Em operacao: <?php echo (int) $secretariaResumo['frota_operacao']; ?> |
-                                    Motoristas ativos: <?php echo (int) $secretariaResumo['motoristas_ativos']; ?>
-                                </p>
+                                <h3 class="text-sm font-semibold text-slate-800"><?php echo htmlspecialchars($secretariaRow['secretaria'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                <p class="text-xs text-slate-500 mt-1"><?php echo htmlspecialchars($secretariaRow['frota_resumo'], ENT_QUOTES, 'UTF-8'); ?></p>
                             </div>
                             <div class="text-right">
-                                <p class="text-sm font-bold text-slate-900">R$ <?php echo number_format((float) $secretariaResumo['custo_total_periodo'], 2, ',', '.'); ?></p>
+                                <p class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars($secretariaRow['custo_total'], ENT_QUOTES, 'UTF-8'); ?></p>
                                 <p class="text-xs text-slate-500">custo total</p>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3 mt-4 text-sm">
                             <div class="rounded-xl bg-slate-50 px-3 py-2">
                                 <span class="block text-slate-500 text-xs">Viagens / KM</span>
-                                <span class="font-semibold text-slate-800"><?php echo (int) $secretariaResumo['viagens_periodo']; ?> / <?php echo number_format((float) $secretariaResumo['km_viagens_periodo'], 0, ',', '.'); ?></span>
+                                <span class="font-semibold text-slate-800"><?php echo htmlspecialchars($secretariaRow['viagens_km'], ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                             <div class="rounded-xl bg-slate-50 px-3 py-2">
                                 <span class="block text-slate-500 text-xs">Disponibilidade</span>
-                                <span class="font-semibold text-slate-800"><?php echo $secretariaResumo['disponibilidade_percentual'] !== null ? number_format((float) $secretariaResumo['disponibilidade_percentual'], 1, ',', '.') . '%' : '--'; ?></span>
+                                <span class="font-semibold text-slate-800"><?php echo htmlspecialchars($secretariaRow['disponibilidade'], ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                             <div class="rounded-xl bg-slate-50 px-3 py-2">
                                 <span class="block text-slate-500 text-xs">Abastecimento</span>
-                                <span class="font-semibold text-slate-800"><?php echo (int) $secretariaResumo['abastecimentos_periodo']; ?> registro(s)</span>
+                                <span class="font-semibold text-slate-800"><?php echo htmlspecialchars($secretariaRow['abastecimentos'], ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                             <div class="rounded-xl bg-slate-50 px-3 py-2">
                                 <span class="block text-slate-500 text-xs">Alertas</span>
-                                <span class="font-semibold <?php echo ((int) $secretariaResumo['alertas_total'] > 0) ? 'text-amber-700' : 'text-emerald-700'; ?>"><?php echo (int) $secretariaResumo['alertas_total']; ?> alerta(s)</span>
+                                <span class="font-semibold <?php echo htmlspecialchars($secretariaRow['alertas_class'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($secretariaRow['alertas'], ENT_QUOTES, 'UTF-8'); ?></span>
                             </div>
                         </div>
                     </div>
@@ -369,40 +371,40 @@ $fleetFilterTabs = $pageData['fleet_filter_tabs'];
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
-                        <?php if ($painelVeiculos === []): ?>
+                        <?php if ($executiveVehicleRows === []): ?>
                             <tr>
                                 <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">Ainda nao ha leitura executiva suficiente por veiculo.</td>
                             </tr>
                         <?php endif; ?>
 
-                        <?php foreach ($painelVeiculos as $veiculoResumo): ?>
+                        <?php foreach ($executiveVehicleRows as $vehicleRow): ?>
                             <tr class="hover:bg-slate-50 transition">
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars((string) $veiculoResumo['placa'], ENT_QUOTES, 'UTF-8'); ?></div>
-                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $veiculoResumo['modelo'], ENT_QUOTES, 'UTF-8'); ?></div>
-                                    <div class="text-xs text-slate-400 mt-1"><?php echo htmlspecialchars((string) $veiculoResumo['secretaria_lotada'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars($vehicleRow['placa'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($vehicleRow['modelo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-400 mt-1"><?php echo htmlspecialchars($vehicleRow['secretaria_lotada'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-slate-700">
-                                    <div><?php echo (int) $veiculoResumo['viagens_periodo']; ?> viagem(ns)</div>
-                                    <div class="text-xs text-slate-500"><?php echo number_format((float) $veiculoResumo['km_viagens_periodo'], 0, ',', '.'); ?> km</div>
-                                    <div class="text-xs text-slate-500"><?php echo (int) $veiculoResumo['abastecimentos_periodo']; ?> abastecimento(s)</div>
+                                    <div><?php echo htmlspecialchars($vehicleRow['uso_viagens'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($vehicleRow['uso_km'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($vehicleRow['uso_abastecimentos'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-slate-700">
-                                    <div>R$ <?php echo number_format((float) $veiculoResumo['custo_total_periodo'], 2, ',', '.'); ?></div>
-                                    <div class="text-xs text-slate-500">Abast.: R$ <?php echo number_format((float) $veiculoResumo['gasto_abastecimento_periodo'], 2, ',', '.'); ?></div>
-                                    <div class="text-xs text-slate-500">Manut.: R$ <?php echo number_format((float) $veiculoResumo['custo_manutencao_periodo'], 2, ',', '.'); ?></div>
+                                    <div><?php echo htmlspecialchars($vehicleRow['custo_total'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($vehicleRow['custo_abastecimento'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($vehicleRow['custo_manutencao'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-slate-700">
                                     <div class="flex flex-wrap gap-2">
-                                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo dashboard_executive_alert_badge((string) $veiculoResumo['preventiva_status']); ?>">
-                                            <?php echo htmlspecialchars(dashboard_executive_alert_label((string) $veiculoResumo['preventiva_status']), ENT_QUOTES, 'UTF-8'); ?>
+                                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo htmlspecialchars($vehicleRow['preventiva_badge_class'], ENT_QUOTES, 'UTF-8'); ?>">
+                                            <?php echo htmlspecialchars($vehicleRow['preventiva_badge_label'], ENT_QUOTES, 'UTF-8'); ?>
                                         </span>
-                                        <?php if (! empty($veiculoResumo['deleted_at'])): ?>
+                                        <?php if ($vehicleRow['exibir_arquivado']): ?>
                                             <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-slate-200 text-slate-700">Arquivado</span>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="text-xs text-slate-500 mt-2"><?php echo (int) $veiculoResumo['total_alertas']; ?> alerta(s) consolidados</div>
-                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $veiculoResumo['preventiva_resumo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500 mt-2"><?php echo htmlspecialchars($vehicleRow['total_alertas'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($vehicleRow['preventiva_resumo'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -426,29 +428,29 @@ $fleetFilterTabs = $pageData['fleet_filter_tabs'];
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
-                        <?php if (empty($abastecimentosRecentes)): ?>
+                        <?php if ($recentRefuelRows === []): ?>
                             <tr>
                                 <td colspan="4" class="px-6 py-8 text-center text-sm text-slate-500">Nenhum abastecimento registrado ate o momento.</td>
                             </tr>
                         <?php endif; ?>
 
-                        <?php foreach ($abastecimentosRecentes as $abastecimento): ?>
+                        <?php foreach ($recentRefuelRows as $refuelRow): ?>
                             <tr class="hover:bg-slate-50 transition">
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars((string) $abastecimento['placa'], ENT_QUOTES, 'UTF-8'); ?></div>
-                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $abastecimento['modelo'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-sm font-bold text-slate-900"><?php echo htmlspecialchars($refuelRow['placa'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($refuelRow['modelo'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm text-slate-800"><?php echo htmlspecialchars((string) $abastecimento['motorista_nome'], ENT_QUOTES, 'UTF-8'); ?></div>
-                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $abastecimento['secretaria'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-sm text-slate-800"><?php echo htmlspecialchars($refuelRow['motorista_nome'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($refuelRow['secretaria'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm text-slate-800"><?php echo htmlspecialchars(strtoupper(str_replace('_', ' ', (string) $abastecimento['tipo_combustivel'])), ENT_QUOTES, 'UTF-8'); ?></div>
-                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $abastecimento['data_abastecimento'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-sm text-slate-800"><?php echo htmlspecialchars($refuelRow['combustivel'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($refuelRow['data_abastecimento'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-slate-700">
-                                    <div>R$ <?php echo number_format((float) $abastecimento['valor_total'], 2, ',', '.'); ?></div>
-                                    <div class="text-xs text-slate-500"><?php echo number_format((float) $abastecimento['litros'], 2, ',', '.'); ?> L</div>
+                                    <div><?php echo htmlspecialchars($refuelRow['valor_total'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500"><?php echo htmlspecialchars($refuelRow['litros'], ENT_QUOTES, 'UTF-8'); ?></div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

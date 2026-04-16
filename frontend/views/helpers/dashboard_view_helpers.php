@@ -282,6 +282,9 @@ function dashboard_build_page_data(
         'quick_actions' => dashboard_build_quick_actions($canManageUsers),
         'executive_overview_cards' => dashboard_build_executive_overview_cards($painelSecretarias, $painelVeiculos),
         'fleet_filter_tabs' => dashboard_build_fleet_filter_tabs($filtroFrota),
+        'secretaria_rows' => dashboard_build_secretaria_rows($painelSecretarias),
+        'executive_vehicle_rows' => dashboard_build_executive_vehicle_rows($painelVeiculos),
+        'recent_refuel_rows' => dashboard_build_recent_refuel_rows($abastecimentosRecentes),
     ];
 }
 
@@ -345,6 +348,132 @@ function dashboard_build_fleet_filter_tabs(string $currentFilter): array
     }
 
     return $tabs;
+}
+
+/**
+ * @param list<array<string, mixed>> $painelSecretarias
+ * @return list<array{
+ *     secretaria:string,
+ *     frota_resumo:string,
+ *     custo_total:string,
+ *     viagens_km:string,
+ *     disponibilidade:string,
+ *     abastecimentos:string,
+ *     alertas:string,
+ *     alertas_class:string
+ * }>
+ */
+function dashboard_build_secretaria_rows(array $painelSecretarias): array
+{
+    $rows = [];
+
+    foreach (array_slice($painelSecretarias, 0, 6) as $secretariaResumo) {
+        $alertasTotal = (int) ($secretariaResumo['alertas_total'] ?? 0);
+
+        $rows[] = [
+            'secretaria' => (string) ($secretariaResumo['secretaria'] ?? ''),
+            'frota_resumo' => sprintf(
+                'Frota ativa: %d | Em operacao: %d | Motoristas ativos: %d',
+                (int) ($secretariaResumo['frota_ativa'] ?? 0),
+                (int) ($secretariaResumo['frota_operacao'] ?? 0),
+                (int) ($secretariaResumo['motoristas_ativos'] ?? 0)
+            ),
+            'custo_total' => 'R$ ' . number_format((float) ($secretariaResumo['custo_total_periodo'] ?? 0), 2, ',', '.'),
+            'viagens_km' => sprintf(
+                '%d / %s',
+                (int) ($secretariaResumo['viagens_periodo'] ?? 0),
+                number_format((float) ($secretariaResumo['km_viagens_periodo'] ?? 0), 0, ',', '.')
+            ),
+            'disponibilidade' => ($secretariaResumo['disponibilidade_percentual'] ?? null) !== null
+                ? number_format((float) $secretariaResumo['disponibilidade_percentual'], 1, ',', '.') . '%'
+                : '--',
+            'abastecimentos' => (int) ($secretariaResumo['abastecimentos_periodo'] ?? 0) . ' registro(s)',
+            'alertas' => $alertasTotal . ' alerta(s)',
+            'alertas_class' => $alertasTotal > 0 ? 'text-amber-700' : 'text-emerald-700',
+        ];
+    }
+
+    return $rows;
+}
+
+/**
+ * @param list<array<string, mixed>> $painelVeiculos
+ * @return list<array{
+ *     placa:string,
+ *     modelo:string,
+ *     secretaria_lotada:string,
+ *     uso_viagens:string,
+ *     uso_km:string,
+ *     uso_abastecimentos:string,
+ *     custo_total:string,
+ *     custo_abastecimento:string,
+ *     custo_manutencao:string,
+ *     preventiva_badge_class:string,
+ *     preventiva_badge_label:string,
+ *     exibir_arquivado:bool,
+ *     total_alertas:string,
+ *     preventiva_resumo:string
+ * }>
+ */
+function dashboard_build_executive_vehicle_rows(array $painelVeiculos): array
+{
+    $rows = [];
+
+    foreach ($painelVeiculos as $veiculoResumo) {
+        $preventivaStatus = (string) ($veiculoResumo['preventiva_status'] ?? '');
+
+        $rows[] = [
+            'placa' => (string) ($veiculoResumo['placa'] ?? ''),
+            'modelo' => (string) ($veiculoResumo['modelo'] ?? ''),
+            'secretaria_lotada' => (string) ($veiculoResumo['secretaria_lotada'] ?? ''),
+            'uso_viagens' => (int) ($veiculoResumo['viagens_periodo'] ?? 0) . ' viagem(ns)',
+            'uso_km' => number_format((float) ($veiculoResumo['km_viagens_periodo'] ?? 0), 0, ',', '.') . ' km',
+            'uso_abastecimentos' => (int) ($veiculoResumo['abastecimentos_periodo'] ?? 0) . ' abastecimento(s)',
+            'custo_total' => 'R$ ' . number_format((float) ($veiculoResumo['custo_total_periodo'] ?? 0), 2, ',', '.'),
+            'custo_abastecimento' => 'Abast.: R$ ' . number_format((float) ($veiculoResumo['gasto_abastecimento_periodo'] ?? 0), 2, ',', '.'),
+            'custo_manutencao' => 'Manut.: R$ ' . number_format((float) ($veiculoResumo['custo_manutencao_periodo'] ?? 0), 2, ',', '.'),
+            'preventiva_badge_class' => dashboard_executive_alert_badge($preventivaStatus),
+            'preventiva_badge_label' => dashboard_executive_alert_label($preventivaStatus),
+            'exibir_arquivado' => ! empty($veiculoResumo['deleted_at']),
+            'total_alertas' => (int) ($veiculoResumo['total_alertas'] ?? 0) . ' alerta(s) consolidados',
+            'preventiva_resumo' => (string) ($veiculoResumo['preventiva_resumo'] ?? ''),
+        ];
+    }
+
+    return $rows;
+}
+
+/**
+ * @param list<array<string, mixed>> $abastecimentosRecentes
+ * @return list<array{
+ *     placa:string,
+ *     modelo:string,
+ *     motorista_nome:string,
+ *     secretaria:string,
+ *     combustivel:string,
+ *     data_abastecimento:string,
+ *     valor_total:string,
+ *     litros:string
+ * }>
+ */
+function dashboard_build_recent_refuel_rows(array $abastecimentosRecentes): array
+{
+    $rows = [];
+
+    foreach ($abastecimentosRecentes as $abastecimento) {
+        $rows[] = [
+            'placa' => (string) ($abastecimento['placa'] ?? ''),
+            'modelo' => (string) ($abastecimento['modelo'] ?? ''),
+            'motorista_nome' => (string) ($abastecimento['motorista_nome'] ?? ''),
+            'secretaria' => (string) ($abastecimento['secretaria'] ?? ''),
+            'combustivel' => strtoupper(str_replace('_', ' ', (string) ($abastecimento['tipo_combustivel'] ?? ''))),
+            'data_abastecimento' => (string) ($abastecimento['data_abastecimento'] ?? ''),
+            'valor_total' => 'R$ ' . number_format((float) ($abastecimento['valor_total'] ?? 0), 2, ',', '.'),
+            'litros' => number_format((float) ($abastecimento['litros'] ?? 0), 2, ',', '.') . ' L',
+        ];
+    }
+
+    return $rows;
 }
 
 function dashboard_vehicle_status_label(string $status): string

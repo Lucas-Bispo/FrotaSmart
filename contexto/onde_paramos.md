@@ -44,6 +44,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - os fluxos de manutencoes, viagens e disponibilidade do modulo de relatorios agora tambem usam um service operacional dedicado em `src/Application/Services`, reunindo leitura e transformacoes fora da fachada legacy
 - a exportacao e a montagem das dependencias do modulo de relatorios agora tambem usam componentes dedicados em `src/`, reduzindo mais composicao e `new` espalhado dentro da fachada legacy
 - o `dashboard.php` agora tambem centraliza no helper o pacote principal de dados da tela, incluindo cards executivos e tabs de filtro da frota, reduzindo mais atribuicoes e repeticao local na view principal
+- o `dashboard.php` agora tambem prepara no helper as linhas das tabelas executivas por secretaria, por veiculo e de abastecimentos recentes, reduzindo mais formatacao inline e composicao local
 - o `bootstrap-db.php` agora tambem separa a evolucao de schema por modulo e usa helpers pequenos para colunas, indices e statements, reduzindo mais ramificacao no script operacional
 - os modulos de motoristas e parceiros operacionais agora tambem delegam validacao e normalizacao de entrada para services dedicados em `src/Application/Services`, reduzindo validacoes cruas dentro dos controllers
 
@@ -53,7 +54,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- revisar se a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` ja pode ser encerrada formalmente e escolher o proximo hotspot entre o fracionamento residual do dashboard e os controllers administrativos restantes
+- revisar se a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` ja pode ser encerrada formalmente e escolher o proximo hotspot entre o fracionamento residual do dashboard, a view de relatorios e os controllers administrativos restantes
 
 ## O que ja esta concluido por ciclo
 
