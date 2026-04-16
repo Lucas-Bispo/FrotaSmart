@@ -50,6 +50,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - os modulos de motoristas e parceiros operacionais agora tambem delegam validacao e normalizacao de entrada para services dedicados em `src/Application/Services`, reduzindo validacoes cruas dentro dos controllers
 - o controller administrativo de usuarios agora tambem delega a validacao de cadastro para um service dedicado em `src/Application/Services`, reduzindo mais regra inline no nivel HTTP
 - o fluxo administrativo de autenticacao agora tambem delega a validacao basica de login para um service dedicado em `src/Application/Services`, reduzindo mais regra inline no controller
+- o repositório PDO de veiculos agora tambem removeu flags booleanas residuais no detalhe privado de implementacao, usando metodos explicitos para leitura ativa e historica
 
 ## Ultima entrega documental consolidada
 - reorganizacao da documentacao antiga em `contexto/ciclo_01_fundacao_arquitetura/`
@@ -57,7 +58,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- abrir a proxima task tecnica do ciclo com foco em contratos ainda dependentes de flags, residuos pequenos de `global $pdo` e refinamentos pontuais do legado administrativo
+- continuar a nova frente tecnica com foco em contratos ainda dependentes de flags, residuos pequenos de `global $pdo` e refinamentos pontuais do legado administrativo
 
 ## O que ja esta concluido por ciclo
 

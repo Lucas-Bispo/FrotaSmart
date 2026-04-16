@@ -93,22 +93,22 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
 
     public function findActiveByPlaca(Placa $placa): ?Veiculo
     {
-        return $this->findSingleByPlaca($placa, false);
+        return $this->findActiveSingleByPlaca($placa);
     }
 
     public function findAnyByPlaca(Placa $placa): ?Veiculo
     {
-        return $this->findSingleByPlaca($placa, true);
+        return $this->findAnySingleByPlaca($placa);
     }
 
     public function existsActiveByPlaca(Placa $placa): bool
     {
-        return $this->existsSingleByPlaca($placa, false);
+        return $this->existsActiveSingleByPlaca($placa);
     }
 
     public function existsAnyByPlaca(Placa $placa): bool
     {
-        return $this->existsSingleByPlaca($placa, true);
+        return $this->existsAnySingleByPlaca($placa);
     }
 
     public function findAll(): array
@@ -229,9 +229,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
         };
     }
 
-    private function findSingleByPlaca(Placa $placa, bool $allowArchived): ?Veiculo
+    private function findActiveSingleByPlaca(Placa $placa): ?Veiculo
     {
-        $sql = 'SELECT
+        $statement = $this->connection->prepare(
+            'SELECT
                 placa,
                 modelo,
                 status,
@@ -246,15 +247,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                 documentos_observacoes,
                 deleted_at
              FROM veiculos
-             WHERE placa = :placa';
-
-        if (! $allowArchived) {
-            $sql .= ' AND deleted_at IS NULL';
-        }
-
-        $sql .= ' LIMIT 1';
-
-        $statement = $this->connection->prepare($sql);
+             WHERE placa = :placa
+               AND deleted_at IS NULL
+             LIMIT 1'
+        );
         $statement->execute([':placa' => $placa->value()]);
 
         $row = $statement->fetch();
@@ -266,17 +262,60 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
         return $this->hydrateVeiculo($row);
     }
 
-    private function existsSingleByPlaca(Placa $placa, bool $allowArchived): bool
+    private function findAnySingleByPlaca(Placa $placa): ?Veiculo
     {
-        $sql = 'SELECT 1 FROM veiculos WHERE placa = :placa';
+        $statement = $this->connection->prepare(
+            'SELECT
+                placa,
+                modelo,
+                status,
+                renavam,
+                chassi,
+                ano_fabricacao,
+                tipo,
+                combustivel,
+                secretaria_lotada,
+                quilometragem_inicial,
+                data_aquisicao,
+                documentos_observacoes,
+                deleted_at
+             FROM veiculos
+             WHERE placa = :placa
+             LIMIT 1'
+        );
+        $statement->execute([':placa' => $placa->value()]);
 
-        if (! $allowArchived) {
-            $sql .= ' AND deleted_at IS NULL';
+        $row = $statement->fetch();
+
+        if ($row === false) {
+            return null;
         }
 
-        $sql .= ' LIMIT 1';
+        return $this->hydrateVeiculo($row);
+    }
 
-        $statement = $this->connection->prepare($sql);
+    private function existsActiveSingleByPlaca(Placa $placa): bool
+    {
+        $statement = $this->connection->prepare(
+            'SELECT 1
+             FROM veiculos
+             WHERE placa = :placa
+               AND deleted_at IS NULL
+             LIMIT 1'
+        );
+        $statement->execute([':placa' => $placa->value()]);
+
+        return $statement->fetchColumn() !== false;
+    }
+
+    private function existsAnySingleByPlaca(Placa $placa): bool
+    {
+        $statement = $this->connection->prepare(
+            'SELECT 1
+             FROM veiculos
+             WHERE placa = :placa
+             LIMIT 1'
+        );
         $statement->execute([':placa' => $placa->value()]);
 
         return $statement->fetchColumn() !== false;

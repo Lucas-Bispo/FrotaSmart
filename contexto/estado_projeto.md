@@ -91,6 +91,7 @@
 - `UserController` agora tambem delega a validacao de cadastro administrativo para um service pequeno e testavel em `src/Application/Services`
 - `AuthController` agora tambem delega a validacao basica de login para um service pequeno e testavel em `src/Application/Services`
 - `VeiculoRepositoryInterface`, `VeiculoService` e `PdoVeiculoRepository` deixaram de usar a flag `includeArchived` e passaram a expor metodos com intencao explicita
+- `PdoVeiculoRepository` agora tambem removeu flags booleanas residuais no detalhe privado de implementacao, usando metodos explicitos para leitura ativa e historica
 - `dashboard.php` agora reaproveita `dashboard_view_helpers.php` para organizar parte da camada de apresentacao em funcoes puras e estruturas declarativas
 - `dashboard.php` agora tambem reaproveita o helper para preparar linhas prontas das tabelas executivas e de abastecimentos recentes, reduzindo mais formatacao inline na view
 - `relatorios.php` agora reaproveita `relatorios_view_helpers.php` para reduzir condicionais de apresentacao e centralizar variacoes por tipo de relatorio

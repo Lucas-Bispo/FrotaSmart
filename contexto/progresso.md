@@ -1191,3 +1191,20 @@
 
 ### Validacao realizada
 - `php scripts/test-wsl-stack.php`
+
+## 2026-04-16 - Continuidade tecnica apos Task 24
+
+### Flags internas removidas do repositorio PDO de veiculos
+- Refatorado [PdoVeiculoRepository.php](../src/Infrastructure/Persistence/PdoVeiculoRepository.php) para remover as flags booleanas privadas que ainda distinguiam leitura ativa e historica no detalhe de implementacao
+- A leitura por placa e a verificacao de existencia agora usam metodos privados explicitos para ativo e historico, alinhando a implementacao ao contrato publico ja limpo
+- Mantido o comportamento do repositório sem alterar a interface publicada para o restante do projeto
+
+### Resultado tecnico
+- o projeto avanca na nova frente aberta apos a `Task 24`, reduzindo mais um uso residual de flag booleana como chave de comportamento
+- a persistencia de veiculos ficou mais legivel e mais aderente ao guia de Clean Code, inclusive nas camadas privadas de implementacao
+
+### Validacao realizada
+- `php -l src/Infrastructure/Persistence/PdoVeiculoRepository.php`
+- `php scripts/test-repository-contract.php`
+- `php scripts/test-repository-pdo.php`
+- `php scripts/test-veiculo-service.php`
