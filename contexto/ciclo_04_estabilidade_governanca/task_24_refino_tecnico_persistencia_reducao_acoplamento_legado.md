@@ -82,6 +82,12 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - os fluxos de manutencoes, viagens e disponibilidade agora tambem passam por um service operacional dedicado em `src/Application/Services`, reduzindo mais leituras e transformacoes residuais dentro do model legacy
 - a exportacao CSV e a montagem das dependencias do modulo agora tambem saem do `RelatorioOperacionalModel`, reduzindo mais composicao e instanciação local nessa fachada legacy
 
+## Encerramento da task
+- a `Task 24` pode ser considerada concluida
+- o objetivo de reduzir o hotspot principal de persistencia e acoplamento legado foi atendido por recortes incrementais, mantendo compatibilidade com o sistema em uso
+- os principais pontos definidos no guia de Clean Code foram aplicados ao modulo de relatorios, ao dashboard, ao bootstrap operacional e aos controllers mais sensiveis
+- ainda existem residuos legados no projeto, mas eles ja deixaram de ser o gargalo dominante desta frente e podem seguir como backlog pontual no proximo ciclo
+
 ## Validacao esperada
 - `php -l src/Application/Services/VeiculoDashboardService.php`
 - `php -l frontend/views/dashboard.php`
@@ -151,8 +157,4 @@ Continuar a migracao incremental do FrotaSmart para a espinha em `src/`, reduzin
 - `php scripts/test-relatorio-export-service.php`
 
 ## Proximo recorte recomendado dentro da task
-- consolidar o encerramento formal da task caso o hotspot principal ja esteja reduzido o suficiente para migrar o foco
-- continuar deslocando agregacoes e regras de montagem ainda presas ao `RelatorioOperacionalModel`
-- avaliar se `AbastecimentoModel` e `ManutencaoModel` devem gradualmente delegar leituras compartilhadas para os novos read models, evitando duplicacao de regra analitica
-- continuar deslocando pos-processamentos e agregacoes restantes do `RelatorioOperacionalModel`, especialmente os fluxos transacionais ainda nao cobertos por criterio dedicado fora da fachada
-- continuar o fracionamento de `relatorios.php` para reduzir responsabilidade de view e aproximar a apresentacao do padrao de Clean Code definido para o projeto
+- abrir a proxima task com foco em contratos ainda dependentes de flags, residuos pequenos de `global $pdo` e refinamentos pontuais do legado administrativo

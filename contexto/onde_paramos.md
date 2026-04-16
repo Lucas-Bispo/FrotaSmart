@@ -19,7 +19,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - exportacoes CSV agora tambem geram evento auditavel, fortalecendo a governanca operacional
 
 ## Avanco atual em andamento
-- `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado`
+- `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` foi concluida e o projeto esta pronto para abrir a proxima frente tecnica
 - a leitura principal da frota no dashboard passou a sair de `VeiculoDashboardService` em `src/`, reaproveitando `PdoVeiculoRepository`
 - o `VeiculoModel` legado deixou de ser o ponto central da frota na pagina principal
 - a leitura SQL de relatorios comecou a migrar para `RelatorioOperacionalQueryService` em `src/Infrastructure/ReadModels`
@@ -57,7 +57,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - atualizacao dos links e roadmaps para refletir os ciclos 01, 02, 03 e 04
 
 ## Proximo passo recomendado
-- revisar se a `Task 24 - Refino tecnico da persistencia e reducao de acoplamento legado` ja pode ser encerrada formalmente e escolher o proximo hotspot entre contratos ainda dependentes de flags e algum residual final pequeno de legado
+- abrir a proxima task tecnica do ciclo com foco em contratos ainda dependentes de flags, residuos pequenos de `global $pdo` e refinamentos pontuais do legado administrativo
 
 ## O que ja esta concluido por ciclo
 
@@ -79,7 +79,7 @@ Servir como ponto rapido de retomada do projeto em futuras sessoes, deixando cla
 - task 21: concluida
 - task 22: concluida
 - task 23: concluida
-- task 24: em andamento
+- task 24: concluida
 - ver: [roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md)
 
 ## Arquivos principais para retomar rapido

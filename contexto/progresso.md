@@ -1177,3 +1177,17 @@
 - `php -l backend/controllers/AuthController.php`
 - `php -l scripts/test-auth-login-input-service.php`
 - `php scripts/test-auth-login-input-service.php`
+
+## 2026-04-16 - Encerramento formal da Task 24
+
+### Fechamento da frente de refino tecnico
+- Atualizados [task_24_refino_tecnico_persistencia_reducao_acoplamento_legado.md](./ciclo_04_estabilidade_governanca/task_24_refino_tecnico_persistencia_reducao_acoplamento_legado.md), [roadmap_ciclo_04.md](./ciclo_04_estabilidade_governanca/roadmap_ciclo_04.md), [onde_paramos.md](./onde_paramos.md) e [estado_projeto.md](./estado_projeto.md) para marcar a conclusao formal da task
+- Consolidado o entendimento de que os hotspots principais desta frente deixaram de ser o gargalo dominante do projeto
+- Registrado o proximo foco recomendado: contratos ainda dependentes de flags, residuos pequenos de `global $pdo` e ajustes finais de legado administrativo
+
+### Resultado tecnico
+- o ciclo 04 agora fecha sua task de refino tecnico com base validada no WSL e com backlog residual mais claro
+- o projeto fica melhor posicionado para abrir a proxima task sem misturar encerramento documental com novas extracoes tecnicas
+
+### Validacao realizada
+- `php scripts/test-wsl-stack.php`

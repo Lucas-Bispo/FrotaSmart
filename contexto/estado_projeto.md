@@ -124,3 +124,4 @@ A [task_01_fundacao_arquitetura_composer_psr4.md](./ciclo_01_fundacao_arquitetur
 - Preservar a compatibilidade com Linux/WSL e com a publicacao via `public/`
 - Manter o WSL Ubuntu como ambiente principal e repetivel de desenvolvimento
 - Avancar o ciclo 04 priorizando refino tecnico da persistencia, governanca operacional, compliance e transparencia de dados nao pessoais
+- Considerar a `Task 24` concluida e deslocar o proximo foco para residuos legados menores, especialmente contratos com flags e dependencias globais pontuais
