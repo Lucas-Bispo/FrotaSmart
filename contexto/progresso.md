@@ -1485,3 +1485,17 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-17 - Fase 4, checklists operacionais com evidencias, etapa 2
+
+### Itens estruturados e vinculo opcional com viagem
+- Evoluidos [ChecklistOperacionalModel.php](../backend/models/ChecklistOperacionalModel.php), [ChecklistOperacionalController.php](../backend/controllers/ChecklistOperacionalController.php) e [checklists.php](../frontend/views/checklists.php) para suportar `viagem_id` opcional e um conjunto estruturado de itens inspecionados em `itens_json`
+- Atualizado [bootstrap-db.php](../scripts/bootstrap-db.php) para manter a tabela `checklists_operacionais` pronta para associacao com viagem e persistencia dos itens detalhados da vistoria
+- Ajustado [test-checklist-operacional-model.php](../scripts/test-checklist-operacional-model.php) para validar criacao e atualizacao com checklist detalhado e vinculo opcional com uma viagem real
+
+### Resultado tecnico
+- o modulo de checklist deixa de ser apenas um registro geral de conformidade e passa a ter trilha auditavel mais aderente a inspeção operacional real, com itens marcados e observacoes por item
+- a etapa prepara o terreno para anexos reais ou automacoes futuras sem exigir migracao de stack nem remodelagem do fluxo ja entregue
+
+### Validacao realizada
+- pendente executar nesta retomada

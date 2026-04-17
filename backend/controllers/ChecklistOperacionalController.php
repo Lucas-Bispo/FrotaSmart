@@ -9,6 +9,13 @@ final class ChecklistOperacionalController
 {
     private const ALLOWED_TYPES = ['saida', 'retorno'];
     private const ALLOWED_STATUS = ['conforme', 'nao_conforme', 'pendente'];
+    private const ITEM_LABELS = [
+        'documentacao' => 'Documentacao obrigatoria',
+        'pneus' => 'Pneus e rodas',
+        'iluminacao' => 'Iluminacao e sinalizacao',
+        'equipamentos' => 'Equipamentos obrigatorios',
+        'limpeza' => 'Condicoes gerais e limpeza',
+    ];
 
     private ChecklistOperacionalModel $model;
 
@@ -132,6 +139,7 @@ final class ChecklistOperacionalController
 
         return [
             'tipo' => $tipo,
+            'viagem_id' => $this->normalizeOptionalId($_POST['viagem_id'] ?? null),
             'veiculo_id' => $veiculoId,
             'motorista_id' => $motoristaId,
             'secretaria' => $secretaria,
@@ -139,10 +147,47 @@ final class ChecklistOperacionalController
             'status_conformidade' => $statusConformidade,
             'aceite_responsavel' => $aceiteResponsavel,
             'realizado_em' => $this->normalizeDateTimeForDatabase($realizadoEm),
+            'itens_json' => $this->encodeChecklistItems($_POST['itens'] ?? [], $_POST['item_observacoes'] ?? []),
             'nao_conformidades' => $naoConformidades !== '' ? $naoConformidades : null,
             'evidencia_referencia' => $evidenciaReferencia !== '' ? $evidenciaReferencia : null,
             'observacoes' => $observacoes !== '' ? $observacoes : null,
         ];
+    }
+
+    private function normalizeOptionalId(mixed $value): ?int
+    {
+        $id = (int) $value;
+
+        return $id > 0 ? $id : null;
+    }
+
+    /**
+     * @param mixed $selectedItems
+     * @param mixed $itemNotes
+     */
+    private function encodeChecklistItems(mixed $selectedItems, mixed $itemNotes): string
+    {
+        $selectedLookup = [];
+        if (is_array($selectedItems)) {
+            foreach ($selectedItems as $item) {
+                $selectedLookup[(string) $item] = true;
+            }
+        }
+
+        $notes = is_array($itemNotes) ? $itemNotes : [];
+        $items = [];
+
+        foreach (self::ITEM_LABELS as $code => $label) {
+            $note = trim((string) ($notes[$code] ?? ''));
+            $items[] = [
+                'codigo' => $code,
+                'label' => $label,
+                'checked' => isset($selectedLookup[$code]),
+                'observacao' => $note !== '' ? $note : null,
+            ];
+        }
+
+        return json_encode($items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]';
     }
 
     private function isValidDateTime(string $value): bool

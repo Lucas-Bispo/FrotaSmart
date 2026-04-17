@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../backend/config/security.php';
 require_once __DIR__ . '/../../backend/models/ChecklistOperacionalModel.php';
 require_once __DIR__ . '/../../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../../backend/models/VeiculoModel.php';
+require_once __DIR__ . '/../../backend/models/ViagemModel.php';
 
 secure_session_start();
 
@@ -18,6 +19,7 @@ if (! isset($_SESSION['user']) || ! user_can(\FrotaSmart\Application\Security\Rb
 $checklistModel = new ChecklistOperacionalModel();
 $veiculoModel = new VeiculoModel();
 $motoristaModel = new MotoristaModel();
+$viagemModel = new ViagemModel();
 
 $filtroTipo = trim((string) ($_GET['tipo'] ?? ''));
 $filtroStatus = trim((string) ($_GET['status'] ?? ''));
@@ -30,11 +32,20 @@ $checklists = $checklistModel->listByFilters([
 ]);
 $veiculos = $veiculoModel->getAllVeiculos();
 $motoristas = $motoristaModel->getAllMotoristas();
+$viagens = $viagemModel->listByFilters();
 $canManage = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);
 $successMessage = pull_flash('success');
 $errorMessage = pull_flash('error');
 $editingId = isset($_GET['edit']) ? (int) $_GET['edit'] : 0;
 $editingChecklist = $editingId > 0 && $canManage ? $checklistModel->findById($editingId) : null;
+/** @var array<string, string> $checklistItemLabels */
+$checklistItemLabels = [
+    'documentacao' => 'Documentacao obrigatoria',
+    'pneus' => 'Pneus e rodas',
+    'iluminacao' => 'Iluminacao e sinalizacao',
+    'equipamentos' => 'Equipamentos obrigatorios',
+    'limpeza' => 'Condicoes gerais e limpeza',
+];
 
 $totalConformes = 0;
 $totalNaoConformes = 0;
@@ -65,6 +76,24 @@ if (is_array($editingChecklist) && ! empty($editingChecklist['realizado_em'])) {
     $editingDate = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', (string) $editingChecklist['realizado_em']);
     if ($editingDate instanceof DateTimeImmutable) {
         $editingRealizadoEm = $editingDate->format('Y-m-d\TH:i');
+    }
+}
+
+$editingItems = [];
+if (is_array($editingChecklist) && ! empty($editingChecklist['itens_json'])) {
+    $decodedItems = json_decode((string) $editingChecklist['itens_json'], true);
+    if (is_array($decodedItems)) {
+        foreach ($decodedItems as $item) {
+            $code = (string) ($item['codigo'] ?? '');
+            if ($code === '') {
+                continue;
+            }
+
+            $editingItems[$code] = [
+                'checked' => ! empty($item['checked']),
+                'observacao' => (string) ($item['observacao'] ?? ''),
+            ];
+        }
     }
 }
 
@@ -191,8 +220,37 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Viagem vinculada</label>
+                        <select name="viagem_id" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Sem vinculo direto com viagem</option>
+                            <?php foreach (array_slice($viagens, 0, 50) as $viagem): ?>
+                                <option value="<?php echo (int) $viagem['id']; ?>" <?php echo ((int) ($editingChecklist['viagem_id'] ?? 0) === (int) $viagem['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars('#' . (string) $viagem['id'] . ' - ' . (string) $viagem['placa'] . ' - ' . (string) $viagem['destino'], ENT_QUOTES, 'UTF-8'); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Data e hora da vistoria</label>
                         <input type="datetime-local" name="realizado_em" required value="<?php echo htmlspecialchars($editingRealizadoEm !== '' ? $editingRealizadoEm : date('Y-m-d\TH:i'), ENT_QUOTES, 'UTF-8'); ?>" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div class="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-700">Itens da inspecao</h3>
+                            <p class="text-xs text-slate-500">Marque os itens verificados e registre observacoes quando necessario.</p>
+                        </div>
+                        <?php foreach ($checklistItemLabels as $code => $label): ?>
+                            <?php $itemState = $editingItems[$code] ?? ['checked' => false, 'observacao' => '']; ?>
+                            <div class="rounded-xl border border-slate-200 bg-white p-3">
+                                <label class="inline-flex items-center gap-3 text-sm text-slate-700">
+                                    <input type="checkbox" name="itens[]" value="<?php echo htmlspecialchars($code, ENT_QUOTES, 'UTF-8'); ?>" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" <?php echo ! empty($itemState['checked']) ? 'checked' : ''; ?>>
+                                    <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
+                                </label>
+                                <input type="text" name="item_observacoes[<?php echo htmlspecialchars($code, ENT_QUOTES, 'UTF-8'); ?>]" value="<?php echo htmlspecialchars((string) ($itemState['observacao'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" placeholder="Observacao opcional do item" class="mt-3 w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                        <?php endforeach; ?>
                     </div>
 
                     <div>
@@ -314,6 +372,11 @@ require_once __DIR__ . '/../includes/header.php';
                                     <div class="text-sm text-slate-800"><?php echo htmlspecialchars((string) $checklist['placa'] . ' - ' . (string) $checklist['modelo'], ENT_QUOTES, 'UTF-8'); ?></div>
                                     <div class="text-xs text-slate-500"><?php echo htmlspecialchars((string) $checklist['motorista_nome'], ENT_QUOTES, 'UTF-8'); ?></div>
                                     <div class="text-xs text-slate-500 mt-1"><?php echo htmlspecialchars((string) $checklist['responsavel_operacao'], ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <?php if (! empty($checklist['viagem_destino'])): ?>
+                                        <div class="text-xs text-cyan-700 mt-1">
+                                            Viagem vinculada: <?php echo htmlspecialchars((string) $checklist['viagem_destino'], ENT_QUOTES, 'UTF-8'); ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo $badgeClass; ?>">
@@ -321,6 +384,20 @@ require_once __DIR__ . '/../includes/header.php';
                                     </span>
                                     <div class="text-xs text-slate-500 mt-2 max-w-xs">
                                         <?php echo htmlspecialchars((string) ($checklist['nao_conformidades'] ?? 'Sem nao conformidades registradas.'), ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                    <?php
+                                    $itensResumo = [];
+                                    $decodedItems = json_decode((string) ($checklist['itens_json'] ?? '[]'), true);
+                                    if (is_array($decodedItems)) {
+                                        foreach ($decodedItems as $item) {
+                                            if (! empty($item['checked'])) {
+                                                $itensResumo[] = (string) ($item['label'] ?? $item['codigo'] ?? '');
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                    <div class="text-xs text-slate-500 mt-2 max-w-xs">
+                                        <?php echo htmlspecialchars($itensResumo === [] ? 'Nenhum item marcado.' : implode(' | ', array_slice($itensResumo, 0, 3)), ENT_QUOTES, 'UTF-8'); ?>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">

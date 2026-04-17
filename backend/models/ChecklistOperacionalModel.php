@@ -45,10 +45,13 @@ final class ChecklistOperacionalModel
                     c.*,
                     v.placa,
                     v.modelo,
-                    m.nome AS motorista_nome
+                    m.nome AS motorista_nome,
+                    vi.destino AS viagem_destino,
+                    vi.data_saida AS viagem_data_saida
                 FROM checklists_operacionais c
                 INNER JOIN veiculos v ON v.id = c.veiculo_id
-                INNER JOIN motoristas m ON m.id = c.motorista_id';
+                INNER JOIN motoristas m ON m.id = c.motorista_id
+                LEFT JOIN viagens vi ON vi.id = c.viagem_id';
 
         if ($conditions !== []) {
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
@@ -84,6 +87,7 @@ final class ChecklistOperacionalModel
         $stmt = $this->connection->prepare(
             'INSERT INTO checklists_operacionais (
                 tipo,
+                viagem_id,
                 veiculo_id,
                 motorista_id,
                 secretaria,
@@ -91,11 +95,13 @@ final class ChecklistOperacionalModel
                 status_conformidade,
                 aceite_responsavel,
                 realizado_em,
+                itens_json,
                 nao_conformidades,
                 evidencia_referencia,
                 observacoes
             ) VALUES (
                 :tipo,
+                :viagem_id,
                 :veiculo_id,
                 :motorista_id,
                 :secretaria,
@@ -103,6 +109,7 @@ final class ChecklistOperacionalModel
                 :status_conformidade,
                 :aceite_responsavel,
                 :realizado_em,
+                :itens_json,
                 :nao_conformidades,
                 :evidencia_referencia,
                 :observacoes
@@ -111,6 +118,7 @@ final class ChecklistOperacionalModel
 
         $stmt->execute([
             ':tipo' => $data['tipo'],
+            ':viagem_id' => $data['viagem_id'],
             ':veiculo_id' => $data['veiculo_id'],
             ':motorista_id' => $data['motorista_id'],
             ':secretaria' => $data['secretaria'],
@@ -118,6 +126,7 @@ final class ChecklistOperacionalModel
             ':status_conformidade' => $data['status_conformidade'],
             ':aceite_responsavel' => $data['aceite_responsavel'],
             ':realizado_em' => $data['realizado_em'],
+            ':itens_json' => $data['itens_json'],
             ':nao_conformidades' => $data['nao_conformidades'],
             ':evidencia_referencia' => $data['evidencia_referencia'],
             ':observacoes' => $data['observacoes'],
@@ -131,6 +140,7 @@ final class ChecklistOperacionalModel
         $stmt = $this->connection->prepare(
             'UPDATE checklists_operacionais
              SET tipo = :tipo,
+                 viagem_id = :viagem_id,
                  veiculo_id = :veiculo_id,
                  motorista_id = :motorista_id,
                  secretaria = :secretaria,
@@ -138,6 +148,7 @@ final class ChecklistOperacionalModel
                  status_conformidade = :status_conformidade,
                  aceite_responsavel = :aceite_responsavel,
                  realizado_em = :realizado_em,
+                 itens_json = :itens_json,
                  nao_conformidades = :nao_conformidades,
                  evidencia_referencia = :evidencia_referencia,
                  observacoes = :observacoes
@@ -147,6 +158,7 @@ final class ChecklistOperacionalModel
         $stmt->execute([
             ':id' => $id,
             ':tipo' => $data['tipo'],
+            ':viagem_id' => $data['viagem_id'],
             ':veiculo_id' => $data['veiculo_id'],
             ':motorista_id' => $data['motorista_id'],
             ':secretaria' => $data['secretaria'],
@@ -154,6 +166,7 @@ final class ChecklistOperacionalModel
             ':status_conformidade' => $data['status_conformidade'],
             ':aceite_responsavel' => $data['aceite_responsavel'],
             ':realizado_em' => $data['realizado_em'],
+            ':itens_json' => $data['itens_json'],
             ':nao_conformidades' => $data['nao_conformidades'],
             ':evidencia_referencia' => $data['evidencia_referencia'],
             ':observacoes' => $data['observacoes'],
