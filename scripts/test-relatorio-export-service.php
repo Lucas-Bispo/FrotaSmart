@@ -62,6 +62,23 @@ $operationalReadModel = new class () implements \FrotaSmart\Application\Contract
             'documentos_pendentes' => 0,
         ]];
     }
+
+    public function fetchChecklistReport(array $filters): array
+    {
+        return [[
+            'tipo' => 'retorno',
+            'placa' => 'CHK1A23',
+            'secretaria' => 'Saude',
+            'motorista_nome' => 'Carlos',
+            'realizado_em' => '2026-04-17 18:10:00',
+            'status_conformidade' => 'conforme',
+            'nao_conformidades' => '',
+            'itens_json' => '[{"checked":true},{"checked":true}]',
+            'evidencias_json' => '[{"referencia":"foto_ret_01.jpg"}]',
+            'evidencia_referencia' => 'foto_ret_01.jpg',
+            'viagem_destino' => 'Garagem',
+        ]];
+    }
 };
 
 $auditReadModel = new class () implements \FrotaSmart\Application\Contracts\AuditReportReadModelInterface {
@@ -105,6 +122,7 @@ $csvViagem = $service->export('viagens', ['status' => 'concluida']);
 $csvAbastecimento = $service->export('abastecimentos', ['status' => 'critico']);
 $csvDocumentacao = $service->export('documentacao', ['status' => 'vencendo']);
 $csvTransparencia = $service->export('transparencia', ['secretaria' => 'Administracao']);
+$csvChecklist = $service->export('checklists', ['status' => 'conforme']);
 $csvUnknown = $service->export('inexistente', []);
 
 if (! str_contains($csvViagem, 'viagem')) {
@@ -121,6 +139,10 @@ if (! str_contains($csvDocumentacao, 'ABC1D23') || ! str_contains($csvDocumentac
 
 if (! str_contains($csvTransparencia, 'XYZ9K88') || str_contains($csvTransparencia, 'motorista')) {
     throw new RuntimeException('Export service deveria serializar o dataset de transparencia sem dados pessoais.');
+}
+
+if (! str_contains($csvChecklist, 'CHK1A23') || ! str_contains($csvChecklist, 'conforme')) {
+    throw new RuntimeException('Export service deveria serializar o dataset de checklists operacionais.');
 }
 
 if (! str_contains($csvUnknown, 'sem_dados')) {

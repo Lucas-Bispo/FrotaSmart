@@ -14,6 +14,7 @@ function relatorios_report_labels(): array
         'disponibilidade' => 'Disponibilidade',
         'documentacao' => 'Documentacao',
         'transparencia' => 'Transparencia',
+        'checklists' => 'Checklists',
         'auditoria' => 'Auditoria',
     ];
 }
@@ -30,6 +31,7 @@ function relatorios_status_options(string $report): array
         'disponibilidade' => ['ativo' => 'Ativo', 'manutencao' => 'Manutencao', 'em_viagem' => 'Em viagem', 'reservado' => 'Reservado', 'baixado' => 'Baixado'],
         'documentacao' => ['vencido' => 'Vencido', 'vencendo' => 'Vencendo', 'regular' => 'Regular'],
         'transparencia' => ['ativo' => 'Ativo', 'manutencao' => 'Manutencao', 'em_viagem' => 'Em viagem', 'reservado' => 'Reservado', 'baixado' => 'Baixado'],
+        'checklists' => ['conforme' => 'Conforme', 'nao_conforme' => 'Nao conforme', 'pendente' => 'Pendente'],
         'auditoria' => ['create' => 'Criacao', 'update' => 'Atualizacao', 'archive' => 'Arquivamento', 'restore' => 'Restauracao', 'delete' => 'Exclusao', 'blocked' => 'Bloqueio', 'export' => 'Exportacao', 'login' => 'Login', 'login_failed' => 'Falha login', 'logout' => 'Logout'],
         default => [],
     };
@@ -74,6 +76,15 @@ function relatorios_summary_cards(string $report, array $summary, array $auditSu
         ];
     }
 
+    if ($report === 'checklists') {
+        return [
+            ['title' => 'Checklists no periodo', 'value' => (string) (int) ($summary['checklists_total'] ?? 0), 'value_class' => 'text-slate-800'],
+            ['title' => 'Nao conformes', 'value' => (string) (int) ($summary['nao_conformes'] ?? 0), 'value_class' => 'text-rose-700'],
+            ['title' => 'Evidencias', 'value' => (string) (int) ($summary['evidencias_total'] ?? 0), 'value_class' => 'text-cyan-700'],
+            ['title' => 'Itens marcados', 'value' => (string) (int) ($summary['itens_marcados'] ?? 0), 'value_class' => 'text-emerald-700'],
+        ];
+    }
+
     return [
         ['title' => 'Gasto abastecimento', 'value' => 'R$ ' . number_format((float) ($summary['gasto_abastecimento'] ?? 0), 2, ',', '.'), 'value_class' => 'text-emerald-600'],
         ['title' => 'Custo manutencao', 'value' => 'R$ ' . number_format((float) ($summary['custo_manutencao'] ?? 0), 2, ',', '.'), 'value_class' => 'text-amber-600'],
@@ -93,6 +104,7 @@ function relatorios_table_headers(string $report): array
         'viagens' => ['Veiculo', 'Secretaria', 'Motorista', 'Trajeto', 'KM e status'],
         'documentacao' => ['Veiculo', 'Secretaria', 'Situacao documental', 'Proximo vencimento', 'Pendencias e controle'],
         'transparencia' => ['Veiculo', 'Secretaria', 'Cadastro publico', 'Uso no periodo', 'Custos e conformidade'],
+        'checklists' => ['Checklist', 'Veiculo', 'Motorista', 'Conformidade', 'Evidencias e itens'],
         'auditoria' => ['Data e evento', 'Acao', 'Alvo', 'Ator e origem', 'Contexto'],
         default => ['Veiculo', 'Secretaria', 'Status', 'Uso', 'Historico'],
     };
@@ -254,7 +266,11 @@ function relatorios_build_page_data($model, string $report, array $filters, arra
         ? relatorios_documentacao_summary($rows)
         : ($report === 'transparencia'
             ? relatorios_transparencia_summary($rows)
-            : $model->getResumo($filters));
+            : ($report === 'checklists'
+                ? relatorios_checklists_summary($rows)
+                : $model->getResumo($filters)
+            )
+        );
     $auditSummary = $model->getAuditSummary($filters);
     $auditTargetTypes = $model->getAuditTargetTypes();
     $statusOptions = relatorios_status_options($report);
@@ -297,6 +313,7 @@ function relatorios_rows_for_report($model, string $report, array $filters): arr
         'disponibilidade' => $model->getDisponibilidadeReport($filters),
         'documentacao' => $model->getDocumentacaoReport($filters),
         'transparencia' => $model->getTransparenciaReport($filters),
+        'checklists' => $model->getChecklistReport($filters),
         'auditoria' => $model->getAuditReport($filters),
         default => $model->getAbastecimentoReport($filters),
     };
@@ -330,6 +347,7 @@ function relatorios_row_markup(string $report, array $row): string
         'viagens' => relatorios_viagem_row($row),
         'documentacao' => relatorios_documentacao_row($row),
         'transparencia' => relatorios_transparencia_row($row),
+        'checklists' => relatorios_checklist_row($row),
         'auditoria' => relatorios_auditoria_row($row),
         default => relatorios_disponibilidade_row($row),
     };
@@ -535,6 +553,61 @@ function relatorios_transparencia_summary(array $rows): array
         if ((int) ($row['documentos_pendentes'] ?? 0) > 0) {
             $summary['veiculos_com_pendencia']++;
         }
+    }
+
+    return $summary;
+}
+
+function relatorios_checklist_row(array $row): string
+{
+    $status = (string) ($row['status_conformidade'] ?? 'pendente');
+    $badgeClass = match ($status) {
+        'conforme' => 'bg-emerald-100 text-emerald-800',
+        'nao_conforme' => 'bg-rose-100 text-rose-800',
+        default => 'bg-amber-100 text-amber-800',
+    };
+
+    return sprintf(
+        '<td class="px-6 py-4"><div class="text-sm font-bold text-slate-900">%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold %s">%s</span><div class="text-xs text-slate-500 mt-2">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%d item(ns) | %d evidencia(s)</div></td>',
+        htmlspecialchars(ucfirst((string) ($row['tipo'] ?? '')), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['realizado_em'] ?? ''), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['placa'] ?? ''), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['secretaria'] ?? ''), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['motorista_nome'] ?? ''), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) (($row['viagem_destino'] ?? '') !== '' ? $row['viagem_destino'] : 'Sem viagem vinculada'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($badgeClass, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars(ucfirst(str_replace('_', ' ', $status)), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) (($row['nao_conformidades'] ?? '') !== '' ? $row['nao_conformidades'] : 'Sem nao conformidade registrada.'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) (($row['evidencia_referencia'] ?? '') !== '' ? $row['evidencia_referencia'] : 'Sem evidencia resumida.'), ENT_QUOTES, 'UTF-8'),
+        (int) ($row['itens_marcados'] ?? 0),
+        (int) ($row['evidencias_total'] ?? 0)
+    );
+}
+
+/**
+ * @param list<array<string, mixed>> $rows
+ * @return array<string, int>
+ */
+function relatorios_checklists_summary(array $rows): array
+{
+    $summary = [
+        'checklists_total' => count($rows),
+        'nao_conformes' => 0,
+        'evidencias_total' => 0,
+        'itens_marcados' => 0,
+    ];
+
+    foreach ($rows as $row) {
+        if (($row['status_conformidade'] ?? '') === 'nao_conforme') {
+            $summary['nao_conformes']++;
+        }
+
+        $summary['evidencias_total'] += (int) ($row['evidencias_total'] ?? 0);
+        $summary['itens_marcados'] += (int) ($row['itens_marcados'] ?? 0);
     }
 
     return $summary;

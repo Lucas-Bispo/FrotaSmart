@@ -416,6 +416,64 @@ final class RelatorioOperacionalQueryService implements AuditReportReadModelInte
     }
 
     /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public function fetchChecklistReport(array $filters): array
+    {
+        $criteria = $this->criteria->forOperationalReport($filters);
+        $conditions = [];
+        $params = [];
+
+        if (($dataInicio = $criteria['data_inicio']) !== null) {
+            $conditions[] = 'DATE(c.realizado_em) >= :data_inicio';
+            $params[':data_inicio'] = $dataInicio;
+        }
+
+        if (($dataFim = $criteria['data_fim']) !== null) {
+            $conditions[] = 'DATE(c.realizado_em) <= :data_fim';
+            $params[':data_fim'] = $dataFim;
+        }
+
+        if (($secretaria = $criteria['secretaria']) !== null) {
+            $conditions[] = 'c.secretaria = :secretaria';
+            $params[':secretaria'] = $secretaria;
+        }
+
+        if (($veiculoId = $criteria['veiculo_id']) !== null) {
+            $conditions[] = 'c.veiculo_id = :veiculo_id';
+            $params[':veiculo_id'] = $veiculoId;
+        }
+
+        if (($status = $criteria['status']) !== null) {
+            $conditions[] = 'c.status_conformidade = :status';
+            $params[':status'] = $status;
+        }
+
+        $sql = 'SELECT
+                    c.*,
+                    v.placa,
+                    v.modelo,
+                    m.nome AS motorista_nome,
+                    vi.destino AS viagem_destino
+                FROM checklists_operacionais c
+                INNER JOIN veiculos v ON v.id = c.veiculo_id
+                INNER JOIN motoristas m ON m.id = c.motorista_id
+                LEFT JOIN viagens vi ON vi.id = c.viagem_id';
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' ORDER BY c.realizado_em DESC, c.id DESC';
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function fetchFleetSummaryBySecretaria(): array

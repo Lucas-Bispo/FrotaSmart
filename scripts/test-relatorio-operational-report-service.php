@@ -85,6 +85,25 @@ $readModel = new class () implements \FrotaSmart\Application\Contracts\Relatorio
             'documentos_pendentes' => 1,
         ]];
     }
+
+    public function fetchChecklistReport(array $filters): array
+    {
+        $this->lastFilters = $filters;
+
+        return [[
+            'tipo' => 'saida',
+            'placa' => 'ABC1D23',
+            'secretaria' => 'Saude',
+            'motorista_nome' => 'Carlos',
+            'realizado_em' => '2026-04-17 08:30:00',
+            'status_conformidade' => 'nao_conforme',
+            'nao_conformidades' => 'Lanterna traseira com falha.',
+            'itens_json' => '[{"checked":true},{"checked":true},{"checked":false}]',
+            'evidencias_json' => '[{"referencia":"foto_1.jpg"},{"referencia":"foto_2.jpg"}]',
+            'evidencia_referencia' => 'foto_1.jpg | foto_2.jpg',
+            'viagem_destino' => 'Centro',
+        ]];
+    }
 };
 
 $service = new \FrotaSmart\Application\Services\RelatorioOperationalReportService(
@@ -102,6 +121,7 @@ $viagens = $service->viagens($filters);
 $disponibilidade = $service->disponibilidade($filters);
 $documentacao = $service->documentacao($filters);
 $transparencia = $service->transparenciaPublica($filters);
+$checklists = $service->checklists($filters);
 
 if (($readModel->lastFilters['veiculo_id'] ?? null) !== '8') {
     throw new RuntimeException('Service operacional de relatorios deveria repassar os filtros ao read model.');
@@ -128,6 +148,10 @@ if (($documentacao[0]['situacao_documental'] ?? '') !== 'vencido'
 if (($transparencia[0]['situacao_publicacao'] ?? '') !== 'pendencia_documental'
     || array_key_exists('motorista_nome', $transparencia[0])) {
     throw new RuntimeException('Service operacional de relatorios deveria classificar e preservar o dataset publico sem dados pessoais.');
+}
+
+if (($checklists[0]['evidencias_total'] ?? null) !== 2 || ($checklists[0]['itens_marcados'] ?? null) !== 2) {
+    throw new RuntimeException('Service operacional de relatorios deveria enriquecer o dataset de checklist com resumo de itens e evidencias.');
 }
 
 echo "Service operacional de relatorios validado com sucesso.\n";

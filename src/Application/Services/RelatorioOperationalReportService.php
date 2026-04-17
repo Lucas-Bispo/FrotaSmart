@@ -63,4 +63,15 @@ final class RelatorioOperationalReportService
             $this->readModel->fetchTransparenciaPublicaReport($filters)
         );
     }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public function checklists(array $filters): array
+    {
+        return $this->rowTransformer->withChecklistResumo(
+            $this->readModel->fetchChecklistReport($filters)
+        );
+    }
 }

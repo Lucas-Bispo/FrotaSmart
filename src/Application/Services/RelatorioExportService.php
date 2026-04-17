@@ -27,6 +27,7 @@ final class RelatorioExportService
             'disponibilidade' => fn (): array => $this->operationalReports->disponibilidade($filters),
             'documentacao' => fn (): array => $this->operationalReports->documentacao($filters),
             'transparencia' => fn (): array => $this->operationalReports->transparenciaPublica($filters),
+            'checklists' => fn (): array => $this->operationalReports->checklists($filters),
             'auditoria' => fn (): array => $this->auditReport->report($filters),
         ]));
     }

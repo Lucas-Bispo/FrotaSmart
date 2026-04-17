@@ -111,6 +111,23 @@ $fakeModel = new class {
             'documentos_pendentes' => 0,
         ]];
     }
+
+    public function getChecklistReport(array $filters): array
+    {
+        return [[
+            'tipo' => 'saida',
+            'placa' => 'CHK1A23',
+            'secretaria' => 'Saude',
+            'motorista_nome' => 'Carlos',
+            'realizado_em' => '2026-04-17 08:30:00',
+            'status_conformidade' => 'nao_conforme',
+            'nao_conformidades' => 'Lanterna traseira com falha.',
+            'itens_marcados' => 2,
+            'evidencias_total' => 3,
+            'evidencia_referencia' => 'foto_1.jpg | foto_2.jpg',
+            'viagem_destino' => 'Centro',
+        ]];
+    }
 };
 
 $pageData = relatorios_build_page_data(
@@ -211,6 +228,34 @@ if (($transparencyPageData['reportTitle'] ?? '') !== 'Transparencia') {
 
 if (! str_contains((string) (($transparencyPageData['rowMarkupList'][0] ?? '')), 'Regular para publicacao')) {
     throw new RuntimeException('Helper de view deveria renderizar a classificacao publica do dataset de transparencia.');
+}
+
+$checklistPageData = relatorios_build_page_data(
+    $fakeModel,
+    'checklists',
+    [
+        'data_inicio' => '',
+        'data_fim' => '',
+        'secretaria' => 'Saude',
+        'veiculo_id' => '1',
+        'status' => 'nao_conforme',
+        'ator' => '',
+        'evento' => '',
+        'tipo_alvo' => '',
+    ],
+    relatorios_report_labels()
+);
+
+if (($checklistPageData['summaryCards'][1]['value'] ?? '') !== '1') {
+    throw new RuntimeException('Helper de view deveria resumir checklists nao conformes.');
+}
+
+if (($checklistPageData['reportTitle'] ?? '') !== 'Checklists') {
+    throw new RuntimeException('Helper de view deveria expor o titulo da aba de checklists.');
+}
+
+if (! str_contains((string) (($checklistPageData['rowMarkupList'][0] ?? '')), 'Lanterna traseira com falha.')) {
+    throw new RuntimeException('Helper de view deveria renderizar a linha resumida do checklist.');
 }
 
 echo "Helpers de view de relatorios validados com sucesso.\n";

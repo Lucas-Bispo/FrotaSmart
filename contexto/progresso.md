@@ -1526,3 +1526,17 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-17 - Fase 4, checklists operacionais com evidencias, etapa 5
+
+### Consulta e exportacao de checklists no modulo de relatorios
+- Evoluidos [RelatorioOperationalReadModelInterface.php](../src/Application/Contracts/RelatorioOperationalReadModelInterface.php), [RelatorioOperationalReportService.php](../src/Application/Services/RelatorioOperationalReportService.php), [RelatorioRowTransformerService.php](../src/Application/Services/RelatorioRowTransformerService.php) e [RelatorioOperacionalQueryService.php](../src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php) para expor um dataset dedicado de checklists operacionais
+- Atualizados [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php), [RelatorioExportService.php](../src/Application/Services/RelatorioExportService.php) e [relatorios_view_helpers.php](../frontend/views/helpers/relatorios_view_helpers.php) para adicionar a aba `checklists` com resumo, renderizacao da tabela e exportacao CSV
+- Ajustados [test-relatorio-operational-report-service.php](../scripts/test-relatorio-operational-report-service.php), [test-relatorio-export-service.php](../scripts/test-relatorio-export-service.php) e [test-relatorio-view-helpers.php](../scripts/test-relatorio-view-helpers.php) para validar o fluxo novo
+
+### Resultado tecnico
+- a frente de checklists deixa de depender apenas da tela operacional e do dashboard e passa a ter consulta institucional no modulo de relatorios, aderente ao que os `.md` pedem para leitura e rastreabilidade
+- o sistema agora fecha um ciclo mais completo dessa frente: cadastro, detalhe operacional, leitura gerencial e exportacao estruturada
+
+### Validacao realizada
+- pendente executar nesta retomada

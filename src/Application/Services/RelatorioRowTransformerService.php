@@ -161,6 +161,44 @@ final class RelatorioRowTransformerService
      * @param list<array<string, mixed>> $rows
      * @return list<array<string, mixed>>
      */
+    public function withChecklistResumo(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            $evidenceCount = 0;
+            $decodedEvidence = json_decode((string) ($row['evidencias_json'] ?? '[]'), true);
+
+            if (is_array($decodedEvidence)) {
+                foreach ($decodedEvidence as $entry) {
+                    if (trim((string) ($entry['referencia'] ?? '')) !== '') {
+                        $evidenceCount++;
+                    }
+                }
+            } elseif (trim((string) ($row['evidencia_referencia'] ?? '')) !== '') {
+                $evidenceCount = 1;
+            }
+
+            $checkedItems = 0;
+            $decodedItems = json_decode((string) ($row['itens_json'] ?? '[]'), true);
+            if (is_array($decodedItems)) {
+                foreach ($decodedItems as $item) {
+                    if (! empty($item['checked'])) {
+                        $checkedItems++;
+                    }
+                }
+            }
+
+            $row['evidencias_total'] = $evidenceCount;
+            $row['itens_marcados'] = $checkedItems;
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
     public function withAuditContextSummary(array $rows): array
     {
         foreach ($rows as &$row) {

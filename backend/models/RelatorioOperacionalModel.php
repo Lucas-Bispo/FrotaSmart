@@ -70,6 +70,11 @@ final class RelatorioOperacionalModel
         return $this->operationalReports->transparenciaPublica($filters);
     }
 
+    public function getChecklistReport(array $filters): array
+    {
+        return $this->operationalReports->checklists($filters);
+    }
+
     public function getResumo(array $filters): array
     {
         return $this->operationalSummaries->summarize(
