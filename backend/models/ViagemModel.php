@@ -6,13 +6,18 @@ require_once __DIR__ . '/../config/db.php';
 
 final class ViagemModel
 {
+    private PDO $connection;
+
+    public function __construct(?PDO $connection = null)
+    {
+        $this->connection = $connection ?? $this->resolveLegacyConnection();
+    }
+
     /**
      * @param array{status?:?string,secretaria?:?string} $filters
      */
     public function listByFilters(array $filters = []): array
     {
-        global $pdo;
-
         $status = $filters['status'] ?? null;
         $secretaria = $filters['secretaria'] ?? null;
         $conditions = [];
@@ -39,7 +44,7 @@ final class ViagemModel
 
         $sql .= ' ORDER BY v.data_saida DESC, v.id DESC';
 
-        $stmt = $pdo->prepare($sql);
+        $stmt = $this->connection->prepare($sql);
         $stmt->execute($params);
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -47,9 +52,7 @@ final class ViagemModel
 
     public function findById(int $id): ?array
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'SELECT v.*, ve.placa, ve.modelo, m.nome AS motorista_nome
              FROM viagens v
              INNER JOIN veiculos ve ON ve.id = v.veiculo_id
@@ -65,9 +68,7 @@ final class ViagemModel
 
     public function create(array $data): int
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'INSERT INTO viagens (
                 veiculo_id,
                 motorista_id,
@@ -118,14 +119,12 @@ final class ViagemModel
             ':observacoes' => $data['observacoes'],
         ]);
 
-        return (int) $pdo->lastInsertId();
+        return (int) $this->connection->lastInsertId();
     }
 
     public function update(int $id, array $data): void
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'UPDATE viagens
              SET veiculo_id = :veiculo_id,
                  motorista_id = :motorista_id,
@@ -165,10 +164,19 @@ final class ViagemModel
 
     public function countEmCurso(): int
     {
-        global $pdo;
-
-        $stmt = $pdo->query("SELECT COUNT(*) FROM viagens WHERE status = 'em_curso'");
+        $stmt = $this->connection->query("SELECT COUNT(*) FROM viagens WHERE status = 'em_curso'");
 
         return (int) $stmt->fetchColumn();
+    }
+
+    private function resolveLegacyConnection(): PDO
+    {
+        global $pdo;
+
+        if ($pdo instanceof PDO) {
+            return $pdo;
+        }
+
+        throw new RuntimeException('Conexao PDO indisponivel para ViagemModel.');
     }
 }

@@ -25,8 +25,10 @@ final class RelatorioAbastecimentoReportService
 
         return $this->filters->filter(
             $this->readModel->fetchByCriteria($criteria),
-            $criteria['secretaria'],
-            $criteria['status']
+            [
+                'secretaria' => $criteria['secretaria'],
+                'status' => $criteria['status'],
+            ]
         );
     }
 }

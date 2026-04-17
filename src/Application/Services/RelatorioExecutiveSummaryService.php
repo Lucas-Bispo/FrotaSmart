@@ -18,10 +18,13 @@ final class RelatorioExecutiveSummaryService
     }
 
     /**
+     * @param array{data_inicio?:?string,data_fim?:?string} $filters
      * @return list<array<string, mixed>>
      */
-    public function buildBySecretaria(?string $dataInicio = null, ?string $dataFim = null): array
+    public function buildBySecretaria(array $filters = []): array
     {
+        $dataInicio = $filters['data_inicio'] ?? null;
+        $dataFim = $filters['data_fim'] ?? null;
         $summaries = [];
 
         foreach ($this->queries->fetchSecretarias() as $secretaria) {
@@ -42,7 +45,10 @@ final class RelatorioExecutiveSummaryService
             $summaries[$name]['motoristas_ativos'] = (int) ($row['motoristas_ativos'] ?? 0);
         }
 
-        foreach ($this->queries->fetchViagensSummaryBySecretaria($dataInicio, $dataFim) as $row) {
+        foreach ($this->queries->fetchViagensSummaryBySecretaria([
+            'data_inicio' => $dataInicio,
+            'data_fim' => $dataFim,
+        ]) as $row) {
             $name = $this->touchSecretariaSummary($summaries, $row['secretaria'] ?? null);
             $summaries[$name]['viagens_periodo'] = (int) ($row['viagens_periodo'] ?? 0);
             $summaries[$name]['km_viagens_periodo'] = (int) ($row['km_viagens_periodo'] ?? 0);
@@ -117,10 +123,14 @@ final class RelatorioExecutiveSummaryService
     }
 
     /**
+     * @param array{data_inicio?:?string,data_fim?:?string,limit?:?int} $filters
      * @return list<array<string, mixed>>
      */
-    public function buildByVeiculo(?string $dataInicio = null, ?string $dataFim = null, int $limit = 8): array
+    public function buildByVeiculo(array $filters = []): array
     {
+        $dataInicio = $filters['data_inicio'] ?? null;
+        $dataFim = $filters['data_fim'] ?? null;
+        $limit = max(1, (int) ($filters['limit'] ?? 8));
         $summaries = [];
 
         foreach ($this->queries->fetchVeiculos() as $veiculo) {
@@ -153,7 +163,10 @@ final class RelatorioExecutiveSummaryService
             ];
         }
 
-        foreach ($this->queries->fetchViagensSummaryByVeiculo($dataInicio, $dataFim) as $row) {
+        foreach ($this->queries->fetchViagensSummaryByVeiculo([
+            'data_inicio' => $dataInicio,
+            'data_fim' => $dataFim,
+        ]) as $row) {
             $veiculoId = (int) ($row['veiculo_id'] ?? 0);
             if (! isset($summaries[$veiculoId])) {
                 continue;

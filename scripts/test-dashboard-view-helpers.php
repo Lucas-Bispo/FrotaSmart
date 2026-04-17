@@ -9,7 +9,12 @@ $alertLimit = $today->modify('+30 days');
 
 $pageData = dashboard_build_page_data(
     [
-        ['status' => 'disponivel'],
+        [
+            'status' => 'disponivel',
+            'placa' => 'ABC1D23',
+            'secretaria_lotada' => 'Saude',
+            'licenciamento_vencimento' => '2026-04-18',
+        ],
         ['status' => 'em_manutencao'],
         ['status' => 'arquivado'],
     ],
@@ -55,6 +60,18 @@ if (($pageData['fleet_filter_tabs'][1]['is_active'] ?? false) !== true) {
 
 if (! in_array('1 CNH(s) vencem nos proximos 30 dias.', $pageData['alertas_operacionais'] ?? [], true)) {
     throw new RuntimeException('Dashboard deveria manter os alertas operacionais dentro do pacote principal da tela.');
+}
+
+if (! in_array('1 documento(s) veicular(es) vencem nos proximos 30 dias.', $pageData['alertas_operacionais'] ?? [], true)) {
+    throw new RuntimeException('Dashboard deveria sinalizar vencimentos documentais no pacote principal da tela.');
+}
+
+if (($pageData['document_pending_rows'][0]['placa'] ?? '') !== 'ABC1D23') {
+    throw new RuntimeException('Dashboard deveria preparar as linhas de pendencia documental na camada de helper.');
+}
+
+if (($pageData['document_secretaria_rows'][0]['secretaria'] ?? '') !== 'Saude') {
+    throw new RuntimeException('Dashboard deveria consolidar pendencias documentais por secretaria.');
 }
 
 echo "Helpers de view do dashboard validados com sucesso.\n";

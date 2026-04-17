@@ -6,14 +6,19 @@ require_once __DIR__ . '/../config/db.php';
 
 final class VeiculoModel
 {
+    private PDO $connection;
+
+    public function __construct(?PDO $connection = null)
+    {
+        $this->connection = $connection ?? $this->resolveLegacyConnection();
+    }
+
     /**
      * @return array<string, mixed>|null
      */
     public function findById(int $id): ?array
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'SELECT *
              FROM veiculos
              WHERE id = ?
@@ -40,9 +45,7 @@ final class VeiculoModel
         ?string $dataAquisicao = null,
         ?string $documentosObservacoes = null
     ): string {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'INSERT INTO veiculos (
                 placa,
                 modelo,
@@ -74,7 +77,7 @@ final class VeiculoModel
             $documentosObservacoes,
         ]);
 
-        return $pdo->lastInsertId();
+        return $this->connection->lastInsertId();
     }
 
     /**
@@ -82,15 +85,13 @@ final class VeiculoModel
      */
     public function getAllVeiculos(string $filtro = 'ativos'): array
     {
-        global $pdo;
-
         $where = match ($filtro) {
             'arquivados' => 'deleted_at IS NOT NULL',
             'todos' => '1 = 1',
             default => 'deleted_at IS NULL',
         };
 
-        $stmt = $pdo->query(
+        $stmt = $this->connection->query(
             'SELECT *
              FROM veiculos
              WHERE ' . $where . '
@@ -114,9 +115,7 @@ final class VeiculoModel
 
     public function countArquivados(): int
     {
-        global $pdo;
-
-        $stmt = $pdo->query('SELECT COUNT(*) FROM veiculos WHERE deleted_at IS NOT NULL');
+        $stmt = $this->connection->query('SELECT COUNT(*) FROM veiculos WHERE deleted_at IS NOT NULL');
 
         return (int) $stmt->fetchColumn();
     }
@@ -136,9 +135,7 @@ final class VeiculoModel
         ?string $dataAquisicao = null,
         ?string $documentosObservacoes = null
     ): int {
-        global $pdo;
-
-        $stmt = $pdo->prepare(
+        $stmt = $this->connection->prepare(
             'UPDATE veiculos
              SET placa = ?,
                  modelo = ?,
@@ -177,9 +174,7 @@ final class VeiculoModel
 
     public function deleteVeiculo(int $id): int
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare('UPDATE veiculos SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL');
+        $stmt = $this->connection->prepare('UPDATE veiculos SET deleted_at = CURRENT_TIMESTAMP WHERE id = ? AND deleted_at IS NULL');
         $stmt->execute([$id]);
 
         return $stmt->rowCount();
@@ -187,11 +182,20 @@ final class VeiculoModel
 
     public function restoreVeiculo(int $id): int
     {
-        global $pdo;
-
-        $stmt = $pdo->prepare('UPDATE veiculos SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL');
+        $stmt = $this->connection->prepare('UPDATE veiculos SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL');
         $stmt->execute([$id]);
 
         return $stmt->rowCount();
+    }
+
+    private function resolveLegacyConnection(): PDO
+    {
+        global $pdo;
+
+        if ($pdo instanceof PDO) {
+            return $pdo;
+        }
+
+        throw new RuntimeException('Conexao PDO indisponivel para VeiculoModel.');
     }
 }

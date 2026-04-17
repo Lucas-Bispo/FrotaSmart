@@ -12,6 +12,7 @@ function relatorios_report_labels(): array
         'manutencoes' => 'Manutencoes',
         'viagens' => 'Viagens',
         'disponibilidade' => 'Disponibilidade',
+        'documentacao' => 'Documentacao',
         'auditoria' => 'Auditoria',
     ];
 }
@@ -26,6 +27,7 @@ function relatorios_status_options(string $report): array
         'manutencoes' => ['aberta' => 'Aberta', 'em_andamento' => 'Em andamento', 'concluida' => 'Concluida', 'cancelada' => 'Cancelada'],
         'viagens' => ['em_curso' => 'Em curso', 'concluida' => 'Concluida', 'cancelada' => 'Cancelada'],
         'disponibilidade' => ['ativo' => 'Ativo', 'manutencao' => 'Manutencao', 'em_viagem' => 'Em viagem', 'reservado' => 'Reservado', 'baixado' => 'Baixado'],
+        'documentacao' => ['vencido' => 'Vencido', 'vencendo' => 'Vencendo', 'regular' => 'Regular'],
         'auditoria' => ['create' => 'Criacao', 'update' => 'Atualizacao', 'archive' => 'Arquivamento', 'restore' => 'Restauracao', 'delete' => 'Exclusao', 'blocked' => 'Bloqueio', 'export' => 'Exportacao', 'login' => 'Login', 'login_failed' => 'Falha login', 'logout' => 'Logout'],
         default => [],
     };
@@ -47,6 +49,20 @@ function relatorios_summary_cards(string $report, array $summary, array $auditSu
         ];
     }
 
+    if ($report === 'documentacao') {
+        $veiculosMonitorados = (int) ($summary['veiculos_monitorados'] ?? 0);
+        $veiculosPendentes = (int) ($summary['veiculos_pendentes'] ?? 0);
+        $documentosVencidos = (int) ($summary['documentos_vencidos'] ?? 0);
+        $documentosVencendo = (int) ($summary['documentos_vencendo'] ?? 0);
+
+        return [
+            ['title' => 'Veiculos monitorados', 'value' => (string) $veiculosMonitorados, 'value_class' => 'text-slate-800'],
+            ['title' => 'Com pendencias', 'value' => (string) $veiculosPendentes, 'value_class' => 'text-amber-700'],
+            ['title' => 'Documentos vencidos', 'value' => (string) $documentosVencidos, 'value_class' => 'text-rose-700'],
+            ['title' => 'Documentos vencendo', 'value' => (string) $documentosVencendo, 'value_class' => 'text-cyan-700'],
+        ];
+    }
+
     return [
         ['title' => 'Gasto abastecimento', 'value' => 'R$ ' . number_format((float) ($summary['gasto_abastecimento'] ?? 0), 2, ',', '.'), 'value_class' => 'text-emerald-600'],
         ['title' => 'Custo manutencao', 'value' => 'R$ ' . number_format((float) ($summary['custo_manutencao'] ?? 0), 2, ',', '.'), 'value_class' => 'text-amber-600'],
@@ -64,6 +80,7 @@ function relatorios_table_headers(string $report): array
         'abastecimentos' => ['Veiculo', 'Secretaria', 'Data e combustivel', 'Consumo', 'Custos'],
         'manutencoes' => ['Veiculo', 'Secretaria', 'Tipo e periodo', 'Parceiro', 'Custos'],
         'viagens' => ['Veiculo', 'Secretaria', 'Motorista', 'Trajeto', 'KM e status'],
+        'documentacao' => ['Veiculo', 'Secretaria', 'Situacao documental', 'Proximo vencimento', 'Pendencias e controle'],
         'auditoria' => ['Data e evento', 'Acao', 'Alvo', 'Ator e origem', 'Contexto'],
         default => ['Veiculo', 'Secretaria', 'Status', 'Uso', 'Historico'],
     };
@@ -220,10 +237,12 @@ function relatorios_build_page_data($model, string $report, array $filters, arra
 {
     $secretarias = $model->getSecretarias();
     $veiculos = $model->getVeiculos();
-    $summary = $model->getResumo($filters);
+    $rows = relatorios_rows_for_report($model, $report, $filters);
+    $summary = $report === 'documentacao'
+        ? relatorios_documentacao_summary($rows)
+        : $model->getResumo($filters);
     $auditSummary = $model->getAuditSummary($filters);
     $auditTargetTypes = $model->getAuditTargetTypes();
-    $rows = relatorios_rows_for_report($model, $report, $filters);
     $statusOptions = relatorios_status_options($report);
 
     return [
@@ -262,6 +281,7 @@ function relatorios_rows_for_report($model, string $report, array $filters): arr
         'manutencoes' => $model->getManutencaoReport($filters),
         'viagens' => $model->getViagemReport($filters),
         'disponibilidade' => $model->getDisponibilidadeReport($filters),
+        'documentacao' => $model->getDocumentacaoReport($filters),
         'auditoria' => $model->getAuditReport($filters),
         default => $model->getAbastecimentoReport($filters),
     };
@@ -293,6 +313,7 @@ function relatorios_row_markup(string $report, array $row): string
         'abastecimentos' => relatorios_abastecimento_row($row),
         'manutencoes' => relatorios_manutencao_row($row),
         'viagens' => relatorios_viagem_row($row),
+        'documentacao' => relatorios_documentacao_row($row),
         'auditoria' => relatorios_auditoria_row($row),
         default => relatorios_disponibilidade_row($row),
     };
@@ -378,6 +399,68 @@ function relatorios_viagem_row(array $row): string
         htmlspecialchars($km, ENT_QUOTES, 'UTF-8'),
         htmlspecialchars((string) $row['status'], ENT_QUOTES, 'UTF-8')
     );
+}
+
+function relatorios_documentacao_row(array $row): string
+{
+    $situacao = (string) ($row['situacao_documental'] ?? 'regular');
+    $badgeClass = match ($situacao) {
+        'vencido' => 'bg-rose-100 text-rose-800',
+        'vencendo' => 'bg-amber-100 text-amber-800',
+        default => 'bg-emerald-100 text-emerald-800',
+    };
+    $badgeLabel = match ($situacao) {
+        'vencido' => 'Vencido',
+        'vencendo' => 'Vencendo',
+        default => 'Regular',
+    };
+
+    return sprintf(
+        '<td class="px-6 py-4"><div class="text-sm font-bold text-slate-900">%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700">%s</td>
+        <td class="px-6 py-4 text-sm text-slate-700"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold %s">%s</span><div class="text-xs text-slate-500 mt-2">%d vencido(s) | %d vencendo</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500">%s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%s</div><div class="text-xs text-slate-500 mt-2">%s</div></td>',
+        htmlspecialchars((string) $row['placa'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) $row['modelo'], ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['secretaria_lotada'] ?? 'Nao informada'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($badgeClass, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($badgeLabel, ENT_QUOTES, 'UTF-8'),
+        (int) ($row['documentos_vencidos'] ?? 0),
+        (int) ($row['documentos_vencendo'] ?? 0),
+        htmlspecialchars((string) ($row['proximo_vencimento'] ?? '--'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['documentos_monitorados'] ?? 'Sem documentos monitorados.'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['pendencias_resumo'] ?? 'Nenhuma pendencia na janela atual.'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) (($row['documentos_observacoes'] ?? '') !== '' ? $row['documentos_observacoes'] : 'Sem observacoes documentais.'), ENT_QUOTES, 'UTF-8')
+    );
+}
+
+/**
+ * @param list<array<string, mixed>> $rows
+ * @return array<string, int>
+ */
+function relatorios_documentacao_summary(array $rows): array
+{
+    $summary = [
+        'veiculos_monitorados' => count($rows),
+        'veiculos_pendentes' => 0,
+        'documentos_vencidos' => 0,
+        'documentos_vencendo' => 0,
+    ];
+
+    foreach ($rows as $row) {
+        $vencidos = (int) ($row['documentos_vencidos'] ?? 0);
+        $vencendo = (int) ($row['documentos_vencendo'] ?? 0);
+
+        if ($vencidos > 0 || $vencendo > 0) {
+            $summary['veiculos_pendentes']++;
+        }
+
+        $summary['documentos_vencidos'] += $vencidos;
+        $summary['documentos_vencendo'] += $vencendo;
+    }
+
+    return $summary;
 }
 
 function relatorios_auditoria_row(array $row): string

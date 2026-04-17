@@ -88,12 +88,14 @@ $repository = new InMemoryVeiculoDashboardRepository(
             'tipo' => 'Ambulancia',
             'combustivel' => 'diesel',
             'quilometragem_inicial' => 82000,
+            'licenciamento_vencimento' => '2026-12-31',
         ]),
         new Veiculo('AAA1B23', 'Van A', 'disponivel', [
             'secretaria_lotada' => 'Educacao',
             'tipo' => 'Van',
             'combustivel' => 'flex',
             'quilometragem_inicial' => 12000,
+            'crlv_vencimento' => '2026-10-15',
         ]),
     ],
     [
@@ -114,6 +116,7 @@ $ativos = $service->listarPorFiltro('ativos');
 assertTrue(count($ativos) === 2, 'Filtro ativos deve retornar apenas veiculos ativos.');
 assertTrue($ativos[0]['placa'] === 'AAA1B23', 'Veiculo disponivel deve vir antes do em manutencao.');
 assertTrue($ativos[1]['placa'] === 'BBB1C23', 'Veiculo em manutencao deve aparecer depois dos disponiveis.');
+assertTrue($ativos[0]['crlv_vencimento'] === '2026-10-15', 'Dashboard deve expor vencimentos documentais no pacote do veiculo.');
 
 $todos = $service->listarPorFiltro('todos');
 assertTrue(count($todos) === 4, 'Filtro todos deve combinar ativos e arquivados.');

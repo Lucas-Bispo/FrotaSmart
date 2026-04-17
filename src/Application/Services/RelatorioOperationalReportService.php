@@ -40,4 +40,16 @@ final class RelatorioOperationalReportService
     {
         return $this->rowTransformer->withDisponibilidadeStatus($this->readModel->fetchDisponibilidadeReport($filters));
     }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public function documentacao(array $filters): array
+    {
+        return $this->rowTransformer->withDocumentacaoResumo(
+            $this->readModel->fetchDocumentacaoReport($filters),
+            $filters
+        );
+    }
 }

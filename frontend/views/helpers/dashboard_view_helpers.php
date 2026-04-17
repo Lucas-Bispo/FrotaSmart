@@ -77,6 +77,35 @@ function dashboard_count_recent_refuels(array $abastecimentos, DateTimeImmutable
 }
 
 /**
+ * @param list<array<string, mixed>> $veiculos
+ * @return array{vencidos:int,vencendo:int}
+ */
+function dashboard_summarize_document_expirations(
+    array $veiculos,
+    DateTimeImmutable $today,
+    DateTimeImmutable $alertLimit
+): array {
+    $vencidos = 0;
+    $vencendo = 0;
+
+    foreach ($veiculos as $veiculo) {
+        foreach (dashboard_collect_vehicle_document_alerts($veiculo, $today, $alertLimit) as $alerta) {
+            if ($alerta['status'] === 'vencido') {
+                $vencidos++;
+                continue;
+            }
+
+            $vencendo++;
+        }
+    }
+
+    return [
+        'vencidos' => $vencidos,
+        'vencendo' => $vencendo,
+    ];
+}
+
+/**
  * @return list<string>
  */
 function dashboard_build_operational_alerts(
@@ -86,7 +115,9 @@ function dashboard_build_operational_alerts(
     int $preventivasProximas,
     int $alertasAbastecimento,
     int $cnhsVencendo,
-    int $veiculosArquivados
+    int $veiculosArquivados,
+    int $documentosVencidos,
+    int $documentosVencendo
 ): array {
     $alertas = [];
 
@@ -107,6 +138,12 @@ function dashboard_build_operational_alerts(
     }
     if ($cnhsVencendo > 0) {
         $alertas[] = $cnhsVencendo . ' CNH(s) vencem nos proximos 30 dias.';
+    }
+    if ($documentosVencidos > 0) {
+        $alertas[] = $documentosVencidos . ' documento(s) veicular(es) estao vencidos.';
+    }
+    if ($documentosVencendo > 0) {
+        $alertas[] = $documentosVencendo . ' documento(s) veicular(es) vencem nos proximos 30 dias.';
     }
     if ($veiculosArquivados > 0) {
         $alertas[] = $veiculosArquivados . ' veiculo(s) seguem arquivados e disponiveis para consulta ou restauracao.';
@@ -163,7 +200,7 @@ function dashboard_build_secondary_metric_cards(
     int $preventivasVencidas,
     int $preventivasProximas,
     float $consumoMedioPeriodo,
-    int $veiculosArquivados
+    int $documentosVencendo
 ): array {
     return [
         ['title' => 'Manutencoes abertas', 'value' => (string) $manutencoesAbertas, 'value_class' => 'text-amber-600', 'description' => null],
@@ -173,7 +210,7 @@ function dashboard_build_secondary_metric_cards(
         ['title' => 'Prev. vencidas', 'value' => (string) $preventivasVencidas, 'value_class' => 'text-rose-700', 'description' => null],
         ['title' => 'Prev. proximas', 'value' => (string) $preventivasProximas, 'value_class' => 'text-amber-600', 'description' => null],
         ['title' => 'Consumo medio', 'value' => $consumoMedioPeriodo > 0 ? number_format($consumoMedioPeriodo, 2, ',', '.') : '--', 'value_class' => 'text-cyan-700', 'description' => null],
-        ['title' => 'Arquivados', 'value' => (string) $veiculosArquivados, 'value_class' => 'text-slate-700', 'description' => null],
+        ['title' => 'Docs vencendo', 'value' => (string) $documentosVencendo, 'value_class' => 'text-rose-700', 'description' => null],
     ];
 }
 
@@ -227,7 +264,22 @@ function dashboard_build_quick_actions(bool $canManageUsers): array
  *     secondary_metric_cards:list<array{title:string,value:string,value_class:string,description:?string}>,
  *     quick_actions:list<array{href:string,title:string,description:string,classes:string}>,
  *     executive_overview_cards:list<array{title:string,value:string,description:string}>,
- *     fleet_filter_tabs:list<array{label:string,href:string,is_active:bool}>
+ *     fleet_filter_tabs:list<array{label:string,href:string,is_active:bool}>,
+ *     document_secretaria_rows:list<array{
+ *         secretaria:string,
+ *         total_pendencias:string,
+ *         documentos_vencidos:string,
+ *         documentos_vencendo:string,
+ *         veiculos_afetados:string,
+ *         status_class:string
+ *     }>,
+ *     document_pending_rows:list<array{
+ *         placa:string,
+ *         secretaria_lotada:string,
+ *         pendencias:string,
+ *         status_badge:string,
+ *         status_badge_class:string
+ *     }>
  * }
  */
 function dashboard_build_page_data(
@@ -252,6 +304,7 @@ function dashboard_build_page_data(
     $statusResumo = dashboard_summarize_vehicle_statuses($veiculosAtivos);
     $motoristasResumo = dashboard_summarize_motoristas($motoristas, $today, $alertLimit);
     $abastecimentosUltimos7Dias = dashboard_count_recent_refuels($abastecimentosRecentes, $today);
+    $documentosResumo = dashboard_summarize_document_expirations($veiculosAtivos, $today, $alertLimit);
 
     return [
         'alertas_operacionais' => dashboard_build_operational_alerts(
@@ -261,7 +314,9 @@ function dashboard_build_page_data(
             $preventivasProximas,
             $alertasAbastecimento,
             $motoristasResumo['cnhs_vencendo'],
-            $veiculosArquivados
+            $veiculosArquivados,
+            $documentosResumo['vencidos'],
+            $documentosResumo['vencendo']
         ),
         'primary_metric_cards' => dashboard_build_primary_metric_cards(
             $totalFrota,
@@ -277,7 +332,7 @@ function dashboard_build_page_data(
             $preventivasVencidas,
             $preventivasProximas,
             $consumoMedioPeriodo,
-            $veiculosArquivados
+            $documentosResumo['vencendo'] + $documentosResumo['vencidos']
         ),
         'quick_actions' => dashboard_build_quick_actions($canManageUsers),
         'executive_overview_cards' => dashboard_build_executive_overview_cards($painelSecretarias, $painelVeiculos),
@@ -285,7 +340,139 @@ function dashboard_build_page_data(
         'secretaria_rows' => dashboard_build_secretaria_rows($painelSecretarias),
         'executive_vehicle_rows' => dashboard_build_executive_vehicle_rows($painelVeiculos),
         'recent_refuel_rows' => dashboard_build_recent_refuel_rows($abastecimentosRecentes),
+        'document_secretaria_rows' => dashboard_build_document_secretaria_rows($veiculosAtivos, $today, $alertLimit),
+        'document_pending_rows' => dashboard_build_document_pending_rows($veiculosAtivos, $today, $alertLimit),
     ];
+}
+
+/**
+ * @param list<array<string, mixed>> $veiculos
+ * @return list<array{
+ *     placa:string,
+ *     secretaria_lotada:string,
+ *     pendencias:string,
+ *     status_badge:string,
+ *     status_badge_class:string
+ * }>
+ */
+function dashboard_build_document_pending_rows(
+    array $veiculos,
+    DateTimeImmutable $today,
+    DateTimeImmutable $alertLimit
+): array {
+    $rows = [];
+
+    foreach ($veiculos as $veiculo) {
+        $alertas = dashboard_collect_vehicle_document_alerts($veiculo, $today, $alertLimit);
+
+        if ($alertas === []) {
+            continue;
+        }
+
+        $hasExpired = count(array_filter(
+            $alertas,
+            static fn (array $alerta): bool => ($alerta['status'] ?? '') === 'vencido'
+        )) > 0;
+
+        $rows[] = [
+            'placa' => (string) ($veiculo['placa'] ?? ''),
+            'secretaria_lotada' => (string) ($veiculo['secretaria_lotada'] ?? 'Nao informada'),
+            'pendencias' => implode(' | ', array_map(
+                static fn (array $alerta): string => (string) ($alerta['label'] ?? ''),
+                $alertas
+            )),
+            'status_badge' => $hasExpired ? 'Vencido' : 'Vencendo',
+            'status_badge_class' => $hasExpired ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800',
+        ];
+    }
+
+    usort($rows, static function (array $left, array $right): int {
+        $leftRank = $left['status_badge'] === 'Vencido' ? 0 : 1;
+        $rightRank = $right['status_badge'] === 'Vencido' ? 0 : 1;
+
+        return [$leftRank, $left['placa']] <=> [$rightRank, $right['placa']];
+    });
+
+    return array_slice($rows, 0, 6);
+}
+
+/**
+ * @param list<array<string, mixed>> $veiculos
+ * @return list<array{
+ *     secretaria:string,
+ *     total_pendencias:string,
+ *     documentos_vencidos:string,
+ *     documentos_vencendo:string,
+ *     veiculos_afetados:string,
+ *     status_class:string
+ * }>
+ */
+function dashboard_build_document_secretaria_rows(
+    array $veiculos,
+    DateTimeImmutable $today,
+    DateTimeImmutable $alertLimit
+): array {
+    $grouped = [];
+
+    foreach ($veiculos as $veiculo) {
+        $alertas = dashboard_collect_vehicle_document_alerts($veiculo, $today, $alertLimit);
+
+        if ($alertas === []) {
+            continue;
+        }
+
+        $secretaria = trim((string) ($veiculo['secretaria_lotada'] ?? ''));
+        $secretaria = $secretaria !== '' ? $secretaria : 'Secretaria nao informada';
+
+        $grouped[$secretaria] ??= [
+            'secretaria' => $secretaria,
+            'documentos_vencidos' => 0,
+            'documentos_vencendo' => 0,
+            'veiculos_afetados' => [],
+        ];
+
+        foreach ($alertas as $alerta) {
+            if (($alerta['status'] ?? '') === 'vencido') {
+                $grouped[$secretaria]['documentos_vencidos']++;
+            } else {
+                $grouped[$secretaria]['documentos_vencendo']++;
+            }
+        }
+
+        $placa = (string) ($veiculo['placa'] ?? '');
+        if ($placa !== '') {
+            $grouped[$secretaria]['veiculos_afetados'][$placa] = true;
+        }
+    }
+
+    $rows = [];
+
+    foreach ($grouped as $item) {
+        $vencidos = (int) $item['documentos_vencidos'];
+        $vencendo = (int) $item['documentos_vencendo'];
+        $veiculosAfetados = count($item['veiculos_afetados']);
+        $totalPendencias = $vencidos + $vencendo;
+
+        $rows[] = [
+            'secretaria' => (string) $item['secretaria'],
+            'total_pendencias' => (string) $totalPendencias . ' pendencia(s)',
+            'documentos_vencidos' => (string) $vencidos . ' vencido(s)',
+            'documentos_vencendo' => (string) $vencendo . ' vencendo',
+            'veiculos_afetados' => (string) $veiculosAfetados . ' veiculo(s)',
+            'status_class' => $vencidos > 0 ? 'text-rose-700' : 'text-amber-700',
+        ];
+    }
+
+    usort($rows, static function (array $left, array $right): int {
+        preg_match('/^(\d+)/', $left['total_pendencias'], $leftMatch);
+        preg_match('/^(\d+)/', $right['total_pendencias'], $rightMatch);
+        $leftTotal = (int) ($leftMatch[1] ?? 0);
+        $rightTotal = (int) ($rightMatch[1] ?? 0);
+
+        return [$rightTotal, $left['secretaria']] <=> [$leftTotal, $right['secretaria']];
+    });
+
+    return array_slice($rows, 0, 6);
 }
 
 /**
@@ -474,6 +661,50 @@ function dashboard_build_recent_refuel_rows(array $abastecimentosRecentes): arra
     }
 
     return $rows;
+}
+
+/**
+ * @param array<string, mixed> $veiculo
+ * @return list<array{status:string,label:string}>
+ */
+function dashboard_collect_vehicle_document_alerts(
+    array $veiculo,
+    DateTimeImmutable $today,
+    DateTimeImmutable $alertLimit
+): array {
+    $documentos = [
+        'licenciamento_vencimento' => 'Licenciamento',
+        'seguro_vencimento' => 'Seguro',
+        'crlv_vencimento' => 'CRLV',
+        'contrato_vencimento' => 'Contrato',
+    ];
+    $alertas = [];
+
+    foreach ($documentos as $field => $label) {
+        $rawDate = (string) ($veiculo[$field] ?? '');
+        $date = DateTimeImmutable::createFromFormat('Y-m-d', $rawDate);
+
+        if (! $date instanceof DateTimeImmutable || $date->format('Y-m-d') !== $rawDate) {
+            continue;
+        }
+
+        if ($date < $today) {
+            $alertas[] = [
+                'status' => 'vencido',
+                'label' => $label . ' vencido em ' . $rawDate,
+            ];
+            continue;
+        }
+
+        if ($date <= $alertLimit) {
+            $alertas[] = [
+                'status' => 'vencendo',
+                'label' => $label . ' vence em ' . $rawDate,
+            ];
+        }
+    }
+
+    return $alertas;
 }
 
 function dashboard_vehicle_status_label(string $status): string

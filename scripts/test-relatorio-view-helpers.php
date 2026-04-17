@@ -72,6 +72,22 @@ $fakeModel = new class {
         return [];
     }
 
+    public function getDocumentacaoReport(array $filters): array
+    {
+        return [[
+            'placa' => 'ABC1D23',
+            'modelo' => 'Sprinter',
+            'secretaria_lotada' => 'Saude',
+            'situacao_documental' => 'vencido',
+            'documentos_vencidos' => 1,
+            'documentos_vencendo' => 1,
+            'proximo_vencimento' => '2026-04-10',
+            'documentos_monitorados' => 'Licenciamento: 2026-04-10 | Seguro: 2026-04-25',
+            'pendencias_resumo' => 'Licenciamento vencido em 2026-04-10 | Seguro vence em 2026-04-25',
+            'documentos_observacoes' => 'Apolice em renovacao.',
+        ]];
+    }
+
     public function getAuditReport(array $filters): array
     {
         return [];
@@ -120,6 +136,34 @@ if (($pageData['clearHref'] ?? '') !== '/relatorios.php?relatorio=abastecimentos
 
 if (! str_contains((string) (($pageData['rowMarkupList'][0] ?? '')), 'ABC1D23')) {
     throw new RuntimeException('Helper de view deveria preparar o markup final das linhas da tabela.');
+}
+
+$documentPageData = relatorios_build_page_data(
+    $fakeModel,
+    'documentacao',
+    [
+        'data_inicio' => '',
+        'data_fim' => '',
+        'secretaria' => 'Saude',
+        'veiculo_id' => '1',
+        'status' => 'vencido',
+        'ator' => '',
+        'evento' => '',
+        'tipo_alvo' => '',
+    ],
+    relatorios_report_labels()
+);
+
+if (($documentPageData['summaryCards'][2]['value'] ?? '') !== '1') {
+    throw new RuntimeException('Helper de view deveria resumir documentos vencidos na aba documental.');
+}
+
+if (($documentPageData['reportTitle'] ?? '') !== 'Documentacao') {
+    throw new RuntimeException('Helper de view deveria expor o titulo da aba documental.');
+}
+
+if (! str_contains((string) (($documentPageData['rowMarkupList'][0] ?? '')), 'Licenciamento vencido em 2026-04-10')) {
+    throw new RuntimeException('Helper de view deveria renderizar o resumo de pendencias da aba documental.');
 }
 
 echo "Helpers de view de relatorios validados com sucesso.\n";

@@ -7,12 +7,12 @@ require_once __DIR__ . '/../backend/models/ManutencaoModel.php';
 require_once __DIR__ . '/../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../backend/models/VeiculoModel.php';
 
-$guard = new OperacaoFrotaGuard();
-$veiculoModel = new VeiculoModel();
-$motoristaModel = new MotoristaModel();
-$manutencaoModel = new ManutencaoModel();
-
 global $pdo;
+
+$veiculoModel = new VeiculoModel($pdo);
+$motoristaModel = new MotoristaModel($pdo);
+$manutencaoModel = new ManutencaoModel($pdo);
+$guard = new OperacaoFrotaGuard($veiculoModel, $motoristaModel, $manutencaoModel);
 
 $placa = 'OPR2A11';
 $modelo = 'Veiculo Teste Regras';

@@ -59,6 +59,8 @@ $fleetFilterTabs = [];
 $secretariaRows = [];
 $executiveVehicleRows = [];
 $recentRefuelRows = [];
+$documentSecretariaRows = [];
+$documentPendingRows = [];
 
 try {
     $veiculoDashboardService = new \FrotaSmart\Application\Services\VeiculoDashboardService(
@@ -83,12 +85,16 @@ try {
     $manutencoesAbertas = $manutencaoModel->countAbertas();
     $preventivasVencidas = $manutencaoModel->countPreventivasVencidas();
     $preventivasProximas = $manutencaoModel->countPreventivasProximas();
-    $custoOperacionalPeriodo = $abastecimentoModel->totalValorPeriodo($periodoInicio, $periodoFim);
-    $consumoResumoPeriodo = $abastecimentoModel->getConsumptionSummary($periodoInicio, $periodoFim);
+    $filtroPeriodo = [
+        'data_inicio' => $periodoInicio,
+        'data_fim' => $periodoFim,
+    ];
+    $custoOperacionalPeriodo = $abastecimentoModel->totalValorByFilters($filtroPeriodo);
+    $consumoResumoPeriodo = $abastecimentoModel->getConsumptionSummary($filtroPeriodo);
     $consumoMedioPeriodo = (float) ($consumoResumoPeriodo['media_consumo_km_l'] ?? 0.0);
     $alertasAbastecimento = (int) ($consumoResumoPeriodo['total_alertas'] ?? 0);
-    $painelSecretarias = $relatorioModel->getExecutiveSummaryBySecretaria($periodoInicio, $periodoFim);
-    $painelVeiculos = $relatorioModel->getExecutiveSummaryByVeiculo($periodoInicio, $periodoFim, 8);
+    $painelSecretarias = $relatorioModel->getExecutiveSummaryBySecretaria($filtroPeriodo);
+    $painelVeiculos = $relatorioModel->getExecutiveSummaryByVeiculo(array_merge($filtroPeriodo, ['limit' => 8]));
 } catch (Exception $e) {
     error_log('Erro ao carregar dashboard: ' . $e->getMessage());
     $errorMessage = 'Nao foi possivel carregar os dados do dashboard no momento.';
@@ -122,6 +128,8 @@ $fleetFilterTabs = $pageData['fleet_filter_tabs'];
 $secretariaRows = $pageData['secretaria_rows'];
 $executiveVehicleRows = $pageData['executive_vehicle_rows'];
 $recentRefuelRows = $pageData['recent_refuel_rows'];
+$documentSecretariaRows = $pageData['document_secretaria_rows'];
+$documentPendingRows = $pageData['document_pending_rows'];
 ?>
 <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-8">
     <div>
@@ -294,6 +302,24 @@ $recentRefuelRows = $pageData['recent_refuel_rows'];
                             <input type="date" name="data_aquisicao" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
                         </div>
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Licenciamento</label>
+                            <input type="date" name="licenciamento_vencimento" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Seguro</label>
+                            <input type="date" name="seguro_vencimento" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">CRLV</label>
+                            <input type="date" name="crlv_vencimento" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Contrato</label>
+                            <input type="date" name="contrato_vencimento" class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        </div>
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">Documentos e observacoes</label>
                         <textarea name="documentos_observacoes" rows="3" placeholder="CRLV, numero de apolice, observacoes iniciais..." class="w-full border border-slate-300 rounded-xl p-3 focus:ring-blue-500 focus:border-blue-500 outline-none"></textarea>
@@ -351,6 +377,53 @@ $recentRefuelRows = $pageData['recent_refuel_rows'];
                     </div>
                 <?php endforeach; ?>
             </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-semibold mb-2 text-slate-700">Pendencias documentais</h2>
+            <p class="text-sm text-slate-500 mb-5">Janela inicial de compliance para licenciamento, seguro, CRLV e contrato.</p>
+
+            <?php if ($documentSecretariaRows !== []): ?>
+                <div class="mb-5 space-y-3">
+                    <?php foreach ($documentSecretariaRows as $documentSecretariaRow): ?>
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-slate-800"><?php echo htmlspecialchars($documentSecretariaRow['secretaria'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                    <p class="text-xs text-slate-500 mt-1"><?php echo htmlspecialchars($documentSecretariaRow['veiculos_afetados'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-semibold <?php echo htmlspecialchars($documentSecretariaRow['status_class'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($documentSecretariaRow['total_pendencias'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                    <p class="text-xs text-slate-500"><?php echo htmlspecialchars($documentSecretariaRow['documentos_vencidos'], ENT_QUOTES, 'UTF-8'); ?> | <?php echo htmlspecialchars($documentSecretariaRow['documentos_vencendo'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($documentPendingRows === []): ?>
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700 text-sm">
+                    Nenhuma pendencia documental relevante foi encontrada na janela atual.
+                </div>
+            <?php else: ?>
+                <div class="space-y-3">
+                    <?php foreach ($documentPendingRows as $documentRow): ?>
+                        <div class="rounded-2xl border border-slate-200 p-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-slate-800"><?php echo htmlspecialchars($documentRow['placa'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                    <p class="text-xs text-slate-500 mt-1"><?php echo htmlspecialchars($documentRow['secretaria_lotada'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                    <p class="text-xs text-slate-500 mt-2"><?php echo htmlspecialchars($documentRow['pendencias'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                </div>
+                                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo htmlspecialchars($documentRow['status_badge_class'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php echo htmlspecialchars($documentRow['status_badge'], ENT_QUOTES, 'UTF-8'); ?>
+                                </span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 

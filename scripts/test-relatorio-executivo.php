@@ -183,8 +183,15 @@ $viagemModel->create([
     'observacoes' => 'Viagem de teste para educacao',
 ]);
 
-$porSecretaria = $relatorioModel->getExecutiveSummaryBySecretaria('2026-04-01', '2026-04-30');
-$porVeiculo = $relatorioModel->getExecutiveSummaryByVeiculo('2026-04-01', '2026-04-30', 10);
+$porSecretaria = $relatorioModel->getExecutiveSummaryBySecretaria([
+    'data_inicio' => '2026-04-01',
+    'data_fim' => '2026-04-30',
+]);
+$porVeiculo = $relatorioModel->getExecutiveSummaryByVeiculo([
+    'data_inicio' => '2026-04-01',
+    'data_fim' => '2026-04-30',
+    'limit' => 10,
+]);
 
 $saude = null;
 $educacao = null;

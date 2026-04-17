@@ -40,6 +40,97 @@ final class RelatorioRowTransformerService
 
     /**
      * @param list<array<string, mixed>> $rows
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public function withDocumentacaoResumo(array $rows, array $filters = []): array
+    {
+        $grouped = [];
+
+        foreach ($rows as $row) {
+            $vehicleKey = (string) ($row['veiculo_id'] ?? $row['placa'] ?? '');
+            if ($vehicleKey === '') {
+                continue;
+            }
+
+            $grouped[$vehicleKey] ??= [
+                'veiculo_id' => $row['veiculo_id'] ?? null,
+                'placa' => (string) ($row['placa'] ?? ''),
+                'modelo' => (string) ($row['modelo'] ?? ''),
+                'secretaria_lotada' => (string) ($row['secretaria_lotada'] ?? 'Nao informada'),
+                'documentos_observacoes' => (string) ($row['documentos_observacoes'] ?? ''),
+                'documentos_vencidos' => 0,
+                'documentos_vencendo' => 0,
+                'documentos_regulares' => 0,
+                'proximo_vencimento' => null,
+                'pendencias_resumo' => [],
+                'documentos_monitorados' => [],
+                'situacao_documental' => 'regular',
+            ];
+
+            $situacao = (string) ($row['situacao_documento'] ?? 'regular');
+            $documentoLabel = (string) ($row['documento_tipo'] ?? 'Documento');
+            $vencimento = (string) ($row['vencimento'] ?? '');
+
+            $grouped[$vehicleKey]['documentos_monitorados'][] = $documentoLabel . ': ' . $vencimento;
+
+            if ($grouped[$vehicleKey]['proximo_vencimento'] === null
+                || ($vencimento !== '' && strcmp($vencimento, (string) $grouped[$vehicleKey]['proximo_vencimento']) < 0)) {
+                $grouped[$vehicleKey]['proximo_vencimento'] = $vencimento;
+            }
+
+            if ($situacao === 'vencido') {
+                $grouped[$vehicleKey]['documentos_vencidos']++;
+                $grouped[$vehicleKey]['pendencias_resumo'][] = $documentoLabel . ' vencido em ' . $vencimento;
+                $grouped[$vehicleKey]['situacao_documental'] = 'vencido';
+                continue;
+            }
+
+            if ($situacao === 'vencendo') {
+                $grouped[$vehicleKey]['documentos_vencendo']++;
+                $grouped[$vehicleKey]['pendencias_resumo'][] = $documentoLabel . ' vence em ' . $vencimento;
+
+                if ($grouped[$vehicleKey]['situacao_documental'] !== 'vencido') {
+                    $grouped[$vehicleKey]['situacao_documental'] = 'vencendo';
+                }
+
+                continue;
+            }
+
+            $grouped[$vehicleKey]['documentos_regulares']++;
+        }
+
+        $statusFilter = trim((string) ($filters['status'] ?? ''));
+        $result = [];
+
+        foreach ($grouped as $item) {
+            $item['total_pendencias'] = (int) $item['documentos_vencidos'] + (int) $item['documentos_vencendo'];
+            $item['pendencias_resumo'] = $item['pendencias_resumo'] === []
+                ? 'Nenhuma pendencia na janela atual.'
+                : implode(' | ', $item['pendencias_resumo']);
+            $item['documentos_monitorados'] = implode(' | ', $item['documentos_monitorados']);
+
+            if ($statusFilter !== '' && $item['situacao_documental'] !== $statusFilter) {
+                continue;
+            }
+
+            $result[] = $item;
+        }
+
+        usort($result, static function (array $left, array $right): int {
+            $priority = ['vencido' => 0, 'vencendo' => 1, 'regular' => 2];
+            $leftPriority = $priority[(string) ($left['situacao_documental'] ?? 'regular')] ?? 9;
+            $rightPriority = $priority[(string) ($right['situacao_documental'] ?? 'regular')] ?? 9;
+
+            return [$leftPriority, (string) ($left['proximo_vencimento'] ?? '9999-12-31'), (string) ($left['placa'] ?? '')]
+                <=> [$rightPriority, (string) ($right['proximo_vencimento'] ?? '9999-12-31'), (string) ($right['placa'] ?? '')];
+        });
+
+        return $result;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
      * @return list<array<string, mixed>>
      */
     public function withAuditContextSummary(array $rows): array

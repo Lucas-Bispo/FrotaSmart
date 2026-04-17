@@ -8,13 +8,18 @@ secure_session_start();
 require_same_origin_post();
 require_once __DIR__ . '/../models/UserModel.php';
 
-class AuthController
+final class AuthController
 {
+    private UserModel $model;
     private \FrotaSmart\Application\Services\AuthLoginInputService $inputService;
 
-    public function __construct()
+    public function __construct(
+        ?UserModel $model = null,
+        ?\FrotaSmart\Application\Services\AuthLoginInputService $inputService = null
+    )
     {
-        $this->inputService = new \FrotaSmart\Application\Services\AuthLoginInputService();
+        $this->model = $model ?? new UserModel();
+        $this->inputService = $inputService ?? new \FrotaSmart\Application\Services\AuthLoginInputService();
     }
 
     public function login(): void
@@ -43,8 +48,7 @@ class AuthController
             $this->redirectToLogin('error', $exception->getMessage());
         }
 
-        $model = new UserModel();
-        $user = $model->login($payload['username'], $payload['password']);
+        $user = $this->model->login($payload['username'], $payload['password']);
 
         if ($user) {
             session_regenerate_id(true);

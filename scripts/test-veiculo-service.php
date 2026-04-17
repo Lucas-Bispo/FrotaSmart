@@ -148,9 +148,11 @@ $veiculo = $service->cadastrar('ABC1D23', 'Onibus Escolar', 'ativo', [
     'combustivel' => 'diesel',
     'secretaria_lotada' => 'Educacao',
     'quilometragem_inicial' => 45200,
+    'licenciamento_vencimento' => '2026-12-31',
 ]);
 assertTrue($veiculo->status() === 'disponivel', 'Cadastro deve normalizar status legado.');
 assertTrue($veiculo->secretariaLotada() === 'Educacao', 'Cadastro deve preservar secretaria lotada.');
+assertTrue($veiculo->licenciamentoVencimento() === '2026-12-31', 'Cadastro deve preservar vencimento documental.');
 
 $buscado = $service->buscarPorPlaca('ABC1D23');
 assertTrue($buscado instanceof Veiculo, 'Busca deve retornar o veiculo cadastrado.');
@@ -163,10 +165,12 @@ $atualizado = $service->atualizar('ABC1D23', 'XYZ9K88', 'Van Adaptada', 'em_manu
     'secretaria_lotada' => 'Saude',
     'quilometragem_inicial' => 1200,
     'data_aquisicao' => '2026-02-01',
+    'seguro_vencimento' => '2026-09-15',
 ]);
 assertTrue($atualizado->placaFormatada() === 'XYZ9K88', 'Atualizacao deve permitir trocar a placa.');
 assertTrue($atualizado->status() === 'em_manutencao', 'Atualizacao deve manter status oficial.');
 assertTrue($atualizado->combustivel() === 'flex', 'Atualizacao deve persistir combustivel.');
+assertTrue($atualizado->seguroVencimento() === '2026-09-15', 'Atualizacao deve preservar vencimento do seguro.');
 assertTrue($service->buscarPorPlaca('ABC1D23') === null, 'Placa antiga nao deve permanecer ativa apos troca.');
 
 $todos = $service->listarTodos();

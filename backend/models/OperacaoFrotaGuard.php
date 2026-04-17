@@ -5,7 +5,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/MotoristaModel.php';
 require_once __DIR__ . '/VeiculoModel.php';
 require_once __DIR__ . '/ManutencaoModel.php';
-require_once __DIR__ . '/../config/db.php';
 
 final class OperacaoFrotaGuard
 {
@@ -13,11 +12,15 @@ final class OperacaoFrotaGuard
     private MotoristaModel $motoristaModel;
     private ManutencaoModel $manutencaoModel;
 
-    public function __construct()
+    public function __construct(
+        ?VeiculoModel $veiculoModel = null,
+        ?MotoristaModel $motoristaModel = null,
+        ?ManutencaoModel $manutencaoModel = null
+    )
     {
-        $this->veiculoModel = new VeiculoModel();
-        $this->motoristaModel = new MotoristaModel();
-        $this->manutencaoModel = new ManutencaoModel();
+        $this->veiculoModel = $veiculoModel ?? new VeiculoModel();
+        $this->motoristaModel = $motoristaModel ?? new MotoristaModel();
+        $this->manutencaoModel = $manutencaoModel ?? new ManutencaoModel();
     }
 
     /**

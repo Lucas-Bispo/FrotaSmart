@@ -33,6 +33,10 @@ final class Veiculo
     private ?string $secretariaLotada;
     private int $quilometragemInicial;
     private ?string $dataAquisicao;
+    private ?string $licenciamentoVencimento;
+    private ?string $seguroVencimento;
+    private ?string $crlvVencimento;
+    private ?string $contratoVencimento;
     private ?string $documentosObservacoes;
     private ?string $arquivadoEm;
 
@@ -53,6 +57,10 @@ final class Veiculo
         $this->secretariaLotada = $this->normalizeOptionalText($dados['secretaria_lotada'] ?? null, 100, 'Secretaria lotada');
         $this->quilometragemInicial = $this->normalizeQuilometragemInicial($dados['quilometragem_inicial'] ?? 0);
         $this->dataAquisicao = $this->normalizeOptionalDate($dados['data_aquisicao'] ?? null, 'Data de aquisicao');
+        $this->licenciamentoVencimento = $this->normalizeOptionalDate($dados['licenciamento_vencimento'] ?? null, 'Vencimento do licenciamento');
+        $this->seguroVencimento = $this->normalizeOptionalDate($dados['seguro_vencimento'] ?? null, 'Vencimento do seguro');
+        $this->crlvVencimento = $this->normalizeOptionalDate($dados['crlv_vencimento'] ?? null, 'Vencimento do CRLV');
+        $this->contratoVencimento = $this->normalizeOptionalDate($dados['contrato_vencimento'] ?? null, 'Vencimento do contrato');
         $this->documentosObservacoes = $this->normalizeOptionalText(
             $dados['documentos_observacoes'] ?? null,
             1000,
@@ -119,6 +127,26 @@ final class Veiculo
     public function dataAquisicao(): ?string
     {
         return $this->dataAquisicao;
+    }
+
+    public function licenciamentoVencimento(): ?string
+    {
+        return $this->licenciamentoVencimento;
+    }
+
+    public function seguroVencimento(): ?string
+    {
+        return $this->seguroVencimento;
+    }
+
+    public function crlvVencimento(): ?string
+    {
+        return $this->crlvVencimento;
+    }
+
+    public function contratoVencimento(): ?string
+    {
+        return $this->contratoVencimento;
     }
 
     public function documentosObservacoes(): ?string
@@ -199,6 +227,10 @@ final class Veiculo
             'secretaria_lotada' => $this->secretariaLotada,
             'quilometragem_inicial' => $this->quilometragemInicial,
             'data_aquisicao' => $this->dataAquisicao,
+            'licenciamento_vencimento' => $this->licenciamentoVencimento,
+            'seguro_vencimento' => $this->seguroVencimento,
+            'crlv_vencimento' => $this->crlvVencimento,
+            'contrato_vencimento' => $this->contratoVencimento,
             'documentos_observacoes' => $this->documentosObservacoes,
             'deleted_at' => $this->arquivadoEm,
         ];

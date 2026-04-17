@@ -30,8 +30,12 @@ $abastecimentos = $abastecimentoModel->listByFilters([
     'data_inicio' => $filtroInicio !== '' ? $filtroInicio : null,
     'data_fim' => $filtroFim !== '' ? $filtroFim : null,
 ]);
-$consumoResumo = $abastecimentoModel->getConsumptionSummary($filtroInicio !== '' ? $filtroInicio : null, $filtroFim !== '' ? $filtroFim : null);
-$rankingEficiencia = $abastecimentoModel->getVehicleEfficiencyRanking(5, $filtroInicio !== '' ? $filtroInicio : null, $filtroFim !== '' ? $filtroFim : null);
+$filtroPeriodo = [
+    'data_inicio' => $filtroInicio !== '' ? $filtroInicio : null,
+    'data_fim' => $filtroFim !== '' ? $filtroFim : null,
+];
+$consumoResumo = $abastecimentoModel->getConsumptionSummary($filtroPeriodo);
+$rankingEficiencia = $abastecimentoModel->getVehicleEfficiencyRanking(array_merge($filtroPeriodo, ['limit' => 5]));
 $parceirosPosto = $parceiroModel->getActiveByTipos(['posto_combustivel', 'prestador_servico']);
 $veiculos = $veiculoModel->getAllVeiculos();
 $motoristas = $motoristaModel->getAllMotoristas();

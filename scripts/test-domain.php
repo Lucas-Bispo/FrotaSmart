@@ -58,11 +58,17 @@ $veiculoCompleto = new Veiculo('QWE1R23', 'Pickup 4x4', 'disponivel', [
     'secretaria_lotada' => 'Obras',
     'quilometragem_inicial' => 12500,
     'data_aquisicao' => '2026-01-10',
+    'licenciamento_vencimento' => '2026-12-31',
+    'seguro_vencimento' => '2026-11-30',
+    'crlv_vencimento' => '2026-10-31',
+    'contrato_vencimento' => '2027-01-15',
     'documentos_observacoes' => 'CRLV regularizado.',
 ]);
 assertTrue($veiculoCompleto->renavam() === '12345678901', 'RENAVAM deve ser preservado.');
 assertTrue($veiculoCompleto->secretariaLotada() === 'Obras', 'Secretaria lotada deve ser preservada.');
 assertTrue($veiculoCompleto->quilometragemInicial() === 12500, 'Km inicial deve ser preservada.');
+assertTrue($veiculoCompleto->licenciamentoVencimento() === '2026-12-31', 'Licenciamento deve ser preservado.');
+assertTrue($veiculoCompleto->crlvVencimento() === '2026-10-31', 'CRLV deve ser preservado.');
 
 expectException(
     static fn () => new Veiculo('placa-invalida', 'Modelo X', 'disponivel'),

@@ -35,6 +35,34 @@ $readModel = new class () implements \FrotaSmart\Application\Contracts\Relatorio
             ['id' => 4, 'deleted_at' => '2026-04-16 09:00:00', 'status' => 'ativo'],
         ];
     }
+
+    public function fetchDocumentacaoReport(array $filters): array
+    {
+        $this->lastFilters = $filters;
+
+        return [
+            [
+                'veiculo_id' => 9,
+                'placa' => 'ABC1D23',
+                'modelo' => 'Sprinter',
+                'secretaria_lotada' => 'Saude',
+                'documentos_observacoes' => 'Apolice renovada.',
+                'documento_tipo' => 'Licenciamento',
+                'vencimento' => '2026-04-10',
+                'situacao_documento' => 'vencido',
+            ],
+            [
+                'veiculo_id' => 9,
+                'placa' => 'ABC1D23',
+                'modelo' => 'Sprinter',
+                'secretaria_lotada' => 'Saude',
+                'documentos_observacoes' => 'Apolice renovada.',
+                'documento_tipo' => 'Seguro',
+                'vencimento' => '2026-04-25',
+                'situacao_documento' => 'vencendo',
+            ],
+        ];
+    }
 };
 
 $service = new \FrotaSmart\Application\Services\RelatorioOperationalReportService(
@@ -50,6 +78,7 @@ $filters = [
 $manutencoes = $service->manutencoes($filters);
 $viagens = $service->viagens($filters);
 $disponibilidade = $service->disponibilidade($filters);
+$documentacao = $service->documentacao($filters);
 
 if (($readModel->lastFilters['veiculo_id'] ?? null) !== '8') {
     throw new RuntimeException('Service operacional de relatorios deveria repassar os filtros ao read model.');
@@ -66,6 +95,11 @@ if (($viagens[0]['km_percorrido'] ?? null) !== 55) {
 if (($disponibilidade[0]['situacao_disponibilidade'] ?? '') !== 'disponivel_operacao'
     || ($disponibilidade[1]['situacao_disponibilidade'] ?? '') !== 'arquivado') {
     throw new RuntimeException('Service operacional de relatorios deveria classificar disponibilidade antes de devolver as linhas.');
+}
+
+if (($documentacao[0]['situacao_documental'] ?? '') !== 'vencido'
+    || ($documentacao[0]['documentos_vencendo'] ?? null) !== 1) {
+    throw new RuntimeException('Service operacional de relatorios deveria consolidar a documentacao por veiculo.');
 }
 
 echo "Service operacional de relatorios validado com sucesso.\n";

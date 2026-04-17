@@ -74,4 +74,47 @@ if (($refuelRows[0]['litros'] ?? '') !== '120,35 L') {
     throw new RuntimeException('Dashboard deveria formatar litros no helper da tabela de abastecimentos.');
 }
 
+$documentRows = dashboard_build_document_pending_rows([
+    [
+        'placa' => 'DOC1A23',
+        'secretaria_lotada' => 'Saude',
+        'licenciamento_vencimento' => '2026-04-10',
+        'seguro_vencimento' => '2026-04-25',
+    ],
+], new DateTimeImmutable('2026-04-16'), new DateTimeImmutable('2026-05-16'));
+
+if (($documentRows[0]['status_badge'] ?? '') !== 'Vencido') {
+    throw new RuntimeException('Dashboard deveria priorizar badge de documento vencido nas pendencias.');
+}
+
+if (strpos((string) ($documentRows[0]['pendencias'] ?? ''), 'Seguro vence em 2026-04-25') === false) {
+    throw new RuntimeException('Dashboard deveria resumir as pendencias documentais por veiculo.');
+}
+
+$documentSecretariaRows = dashboard_build_document_secretaria_rows([
+    [
+        'placa' => 'DOC1A23',
+        'secretaria_lotada' => 'Saude',
+        'licenciamento_vencimento' => '2026-04-10',
+    ],
+    [
+        'placa' => 'DOC1A24',
+        'secretaria_lotada' => 'Saude',
+        'seguro_vencimento' => '2026-04-25',
+    ],
+    [
+        'placa' => 'DOC1B23',
+        'secretaria_lotada' => 'Obras',
+        'crlv_vencimento' => '2026-04-20',
+    ],
+], new DateTimeImmutable('2026-04-16'), new DateTimeImmutable('2026-05-16'));
+
+if (($documentSecretariaRows[0]['secretaria'] ?? '') !== 'Saude') {
+    throw new RuntimeException('Dashboard deveria ordenar primeiro a secretaria com mais pendencias documentais.');
+}
+
+if (($documentSecretariaRows[0]['veiculos_afetados'] ?? '') !== '2 veiculo(s)') {
+    throw new RuntimeException('Dashboard deveria consolidar o total de veiculos afetados por secretaria.');
+}
+
 echo "Helpers de tabela do dashboard validados com sucesso.\n";

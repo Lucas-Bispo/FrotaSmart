@@ -60,6 +60,11 @@ final class RelatorioOperacionalModel
         return $this->operationalReports->disponibilidade($filters);
     }
 
+    public function getDocumentacaoReport(array $filters): array
+    {
+        return $this->operationalReports->documentacao($filters);
+    }
+
     public function getResumo(array $filters): array
     {
         return $this->operationalSummaries->summarize(
@@ -70,14 +75,20 @@ final class RelatorioOperacionalModel
         );
     }
 
-    public function getExecutiveSummaryBySecretaria(?string $dataInicio = null, ?string $dataFim = null): array
+    /**
+     * @param array{data_inicio?:?string,data_fim?:?string} $filters
+     */
+    public function getExecutiveSummaryBySecretaria(array $filters = []): array
     {
-        return $this->executiveSummaries->buildBySecretaria($dataInicio, $dataFim);
+        return $this->executiveSummaries->buildBySecretaria($filters);
     }
 
-    public function getExecutiveSummaryByVeiculo(?string $dataInicio = null, ?string $dataFim = null, int $limit = 8): array
+    /**
+     * @param array{data_inicio?:?string,data_fim?:?string,limit?:?int} $filters
+     */
+    public function getExecutiveSummaryByVeiculo(array $filters = []): array
     {
-        return $this->executiveSummaries->buildByVeiculo($dataInicio, $dataFim, $limit);
+        return $this->executiveSummaries->buildByVeiculo($filters);
     }
 
     public function getAuditReport(array $filters): array

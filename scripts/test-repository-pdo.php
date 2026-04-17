@@ -39,6 +39,10 @@ function ensureVeiculosTable(\PDO $connection): void
             secretaria_lotada VARCHAR(100) DEFAULT NULL,
             quilometragem_inicial INT NOT NULL DEFAULT 0,
             data_aquisicao DATE DEFAULT NULL,
+            licenciamento_vencimento DATE DEFAULT NULL,
+            seguro_vencimento DATE DEFAULT NULL,
+            crlv_vencimento DATE DEFAULT NULL,
+            contrato_vencimento DATE DEFAULT NULL,
             documentos_observacoes TEXT DEFAULT NULL,
             status ENUM('ativo', 'manutencao', 'em_viagem', 'reservado', 'baixado') NOT NULL DEFAULT 'ativo',
             deleted_at TIMESTAMP NULL DEFAULT NULL,
@@ -59,7 +63,11 @@ function ensureVeiculosTable(\PDO $connection): void
         "ALTER TABLE veiculos ADD COLUMN secretaria_lotada VARCHAR(100) NULL AFTER combustivel",
         "ALTER TABLE veiculos ADD COLUMN quilometragem_inicial INT NOT NULL DEFAULT 0 AFTER secretaria_lotada",
         "ALTER TABLE veiculos ADD COLUMN data_aquisicao DATE NULL AFTER quilometragem_inicial",
-        "ALTER TABLE veiculos ADD COLUMN documentos_observacoes TEXT NULL AFTER data_aquisicao",
+        "ALTER TABLE veiculos ADD COLUMN licenciamento_vencimento DATE NULL AFTER data_aquisicao",
+        "ALTER TABLE veiculos ADD COLUMN seguro_vencimento DATE NULL AFTER licenciamento_vencimento",
+        "ALTER TABLE veiculos ADD COLUMN crlv_vencimento DATE NULL AFTER seguro_vencimento",
+        "ALTER TABLE veiculos ADD COLUMN contrato_vencimento DATE NULL AFTER crlv_vencimento",
+        "ALTER TABLE veiculos ADD COLUMN documentos_observacoes TEXT NULL AFTER contrato_vencimento",
         "ALTER TABLE veiculos ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL AFTER status",
     ];
 
@@ -90,6 +98,8 @@ try {
         'secretaria_lotada' => 'Saude',
         'quilometragem_inicial' => 8000,
         'data_aquisicao' => '2026-01-15',
+        'licenciamento_vencimento' => '2026-12-31',
+        'crlv_vencimento' => '2026-11-30',
     ]));
 
     assertTrue($repository->existsActiveByPlaca($placa), 'Repositorio deveria encontrar a placa salva.');
@@ -98,6 +108,7 @@ try {
     assertTrue($veiculo instanceof Veiculo, 'Repositorio deveria hidratar um veiculo.');
     assertTrue($veiculo->status() === 'disponivel', 'Status legado deve ser traduzido para o dominio.');
     assertTrue($veiculo->secretariaLotada() === 'Saude', 'Repositorio deve hidratar secretaria lotada.');
+    assertTrue($veiculo->licenciamentoVencimento() === '2026-12-31', 'Repositorio deve hidratar licenciamento.');
 
     $repository->save(new Veiculo($placa, 'Veiculo Atualizado', 'em_manutencao', [
         'tipo' => 'Ambulancia',

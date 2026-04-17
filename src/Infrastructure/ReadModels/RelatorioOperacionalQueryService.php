@@ -236,6 +236,75 @@ final class RelatorioOperacionalQueryService implements AuditReportReadModelInte
     }
 
     /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public function fetchDocumentacaoReport(array $filters): array
+    {
+        $criteria = $this->criteria->forOperationalReport($filters);
+        $conditions = ["doc.vencimento IS NOT NULL", "doc.vencimento <> ''"];
+        $params = [];
+
+        if (($dataInicio = $criteria['data_inicio']) !== null) {
+            $conditions[] = 'doc.vencimento >= :data_inicio';
+            $params[':data_inicio'] = $dataInicio;
+        }
+
+        if (($dataFim = $criteria['data_fim']) !== null) {
+            $conditions[] = 'doc.vencimento <= :data_fim';
+            $params[':data_fim'] = $dataFim;
+        }
+
+        if (($secretaria = $criteria['secretaria']) !== null) {
+            $conditions[] = 'doc.secretaria_lotada = :secretaria';
+            $params[':secretaria'] = $secretaria;
+        }
+
+        if (($veiculoId = $criteria['veiculo_id']) !== null) {
+            $conditions[] = 'doc.veiculo_id = :veiculo_id';
+            $params[':veiculo_id'] = $veiculoId;
+        }
+
+        $sql = "SELECT
+                    doc.veiculo_id,
+                    doc.placa,
+                    doc.modelo,
+                    doc.secretaria_lotada,
+                    doc.documentos_observacoes,
+                    doc.documento_tipo,
+                    doc.vencimento,
+                    CASE
+                        WHEN doc.vencimento < CURDATE() THEN 'vencido'
+                        WHEN doc.vencimento <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 'vencendo'
+                        ELSE 'regular'
+                    END AS situacao_documento
+                FROM (
+                    SELECT id AS veiculo_id, placa, modelo, secretaria_lotada, documentos_observacoes, 'Licenciamento' AS documento_tipo, licenciamento_vencimento AS vencimento
+                    FROM veiculos
+                    UNION ALL
+                    SELECT id AS veiculo_id, placa, modelo, secretaria_lotada, documentos_observacoes, 'Seguro' AS documento_tipo, seguro_vencimento AS vencimento
+                    FROM veiculos
+                    UNION ALL
+                    SELECT id AS veiculo_id, placa, modelo, secretaria_lotada, documentos_observacoes, 'CRLV' AS documento_tipo, crlv_vencimento AS vencimento
+                    FROM veiculos
+                    UNION ALL
+                    SELECT id AS veiculo_id, placa, modelo, secretaria_lotada, documentos_observacoes, 'Contrato' AS documento_tipo, contrato_vencimento AS vencimento
+                    FROM veiculos
+                ) AS doc";
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' ORDER BY doc.vencimento ASC, doc.placa ASC, doc.documento_tipo ASC';
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function fetchFleetSummaryBySecretaria(): array
@@ -273,8 +342,14 @@ final class RelatorioOperacionalQueryService implements AuditReportReadModelInte
     /**
      * @return list<array<string, mixed>>
      */
-    public function fetchViagensSummaryBySecretaria(?string $dataInicio = null, ?string $dataFim = null): array
+    /**
+     * @param array{data_inicio?:?string,data_fim?:?string} $filters
+     * @return list<array<string, mixed>>
+     */
+    public function fetchViagensSummaryBySecretaria(array $filters = []): array
     {
+        $dataInicio = $filters['data_inicio'] ?? null;
+        $dataFim = $filters['data_fim'] ?? null;
         $conditions = [];
         $params = [];
 
@@ -314,8 +389,14 @@ final class RelatorioOperacionalQueryService implements AuditReportReadModelInte
     /**
      * @return list<array<string, mixed>>
      */
-    public function fetchViagensSummaryByVeiculo(?string $dataInicio = null, ?string $dataFim = null): array
+    /**
+     * @param array{data_inicio?:?string,data_fim?:?string} $filters
+     * @return list<array<string, mixed>>
+     */
+    public function fetchViagensSummaryByVeiculo(array $filters = []): array
     {
+        $dataInicio = $filters['data_inicio'] ?? null;
+        $dataFim = $filters['data_fim'] ?? null;
         $conditions = [];
         $params = [];
 

@@ -8,10 +8,14 @@ final class RelatorioAbastecimentoFilterService
 {
     /**
      * @param list<array<string, mixed>> $rows
+     * @param array{secretaria?:?string,status?:?string} $criteria
      * @return list<array<string, mixed>>
      */
-    public function filter(array $rows, ?string $secretaria = null, ?string $status = null): array
+    public function filter(array $rows, array $criteria = []): array
     {
+        $secretaria = $criteria['secretaria'] ?? null;
+        $status = $criteria['status'] ?? null;
+
         return array_values(array_filter(
             $rows,
             static function (array $row) use ($secretaria, $status): bool {

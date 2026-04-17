@@ -98,6 +98,10 @@ final class VeiculoDashboardService
             'secretaria_lotada' => $veiculo->secretariaLotada(),
             'quilometragem_inicial' => $veiculo->quilometragemInicial(),
             'data_aquisicao' => $veiculo->dataAquisicao(),
+            'licenciamento_vencimento' => $veiculo->licenciamentoVencimento(),
+            'seguro_vencimento' => $veiculo->seguroVencimento(),
+            'crlv_vencimento' => $veiculo->crlvVencimento(),
+            'contrato_vencimento' => $veiculo->contratoVencimento(),
             'documentos_observacoes' => $veiculo->documentosObservacoes(),
             'deleted_at' => $detalhes['deleted_at'] ?? null,
         ];

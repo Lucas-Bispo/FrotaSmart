@@ -6,11 +6,11 @@ require_once __DIR__ . '/../backend/models/AbastecimentoModel.php';
 require_once __DIR__ . '/../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../backend/models/VeiculoModel.php';
 
-$veiculoModel = new VeiculoModel();
-$motoristaModel = new MotoristaModel();
-$abastecimentoModel = new AbastecimentoModel();
-
 global $pdo;
+
+$veiculoModel = new VeiculoModel($pdo);
+$motoristaModel = new MotoristaModel($pdo);
+$abastecimentoModel = new AbastecimentoModel($pdo);
 
 $placa = 'ABS1T11';
 $modelo = 'Veiculo Teste Abastecimento';
@@ -100,12 +100,19 @@ if (count($historico) !== 2) {
     throw new RuntimeException('Historico filtrado de abastecimentos nao retornou o volume esperado.');
 }
 
-$resumo = $abastecimentoModel->getConsumptionSummary('2026-04-01', '2026-04-30');
+$resumo = $abastecimentoModel->getConsumptionSummary([
+    'data_inicio' => '2026-04-01',
+    'data_fim' => '2026-04-30',
+]);
 if (($resumo['media_consumo_km_l'] ?? 0) <= 0) {
     throw new RuntimeException('Resumo deveria consolidar consumo medio positivo.');
 }
 
-$ranking = $abastecimentoModel->getVehicleEfficiencyRanking(5, '2026-04-01', '2026-04-30');
+$ranking = $abastecimentoModel->getVehicleEfficiencyRanking([
+    'limit' => 5,
+    'data_inicio' => '2026-04-01',
+    'data_fim' => '2026-04-30',
+]);
 if (count($ranking) < 1) {
     throw new RuntimeException('Ranking de eficiencia deveria trazer ao menos um veiculo.');
 }

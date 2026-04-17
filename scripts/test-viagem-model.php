@@ -6,11 +6,11 @@ require_once __DIR__ . '/../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../backend/models/VeiculoModel.php';
 require_once __DIR__ . '/../backend/models/ViagemModel.php';
 
-$veiculoModel = new VeiculoModel();
-$motoristaModel = new MotoristaModel();
-$viagemModel = new ViagemModel();
-
 global $pdo;
+
+$veiculoModel = new VeiculoModel($pdo);
+$motoristaModel = new MotoristaModel($pdo);
+$viagemModel = new ViagemModel($pdo);
 
 $placa = 'VIA1G13';
 $modelo = 'Veiculo Teste Viagem';

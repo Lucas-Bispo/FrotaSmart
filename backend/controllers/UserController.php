@@ -15,15 +15,18 @@ if (! isset($_SESSION['user']) || ! user_can(\FrotaSmart\Application\Security\Rb
 
 require_once __DIR__ . '/../models/UserModel.php';
 
-class UserController
+final class UserController
 {
     private UserModel $model;
     private \FrotaSmart\Application\Services\UserRegistrationInputService $inputService;
 
-    public function __construct()
+    public function __construct(
+        ?UserModel $model = null,
+        ?\FrotaSmart\Application\Services\UserRegistrationInputService $inputService = null
+    )
     {
-        $this->model = new UserModel();
-        $this->inputService = new \FrotaSmart\Application\Services\UserRegistrationInputService();
+        $this->model = $model ?? new UserModel();
+        $this->inputService = $inputService ?? new \FrotaSmart\Application\Services\UserRegistrationInputService();
     }
 
     public function add(): void

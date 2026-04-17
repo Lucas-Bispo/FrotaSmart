@@ -1333,3 +1333,127 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-17 - Continuidade tecnica apos Task 24, etapa 5
+
+### Conexao explicita nos models legacy de veiculos e viagens
+- Refatorados [VeiculoModel.php](../backend/models/VeiculoModel.php) e [ViagemModel.php](../backend/models/ViagemModel.php) para aceitar `PDO` injetavel, mantendo fallback legado compativel quando a conexao vier do bootstrap antigo
+- Atualizado [test-viagem-model.php](../scripts/test-viagem-model.php) para validar o fluxo com conexao explicitamente fornecida aos models usados no cenario
+
+### Resultado tecnico
+- o projeto reduz mais um bloco residual de dependencia direta em `global $pdo`, alinhando os models antigos ao mesmo padrao ja aplicado em `UserModel`, `MotoristaModel`, `ParceiroOperacionalModel` e `AbastecimentoModel`
+- o modulo de viagens agora fica consistente entre criterio nomeado para filtros e conexao explicita para persistencia, sem quebrar compatibilidade com os entrypoints atuais
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-17 - Continuidade tecnica apos Task 24, etapa 6
+
+### Guard operacional desacoplado de instanciacao fixa
+- Refatorado [OperacaoFrotaGuard.php](../backend/models/OperacaoFrotaGuard.php) para aceitar `VeiculoModel`, `MotoristaModel` e `ManutencaoModel` por injecao opcional, mantendo compatibilidade com os controllers que ainda usam o construtor sem argumentos
+- Atualizado [test-operacao-frota-guard.php](../scripts/test-operacao-frota-guard.php) para validar o fluxo com models ligados a uma conexao `PDO` explicita e compartilhada
+
+### Resultado tecnico
+- o guard operacional deixa de depender apenas de instanciacao interna fixa, o que reduz acoplamento com bootstrap legado e facilita reuso controlado em testes e composicoes futuras
+- o projeto avanca mais um passo pequeno na retirada de dependencias implícitas, sem alterar o comportamento funcional dos modulos de viagens e abastecimentos
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-17 - Continuidade tecnica apos Task 24, etapa 7
+
+### Filtro de relatorio de abastecimentos com criterio nomeado
+- Refatorado [RelatorioAbastecimentoFilterService.php](../src/Application/Services/RelatorioAbastecimentoFilterService.php) para trocar a assinatura com parametros opcionais por um criterio nomeado de filtro
+- Ajustado [RelatorioAbastecimentoReportService.php](../src/Application/Services/RelatorioAbastecimentoReportService.php) para repassar somente os filtros relevantes ao service de filtragem
+- Atualizado [test-relatorio-abastecimento-filter-service.php](../scripts/test-relatorio-abastecimento-filter-service.php) para validar o contrato novo sem depender de ordem posicional
+
+### Resultado tecnico
+- o modulo de relatorios reduz mais um ponto guiado por parametros opcionais posicionais, alinhando o fluxo de abastecimentos ao mesmo padrao de criterios nomeados adotado em outras partes do projeto
+- o service de filtragem fica mais explicito e mais resiliente a futuras evolucoes de filtro sem ampliar a ambiguidade da assinatura publica
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-17 - Continuidade tecnica apos Task 24, etapa 8
+
+### Resumos de abastecimento e painel executivo com criterio nomeado
+- Refatorado [AbastecimentoModel.php](../backend/models/AbastecimentoModel.php) para trocar as assinaturas posicionais de `totalValorPeriodo()`, `getConsumptionSummary()` e `getVehicleEfficiencyRanking()` por filtros nomeados
+- Refatorados [RelatorioExecutiveSummaryService.php](../src/Application/Services/RelatorioExecutiveSummaryService.php) e [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php) para receber o periodo e o limite em estruturas explicitas
+- Ajustados [abastecimentos.php](../frontend/views/abastecimentos.php), [dashboard.php](../frontend/views/dashboard.php), [test-abastecimento-model.php](../scripts/test-abastecimento-model.php) e [test-relatorio-executivo.php](../scripts/test-relatorio-executivo.php) para consumir o contrato novo
+
+### Resultado tecnico
+- o projeto reduz mais um grupo de contratos guiados por nulos e parametros posicionais, seguindo a direcao registrada nos guias e roadmaps desta fase
+- a leitura de abastecimentos e o painel executivo ficam mais explicitos sobre periodo e limite, diminuindo ambiguidade e custo mental na manutencao
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-17 - Continuidade tecnica apos Task 24, etapa 9
+
+### Agregacoes de viagens do query service com criterio nomeado
+- Refatorado [RelatorioOperacionalQueryService.php](../src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php) para trocar as assinaturas posicionais de `fetchViagensSummaryBySecretaria()` e `fetchViagensSummaryByVeiculo()` por filtros nomeados
+- Ajustado [RelatorioExecutiveSummaryService.php](../src/Application/Services/RelatorioExecutiveSummaryService.php) para repassar o periodo em estrutura explicita ao query service
+
+### Resultado tecnico
+- o hotspot residual de leitura executiva perde mais um contrato guiado por nulos posicionais, seguindo a trilha recomendada nos documentos de contexto e no guia de Clean Code
+- a camada de read model fica mais consistente com o padrao de criterios nomeados ja aplicado aos demais fluxos de relatorios e abastecimentos
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-17 - Continuidade tecnica apos Task 24, etapa 10
+
+### Controllers administrativos com dependencias injetaveis
+- Refatorados [AuthController.php](../backend/controllers/AuthController.php) e [UserController.php](../backend/controllers/UserController.php) para aceitar `UserModel` e os input services por injecao opcional, mantendo compatibilidade com os entrypoints atuais
+- Removida a instanciacao crua de `UserModel` de dentro do fluxo de login, alinhando o recorte administrativo ao mesmo padrao ja aplicado nos controllers e models recentes
+
+### Resultado tecnico
+- o legado administrativo perde mais um residuo pequeno de acoplamento por instanciacao interna fixa, seguindo a direcao registrada nos `.md`
+- os controllers de autenticacao e cadastro de usuarios ficam mais previsiveis para testes e para futuras composicoes sem alterar o comportamento HTTP atual
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-17 - Fase 3, gestao documental e vencimentos, etapa 1
+
+### Base documental inicial integrada ao cadastro e ao dashboard
+- Evoluidos [Veiculo.php](../src/Domain/Entities/Veiculo.php), [PdoVeiculoRepository.php](../src/Infrastructure/Persistence/PdoVeiculoRepository.php), [VeiculoDashboardService.php](../src/Application/Services/VeiculoDashboardService.php) e [VeiculoController.php](../backend/controllers/VeiculoController.php) para suportar vencimentos de `licenciamento`, `seguro`, `CRLV` e `contrato`
+- Atualizado [bootstrap-db.php](../scripts/bootstrap-db.php) para garantir as novas colunas documentais no schema de `veiculos`
+- Evoluidos [dashboard_view_helpers.php](../frontend/views/helpers/dashboard_view_helpers.php) e [dashboard.php](../frontend/views/dashboard.php) para exibir alertas e pendencias documentais por veiculo no painel principal
+- Atualizados [test-domain.php](../scripts/test-domain.php), [test-veiculo-service.php](../scripts/test-veiculo-service.php), [test-repository-pdo.php](../scripts/test-repository-pdo.php), [test-veiculo-dashboard-service.php](../scripts/test-veiculo-dashboard-service.php), [test-dashboard-view-helpers.php](../scripts/test-dashboard-view-helpers.php) e [test-dashboard-table-view-helpers.php](../scripts/test-dashboard-table-view-helpers.php) para cobrir o recorte novo
+
+### Resultado tecnico
+- o projeto abre a frente de compliance documental sugerida nos `.md` sem sair da espinha incremental atual
+- o cadastro de veiculos passa a carregar vencimentos documentais estruturados, e o dashboard ganha uma primeira leitura operacional de pendencias legais por veiculo
+- a entrega prepara o terreno para a proxima etapa dessa mesma frente: painel por secretaria e evolucao de governanca documental
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-17 - Fase 3, gestao documental e vencimentos, etapa 2
+
+### Pendencias documentais consolidadas por secretaria
+- Evoluido [dashboard_view_helpers.php](../frontend/views/helpers/dashboard_view_helpers.php) para consolidar vencimentos documentais tambem por secretaria, com total de pendencias, volume de documentos vencidos/vencendo e quantidade de veiculos afetados
+- Atualizado [dashboard.php](../frontend/views/dashboard.php) para exibir esse resumo gerencial acima da lista detalhada por veiculo
+- Ajustados [test-dashboard-view-helpers.php](../scripts/test-dashboard-view-helpers.php) e [test-dashboard-table-view-helpers.php](../scripts/test-dashboard-table-view-helpers.php) para validar a nova leitura documental por secretaria
+
+### Resultado tecnico
+- a frente de compliance documental deixa de ser apenas uma lista por veiculo e passa a oferecer uma leitura gerencial aderente ao que os `.md` pedem para secretaria e governanca
+- o dashboard ganha um primeiro nivel de priorizacao institucional das pendencias legais sem perder o detalhe operacional por placa
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-17 - Fase 3, gestao documental e vencimentos, etapa 3
+
+### Relatorio dedicado de documentacao e vencimentos
+- Evoluidos [RelatorioOperationalReadModelInterface.php](../src/Application/Contracts/RelatorioOperationalReadModelInterface.php), [RelatorioOperacionalQueryService.php](../src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php) e [RelatorioOperationalReportService.php](../src/Application/Services/RelatorioOperationalReportService.php) para expor um dataset dedicado de documentacao veicular
+- Atualizados [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php), [RelatorioExportService.php](../src/Application/Services/RelatorioExportService.php) e [relatorios_view_helpers.php](../frontend/views/helpers/relatorios_view_helpers.php) para adicionar a aba `documentacao`, consolidar pendencias por veiculo e permitir exportacao CSV desse recorte
+- Ajustados [test-relatorio-operational-report-service.php](../scripts/test-relatorio-operational-report-service.php), [test-relatorio-export-service.php](../scripts/test-relatorio-export-service.php) e [test-relatorio-view-helpers.php](../scripts/test-relatorio-view-helpers.php) para cobrir o fluxo novo
+
+### Resultado tecnico
+- a frente de compliance documental deixa de viver apenas no dashboard e passa a ter um ponto dedicado de consulta, filtro e exportacao, aderente ao que os `.md` pedem para governanca e leitura gerencial
+- o modulo de relatorios ganha uma nova aba especializada sem romper o trilho atual de `query service + operational report service + helper + export`
+
+### Validacao realizada
+- pendente executar nesta retomada

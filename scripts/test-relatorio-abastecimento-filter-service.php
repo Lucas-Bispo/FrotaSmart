@@ -12,9 +12,9 @@ $rows = [
     ['secretaria' => 'Educacao', 'anomalia_status' => 'atencao', 'placa' => 'CCC3C33'],
 ];
 
-$bySecretaria = $service->filter($rows, 'Saude', null);
-$byStatus = $service->filter($rows, null, 'atencao');
-$byBoth = $service->filter($rows, 'Saude', 'critico');
+$bySecretaria = $service->filter($rows, ['secretaria' => 'Saude']);
+$byStatus = $service->filter($rows, ['status' => 'atencao']);
+$byBoth = $service->filter($rows, ['secretaria' => 'Saude', 'status' => 'critico']);
 
 if (count($bySecretaria) !== 2) {
     throw new RuntimeException('Filtro de abastecimentos deveria restringir corretamente por secretaria.');

@@ -81,7 +81,11 @@ function bootstrap_veiculos_schema(PDO $pdo): void
     ensure_column($pdo, 'veiculos', 'secretaria_lotada', 'VARCHAR(100) NULL AFTER combustivel');
     ensure_column($pdo, 'veiculos', 'quilometragem_inicial', 'INT NOT NULL DEFAULT 0 AFTER secretaria_lotada');
     ensure_column($pdo, 'veiculos', 'data_aquisicao', 'DATE NULL AFTER quilometragem_inicial');
-    ensure_column($pdo, 'veiculos', 'documentos_observacoes', 'TEXT NULL AFTER data_aquisicao');
+    ensure_column($pdo, 'veiculos', 'licenciamento_vencimento', 'DATE NULL AFTER data_aquisicao');
+    ensure_column($pdo, 'veiculos', 'seguro_vencimento', 'DATE NULL AFTER licenciamento_vencimento');
+    ensure_column($pdo, 'veiculos', 'crlv_vencimento', 'DATE NULL AFTER seguro_vencimento');
+    ensure_column($pdo, 'veiculos', 'contrato_vencimento', 'DATE NULL AFTER crlv_vencimento');
+    ensure_column($pdo, 'veiculos', 'documentos_observacoes', 'TEXT NULL AFTER contrato_vencimento');
     ensure_column($pdo, 'veiculos', 'deleted_at', 'TIMESTAMP NULL DEFAULT NULL AFTER status');
 
     execute_statements($pdo, [
@@ -251,6 +255,10 @@ $statements = [
         secretaria_lotada VARCHAR(100) DEFAULT NULL,
         quilometragem_inicial INT NOT NULL DEFAULT 0,
         data_aquisicao DATE DEFAULT NULL,
+        licenciamento_vencimento DATE DEFAULT NULL,
+        seguro_vencimento DATE DEFAULT NULL,
+        crlv_vencimento DATE DEFAULT NULL,
+        contrato_vencimento DATE DEFAULT NULL,
         documentos_observacoes TEXT DEFAULT NULL,
         status ENUM('ativo', 'manutencao', 'em_viagem', 'reservado', 'baixado') NOT NULL DEFAULT 'ativo',
         deleted_at TIMESTAMP NULL DEFAULT NULL,

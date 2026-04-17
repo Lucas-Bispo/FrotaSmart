@@ -262,6 +262,10 @@ final class VeiculoController
             'secretaria_lotada' => $input['secretaria_lotada'] ?? null,
             'quilometragem_inicial' => $input['quilometragem_inicial'] ?? 0,
             'data_aquisicao' => $input['data_aquisicao'] ?? null,
+            'licenciamento_vencimento' => $input['licenciamento_vencimento'] ?? null,
+            'seguro_vencimento' => $input['seguro_vencimento'] ?? null,
+            'crlv_vencimento' => $input['crlv_vencimento'] ?? null,
+            'contrato_vencimento' => $input['contrato_vencimento'] ?? null,
             'documentos_observacoes' => $input['documentos_observacoes'] ?? null,
         ];
     }

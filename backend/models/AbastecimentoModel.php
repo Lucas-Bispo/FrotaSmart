@@ -180,8 +180,13 @@ final class AbastecimentoModel
         return $this->enrichRowsWithAnalytics($stmt->fetchAll(PDO::FETCH_ASSOC));
     }
 
-    public function totalValorPeriodo(?string $dataInicio = null, ?string $dataFim = null): float
+    /**
+     * @param array{data_inicio?:?string,data_fim?:?string} $filters
+     */
+    public function totalValorByFilters(array $filters = []): float
     {
+        $dataInicio = $filters['data_inicio'] ?? null;
+        $dataFim = $filters['data_fim'] ?? null;
         $conditions = [];
         $params = [];
 
@@ -207,12 +212,17 @@ final class AbastecimentoModel
         return (float) $stmt->fetchColumn();
     }
 
-    public function getConsumptionSummary(?string $dataInicio = null, ?string $dataFim = null): array
+    /**
+     * @param array{data_inicio?:?string,data_fim?:?string} $filters
+     */
+    public function getConsumptionSummary(array $filters = []): array
     {
+        $normalizedFilters = $this->mergeWithEmptyVehicleFilter($filters);
+
         $rows = $this->listByFilters([
-            'veiculo_id' => null,
-            'data_inicio' => $dataInicio,
-            'data_fim' => $dataFim,
+            'veiculo_id' => $normalizedFilters['veiculo_id'],
+            'data_inicio' => $normalizedFilters['data_inicio'],
+            'data_fim' => $normalizedFilters['data_fim'],
         ]);
         $alertas = array_values(array_filter(
             $rows,
@@ -237,12 +247,18 @@ final class AbastecimentoModel
         ];
     }
 
-    public function getVehicleEfficiencyRanking(int $limit = 5, ?string $dataInicio = null, ?string $dataFim = null): array
+    /**
+     * @param array{data_inicio?:?string,data_fim?:?string,limit?:?int} $filters
+     */
+    public function getVehicleEfficiencyRanking(array $filters = []): array
     {
+        $normalizedFilters = $this->mergeWithEmptyVehicleFilter($filters);
+        $limit = max(1, (int) ($filters['limit'] ?? 5));
+
         $rows = $this->listByFilters([
-            'veiculo_id' => null,
-            'data_inicio' => $dataInicio,
-            'data_fim' => $dataFim,
+            'veiculo_id' => $normalizedFilters['veiculo_id'],
+            'data_inicio' => $normalizedFilters['data_inicio'],
+            'data_fim' => $normalizedFilters['data_fim'],
         ]);
         $grouped = [];
 
@@ -277,6 +293,19 @@ final class AbastecimentoModel
         usort($grouped, static fn (array $a, array $b): int => $b['media_consumo_km_l'] <=> $a['media_consumo_km_l']);
 
         return array_slice($grouped, 0, max(1, $limit));
+    }
+
+    /**
+     * @param array{data_inicio?:?string,data_fim?:?string,veiculo_id?:?int,limit?:?int} $filters
+     * @return array{veiculo_id:?int,data_inicio:?string,data_fim:?string}
+     */
+    private function mergeWithEmptyVehicleFilter(array $filters): array
+    {
+        return [
+            'veiculo_id' => $filters['veiculo_id'] ?? null,
+            'data_inicio' => $filters['data_inicio'] ?? null,
+            'data_fim' => $filters['data_fim'] ?? null,
+        ];
     }
 
     /**

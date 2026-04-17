@@ -39,6 +39,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                      secretaria_lotada = :secretaria_lotada,
                      quilometragem_inicial = :quilometragem_inicial,
                      data_aquisicao = :data_aquisicao,
+                     licenciamento_vencimento = :licenciamento_vencimento,
+                     seguro_vencimento = :seguro_vencimento,
+                     crlv_vencimento = :crlv_vencimento,
+                     contrato_vencimento = :contrato_vencimento,
                      documentos_observacoes = :documentos_observacoes,
                      deleted_at = NULL
                  WHERE placa = :placa'
@@ -57,6 +61,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                     secretaria_lotada,
                     quilometragem_inicial,
                     data_aquisicao,
+                    licenciamento_vencimento,
+                    seguro_vencimento,
+                    crlv_vencimento,
+                    contrato_vencimento,
                     documentos_observacoes
                  ) VALUES (
                     :placa,
@@ -70,6 +78,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                     :secretaria_lotada,
                     :quilometragem_inicial,
                     :data_aquisicao,
+                    :licenciamento_vencimento,
+                    :seguro_vencimento,
+                    :crlv_vencimento,
+                    :contrato_vencimento,
                     :documentos_observacoes
                  )'
             );
@@ -87,6 +99,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
             ':secretaria_lotada' => $veiculo->secretariaLotada(),
             ':quilometragem_inicial' => $veiculo->quilometragemInicial(),
             ':data_aquisicao' => $veiculo->dataAquisicao(),
+            ':licenciamento_vencimento' => $veiculo->licenciamentoVencimento(),
+            ':seguro_vencimento' => $veiculo->seguroVencimento(),
+            ':crlv_vencimento' => $veiculo->crlvVencimento(),
+            ':contrato_vencimento' => $veiculo->contratoVencimento(),
             ':documentos_observacoes' => $veiculo->documentosObservacoes(),
         ]);
     }
@@ -126,6 +142,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                 secretaria_lotada,
                 quilometragem_inicial,
                 data_aquisicao,
+                licenciamento_vencimento,
+                seguro_vencimento,
+                crlv_vencimento,
+                contrato_vencimento,
                 documentos_observacoes,
                 deleted_at
              FROM veiculos
@@ -157,6 +177,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                 secretaria_lotada,
                 quilometragem_inicial,
                 data_aquisicao,
+                licenciamento_vencimento,
+                seguro_vencimento,
+                crlv_vencimento,
+                contrato_vencimento,
                 documentos_observacoes,
                 deleted_at
              FROM veiculos
@@ -209,6 +233,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                 'secretaria_lotada' => $row['secretaria_lotada'] ?? null,
                 'quilometragem_inicial' => $row['quilometragem_inicial'] ?? 0,
                 'data_aquisicao' => $row['data_aquisicao'] ?? null,
+                'licenciamento_vencimento' => $row['licenciamento_vencimento'] ?? null,
+                'seguro_vencimento' => $row['seguro_vencimento'] ?? null,
+                'crlv_vencimento' => $row['crlv_vencimento'] ?? null,
+                'contrato_vencimento' => $row['contrato_vencimento'] ?? null,
                 'documentos_observacoes' => $row['documentos_observacoes'] ?? null,
                 'deleted_at' => $row['deleted_at'] ?? null,
             ]
@@ -244,6 +272,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                 secretaria_lotada,
                 quilometragem_inicial,
                 data_aquisicao,
+                licenciamento_vencimento,
+                seguro_vencimento,
+                crlv_vencimento,
+                contrato_vencimento,
                 documentos_observacoes,
                 deleted_at
              FROM veiculos
@@ -277,6 +309,10 @@ final class PdoVeiculoRepository implements VeiculoRepositoryInterface
                 secretaria_lotada,
                 quilometragem_inicial,
                 data_aquisicao,
+                licenciamento_vencimento,
+                seguro_vencimento,
+                crlv_vencimento,
+                contrato_vencimento,
                 documentos_observacoes,
                 deleted_at
              FROM veiculos
