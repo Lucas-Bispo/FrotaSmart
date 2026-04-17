@@ -101,7 +101,7 @@ final class ChecklistOperacionalController
         $statusConformidade = trim((string) ($_POST['status_conformidade'] ?? ''));
         $realizadoEm = trim((string) ($_POST['realizado_em'] ?? ''));
         $naoConformidades = trim((string) ($_POST['nao_conformidades'] ?? ''));
-        $evidenciaReferencia = trim((string) ($_POST['evidencia_referencia'] ?? ''));
+        $evidenciasTexto = trim((string) ($_POST['evidencias'] ?? ''));
         $observacoes = trim((string) ($_POST['observacoes'] ?? ''));
         $aceiteResponsavel = isset($_POST['aceite_responsavel']) ? 1 : 0;
 
@@ -148,8 +148,9 @@ final class ChecklistOperacionalController
             'aceite_responsavel' => $aceiteResponsavel,
             'realizado_em' => $this->normalizeDateTimeForDatabase($realizadoEm),
             'itens_json' => $this->encodeChecklistItems($_POST['itens'] ?? [], $_POST['item_observacoes'] ?? []),
+            'evidencias_json' => $this->encodeEvidenceEntries($evidenciasTexto),
             'nao_conformidades' => $naoConformidades !== '' ? $naoConformidades : null,
-            'evidencia_referencia' => $evidenciaReferencia !== '' ? $evidenciaReferencia : null,
+            'evidencia_referencia' => $this->summarizeEvidenceEntries($evidenciasTexto),
             'observacoes' => $observacoes !== '' ? $observacoes : null,
         ];
     }
@@ -188,6 +189,50 @@ final class ChecklistOperacionalController
         }
 
         return json_encode($items, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]';
+    }
+
+    private function encodeEvidenceEntries(string $raw): string
+    {
+        $entries = [];
+
+        foreach ($this->normalizeEvidenceLines($raw) as $line) {
+            $entries[] = [
+                'referencia' => $line,
+            ];
+        }
+
+        return json_encode($entries, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '[]';
+    }
+
+    private function summarizeEvidenceEntries(string $raw): ?string
+    {
+        $lines = $this->normalizeEvidenceLines($raw);
+
+        if ($lines === []) {
+            return null;
+        }
+
+        return implode(' | ', array_slice($lines, 0, 3));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function normalizeEvidenceLines(string $raw): array
+    {
+        $parts = preg_split('/\r\n|\r|\n/', $raw) ?: [];
+        $lines = [];
+
+        foreach ($parts as $part) {
+            $line = trim((string) $part);
+            if ($line === '') {
+                continue;
+            }
+
+            $lines[] = $line;
+        }
+
+        return array_values(array_unique($lines));
     }
 
     private function isValidDateTime(string $value): bool

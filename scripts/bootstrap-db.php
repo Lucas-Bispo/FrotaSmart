@@ -200,6 +200,7 @@ function bootstrap_checklists_schema(PDO $pdo): void
 {
     ensure_column($pdo, 'checklists_operacionais', 'viagem_id', 'INT NULL AFTER tipo');
     ensure_column($pdo, 'checklists_operacionais', 'itens_json', 'LONGTEXT NULL AFTER realizado_em');
+    ensure_column($pdo, 'checklists_operacionais', 'evidencias_json', 'LONGTEXT NULL AFTER itens_json');
     ensure_index($pdo, 'checklists_operacionais', 'idx_checklists_tipo', 'INDEX idx_checklists_tipo (tipo)');
     ensure_index($pdo, 'checklists_operacionais', 'idx_checklists_status', 'INDEX idx_checklists_status (status_conformidade)');
     ensure_index($pdo, 'checklists_operacionais', 'idx_checklists_secretaria', 'INDEX idx_checklists_secretaria (secretaria)');
@@ -401,6 +402,7 @@ $statements = [
         aceite_responsavel TINYINT(1) NOT NULL DEFAULT 0,
         realizado_em DATETIME NOT NULL,
         itens_json LONGTEXT DEFAULT NULL,
+        evidencias_json LONGTEXT DEFAULT NULL,
         nao_conformidades TEXT DEFAULT NULL,
         evidencia_referencia VARCHAR(255) DEFAULT NULL,
         observacoes TEXT DEFAULT NULL,

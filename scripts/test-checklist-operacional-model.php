@@ -118,14 +118,23 @@ $checklistId = $model->create([
         ['codigo' => 'documentacao', 'label' => 'Documentacao obrigatoria', 'checked' => true, 'observacao' => null],
         ['codigo' => 'pneus', 'label' => 'Pneus e rodas', 'checked' => false, 'observacao' => 'Desgaste visivel no pneu traseiro.'],
     ], JSON_UNESCAPED_UNICODE),
+    'evidencias_json' => json_encode([
+        ['referencia' => 'foto_saida_001.jpg'],
+        ['referencia' => 'protocolo-ocorrencia-01'],
+    ], JSON_UNESCAPED_UNICODE),
     'nao_conformidades' => 'Pneu traseiro com desgaste acentuado.',
-    'evidencia_referencia' => 'foto_saida_001.jpg',
+    'evidencia_referencia' => 'foto_saida_001.jpg | protocolo-ocorrencia-01',
     'observacoes' => 'Checklist criado no teste automatizado.',
 ]);
 
 $created = $model->findById($checklistId);
 if ($created === null || $created['status_conformidade'] !== 'nao_conforme' || (int) ($created['viagem_id'] ?? 0) !== $cleanupViagemId) {
     throw new RuntimeException('Checklist operacional nao foi criado corretamente.');
+}
+
+$createdEvidence = json_decode((string) ($created['evidencias_json'] ?? '[]'), true);
+if (! is_array($createdEvidence) || count($createdEvidence) !== 2) {
+    throw new RuntimeException('Checklist operacional deveria persistir multiplas evidencias.');
 }
 
 $model->update($checklistId, [
@@ -142,14 +151,24 @@ $model->update($checklistId, [
         ['codigo' => 'documentacao', 'label' => 'Documentacao obrigatoria', 'checked' => true, 'observacao' => null],
         ['codigo' => 'limpeza', 'label' => 'Condicoes gerais e limpeza', 'checked' => true, 'observacao' => 'Veiculo retornou limpo.'],
     ], JSON_UNESCAPED_UNICODE),
+    'evidencias_json' => json_encode([
+        ['referencia' => 'checklist-retorno-protocolo-01'],
+        ['referencia' => 'foto_retorno_002.jpg'],
+        ['referencia' => 'termo_assinado.pdf'],
+    ], JSON_UNESCAPED_UNICODE),
     'nao_conformidades' => null,
-    'evidencia_referencia' => 'checklist-retorno-protocolo-01',
+    'evidencia_referencia' => 'checklist-retorno-protocolo-01 | foto_retorno_002.jpg | termo_assinado.pdf',
     'observacoes' => 'Checklist ajustado no teste automatizado.',
 ]);
 
 $updated = $model->findById($checklistId);
 if ($updated === null || $updated['tipo'] !== 'retorno' || $updated['status_conformidade'] !== 'conforme' || ($updated['viagem_id'] ?? null) !== null) {
     throw new RuntimeException('Checklist operacional nao foi atualizado corretamente.');
+}
+
+$updatedEvidence = json_decode((string) ($updated['evidencias_json'] ?? '[]'), true);
+if (! is_array($updatedEvidence) || count($updatedEvidence) !== 3) {
+    throw new RuntimeException('Checklist operacional deveria atualizar a colecao de evidencias.');
 }
 
 $filtrados = $model->listByFilters([

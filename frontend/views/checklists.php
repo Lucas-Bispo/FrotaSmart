@@ -97,6 +97,26 @@ if (is_array($editingChecklist) && ! empty($editingChecklist['itens_json'])) {
     }
 }
 
+$editingEvidenceText = '';
+if (is_array($editingChecklist) && ! empty($editingChecklist['evidencias_json'])) {
+    $decodedEvidence = json_decode((string) $editingChecklist['evidencias_json'], true);
+    if (is_array($decodedEvidence)) {
+        $evidenceLines = [];
+        foreach ($decodedEvidence as $entry) {
+            $reference = trim((string) ($entry['referencia'] ?? ''));
+            if ($reference !== '') {
+                $evidenceLines[] = $reference;
+            }
+        }
+
+        $editingEvidenceText = implode("\n", $evidenceLines);
+    }
+}
+
+if ($editingEvidenceText === '' && is_array($editingChecklist) && ! empty($editingChecklist['evidencia_referencia'])) {
+    $editingEvidenceText = (string) $editingChecklist['evidencia_referencia'];
+}
+
 $pageTitle = 'Checklists Operacionais';
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -259,8 +279,8 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Referencia da evidencia</label>
-                        <input type="text" name="evidencia_referencia" value="<?php echo htmlspecialchars((string) ($editingChecklist['evidencia_referencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>" placeholder="Link, protocolo, nome do arquivo ou observacao de evidencia" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Evidencias da vistoria</label>
+                        <textarea name="evidencias" class="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-blue-500 focus:border-blue-500 min-h-[90px]" placeholder="Uma referencia por linha: link, protocolo, nome de arquivo ou observacao de evidencia"><?php echo htmlspecialchars($editingEvidenceText, ENT_QUOTES, 'UTF-8'); ?></textarea>
                     </div>
 
                     <div>
@@ -401,7 +421,23 @@ require_once __DIR__ . '/../includes/header.php';
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm text-slate-700"><?php echo htmlspecialchars((string) ($checklist['evidencia_referencia'] ?? 'Sem evidencia vinculada.'), ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <?php
+                                    $evidenceSummary = [];
+                                    $decodedEvidence = json_decode((string) ($checklist['evidencias_json'] ?? '[]'), true);
+                                    if (is_array($decodedEvidence)) {
+                                        foreach ($decodedEvidence as $entry) {
+                                            $reference = trim((string) ($entry['referencia'] ?? ''));
+                                            if ($reference !== '') {
+                                                $evidenceSummary[] = $reference;
+                                            }
+                                        }
+                                    }
+                                    if ($evidenceSummary === [] && ! empty($checklist['evidencia_referencia'])) {
+                                        $evidenceSummary[] = (string) $checklist['evidencia_referencia'];
+                                    }
+                                    ?>
+                                    <div class="text-sm text-slate-700"><?php echo htmlspecialchars($evidenceSummary === [] ? 'Sem evidencia vinculada.' : implode(' | ', array_slice($evidenceSummary, 0, 2)), ENT_QUOTES, 'UTF-8'); ?></div>
+                                    <div class="text-xs text-slate-500 mt-1"><?php echo count($evidenceSummary); ?> evidencia(s) registrada(s)</div>
                                     <div class="text-xs text-slate-500 mt-1"><?php echo ! empty($checklist['aceite_responsavel']) ? 'Aceite registrado' : 'Aceite pendente'; ?></div>
                                 </td>
                                 <td class="px-6 py-4 text-right text-sm font-medium">

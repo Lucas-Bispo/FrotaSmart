@@ -96,6 +96,7 @@ final class ChecklistOperacionalModel
                 aceite_responsavel,
                 realizado_em,
                 itens_json,
+                evidencias_json,
                 nao_conformidades,
                 evidencia_referencia,
                 observacoes
@@ -110,6 +111,7 @@ final class ChecklistOperacionalModel
                 :aceite_responsavel,
                 :realizado_em,
                 :itens_json,
+                :evidencias_json,
                 :nao_conformidades,
                 :evidencia_referencia,
                 :observacoes
@@ -127,6 +129,7 @@ final class ChecklistOperacionalModel
             ':aceite_responsavel' => $data['aceite_responsavel'],
             ':realizado_em' => $data['realizado_em'],
             ':itens_json' => $data['itens_json'],
+            ':evidencias_json' => $data['evidencias_json'],
             ':nao_conformidades' => $data['nao_conformidades'],
             ':evidencia_referencia' => $data['evidencia_referencia'],
             ':observacoes' => $data['observacoes'],
@@ -149,6 +152,7 @@ final class ChecklistOperacionalModel
                  aceite_responsavel = :aceite_responsavel,
                  realizado_em = :realizado_em,
                  itens_json = :itens_json,
+                 evidencias_json = :evidencias_json,
                  nao_conformidades = :nao_conformidades,
                  evidencia_referencia = :evidencia_referencia,
                  observacoes = :observacoes
@@ -167,6 +171,7 @@ final class ChecklistOperacionalModel
             ':aceite_responsavel' => $data['aceite_responsavel'],
             ':realizado_em' => $data['realizado_em'],
             ':itens_json' => $data['itens_json'],
+            ':evidencias_json' => $data['evidencias_json'],
             ':nao_conformidades' => $data['nao_conformidades'],
             ':evidencia_referencia' => $data['evidencia_referencia'],
             ':observacoes' => $data['observacoes'],

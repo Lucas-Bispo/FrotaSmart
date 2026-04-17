@@ -1499,3 +1499,17 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-17 - Fase 4, checklists operacionais com evidencias, etapa 3
+
+### Multiplas evidencias por checklist
+- Evoluidos [ChecklistOperacionalModel.php](../backend/models/ChecklistOperacionalModel.php), [ChecklistOperacionalController.php](../backend/controllers/ChecklistOperacionalController.php) e [checklists.php](../frontend/views/checklists.php) para suportar `evidencias_json`, permitindo registrar varias referencias de evidencia na mesma vistoria
+- Atualizado [bootstrap-db.php](../scripts/bootstrap-db.php) para manter a tabela `checklists_operacionais` pronta para colecao de evidencias em formato estruturado, preservando compatibilidade com o campo resumo legado
+- Ajustado [test-checklist-operacional-model.php](../scripts/test-checklist-operacional-model.php) para validar criacao e atualizacao com multiplas evidencias persistidas
+
+### Resultado tecnico
+- o modulo de checklist deixa de depender de uma unica referencia textual e passa a se aproximar do fluxo real de vistoria, em que uma ocorrencia costuma gerar mais de uma prova operacional
+- a base fica pronta para uma etapa futura de anexos reais sem exigir nova reestruturacao do contrato de persistencia
+
+### Validacao realizada
+- pendente executar nesta retomada
