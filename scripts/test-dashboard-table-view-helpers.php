@@ -117,4 +117,23 @@ if (($documentSecretariaRows[0]['veiculos_afetados'] ?? '') !== '2 veiculo(s)') 
     throw new RuntimeException('Dashboard deveria consolidar o total de veiculos afetados por secretaria.');
 }
 
+$checklistRows = dashboard_build_checklist_rows([
+    [
+        'tipo' => 'retorno',
+        'placa' => 'CHK1A23',
+        'secretaria' => 'Saude',
+        'status_conformidade' => 'nao_conforme',
+        'nao_conformidades' => 'Lanterna traseira sem funcionamento.',
+        'evidencias_json' => '[{"referencia":"foto_ret_01.jpg"},{"referencia":"termo_02.pdf"}]',
+    ],
+]);
+
+if (($checklistRows[0]['status_badge'] ?? '') !== 'Nao conforme') {
+    throw new RuntimeException('Dashboard deveria mapear o badge de checklist no helper.');
+}
+
+if (($checklistRows[0]['evidencias'] ?? '') !== '2 evidencia(s)') {
+    throw new RuntimeException('Dashboard deveria consolidar a quantidade de evidencias do checklist.');
+}
+
 echo "Helpers de tabela do dashboard validados com sucesso.\n";

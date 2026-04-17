@@ -114,6 +114,7 @@ function dashboard_build_operational_alerts(
     int $preventivasVencidas,
     int $preventivasProximas,
     int $alertasAbastecimento,
+    int $checklistsNaoConformes,
     int $cnhsVencendo,
     int $veiculosArquivados,
     int $documentosVencidos,
@@ -135,6 +136,9 @@ function dashboard_build_operational_alerts(
     }
     if ($alertasAbastecimento > 0) {
         $alertas[] = $alertasAbastecimento . ' abastecimento(s) apresentam anomalias de consumo ou custo no periodo.';
+    }
+    if ($checklistsNaoConformes > 0) {
+        $alertas[] = $checklistsNaoConformes . ' checklist(s) registraram nao conformidade no periodo recente.';
     }
     if ($cnhsVencendo > 0) {
         $alertas[] = $cnhsVencendo . ' CNH(s) vencem nos proximos 30 dias.';
@@ -195,6 +199,7 @@ function dashboard_build_primary_metric_cards(
 function dashboard_build_secondary_metric_cards(
     int $manutencoesAbertas,
     int $abastecimentosUltimos7Dias,
+    int $checklistsRecentes,
     int $motoristasAtivos,
     int $cnhsVencendo,
     int $preventivasVencidas,
@@ -205,12 +210,46 @@ function dashboard_build_secondary_metric_cards(
     return [
         ['title' => 'Manutencoes abertas', 'value' => (string) $manutencoesAbertas, 'value_class' => 'text-amber-600', 'description' => null],
         ['title' => 'Abastecimentos em 7 dias', 'value' => (string) $abastecimentosUltimos7Dias, 'value_class' => 'text-cyan-700', 'description' => null],
+        ['title' => 'Checklists recentes', 'value' => (string) $checklistsRecentes, 'value_class' => 'text-indigo-700', 'description' => null],
         ['title' => 'Motoristas ativos', 'value' => (string) $motoristasAtivos, 'value_class' => 'text-emerald-600', 'description' => null],
         ['title' => 'CNHs vencendo', 'value' => (string) $cnhsVencendo, 'value_class' => 'text-rose-600', 'description' => null],
         ['title' => 'Prev. vencidas', 'value' => (string) $preventivasVencidas, 'value_class' => 'text-rose-700', 'description' => null],
         ['title' => 'Prev. proximas', 'value' => (string) $preventivasProximas, 'value_class' => 'text-amber-600', 'description' => null],
         ['title' => 'Consumo medio', 'value' => $consumoMedioPeriodo > 0 ? number_format($consumoMedioPeriodo, 2, ',', '.') : '--', 'value_class' => 'text-cyan-700', 'description' => null],
         ['title' => 'Docs vencendo', 'value' => (string) $documentosVencendo, 'value_class' => 'text-rose-700', 'description' => null],
+    ];
+}
+
+/**
+ * @param list<array<string, mixed>> $checklists
+ * @return array{recentes:int,nao_conformes:int,evidencias:int}
+ */
+function dashboard_summarize_checklists(array $checklists): array
+{
+    $naoConformes = 0;
+    $evidencias = 0;
+
+    foreach ($checklists as $checklist) {
+        if (($checklist['status_conformidade'] ?? '') === 'nao_conforme') {
+            $naoConformes++;
+        }
+
+        $decodedEvidence = json_decode((string) ($checklist['evidencias_json'] ?? '[]'), true);
+        if (is_array($decodedEvidence)) {
+            foreach ($decodedEvidence as $entry) {
+                if (trim((string) ($entry['referencia'] ?? '')) !== '') {
+                    $evidencias++;
+                }
+            }
+        } elseif (trim((string) ($checklist['evidencia_referencia'] ?? '')) !== '') {
+            $evidencias++;
+        }
+    }
+
+    return [
+        'recentes' => count($checklists),
+        'nao_conformes' => $naoConformes,
+        'evidencias' => $evidencias,
     ];
 }
 
@@ -256,6 +295,7 @@ function dashboard_build_quick_actions(bool $canManageUsers): array
  * @param list<array<string, mixed>> $veiculosAtivos
  * @param list<array<string, mixed>> $motoristas
  * @param list<array<string, mixed>> $abastecimentosRecentes
+ * @param list<array<string, mixed>> $checklistsRecentes
  * @param list<array<string, mixed>> $painelSecretarias
  * @param list<array<string, mixed>> $painelVeiculos
  * @return array{
@@ -279,6 +319,15 @@ function dashboard_build_quick_actions(bool $canManageUsers): array
  *         pendencias:string,
  *         status_badge:string,
  *         status_badge_class:string
+ *     }>,
+ *     checklist_rows:list<array{
+ *         tipo:string,
+ *         placa:string,
+ *         secretaria:string,
+ *         status_badge:string,
+ *         status_badge_class:string,
+ *         resumo:string,
+ *         evidencias:string
  *     }>
  * }
  */
@@ -286,6 +335,7 @@ function dashboard_build_page_data(
     array $veiculosAtivos,
     array $motoristas,
     array $abastecimentosRecentes,
+    array $checklistsRecentes,
     array $painelSecretarias,
     array $painelVeiculos,
     bool $canManageUsers,
@@ -305,6 +355,7 @@ function dashboard_build_page_data(
     $motoristasResumo = dashboard_summarize_motoristas($motoristas, $today, $alertLimit);
     $abastecimentosUltimos7Dias = dashboard_count_recent_refuels($abastecimentosRecentes, $today);
     $documentosResumo = dashboard_summarize_document_expirations($veiculosAtivos, $today, $alertLimit);
+    $checklistsResumo = dashboard_summarize_checklists($checklistsRecentes);
 
     return [
         'alertas_operacionais' => dashboard_build_operational_alerts(
@@ -313,6 +364,7 @@ function dashboard_build_page_data(
             $preventivasVencidas,
             $preventivasProximas,
             $alertasAbastecimento,
+            $checklistsResumo['nao_conformes'],
             $motoristasResumo['cnhs_vencendo'],
             $veiculosArquivados,
             $documentosResumo['vencidos'],
@@ -327,6 +379,7 @@ function dashboard_build_page_data(
         'secondary_metric_cards' => dashboard_build_secondary_metric_cards(
             $manutencoesAbertas,
             $abastecimentosUltimos7Dias,
+            $checklistsResumo['recentes'],
             $motoristasResumo['ativos'],
             $motoristasResumo['cnhs_vencendo'],
             $preventivasVencidas,
@@ -342,7 +395,57 @@ function dashboard_build_page_data(
         'recent_refuel_rows' => dashboard_build_recent_refuel_rows($abastecimentosRecentes),
         'document_secretaria_rows' => dashboard_build_document_secretaria_rows($veiculosAtivos, $today, $alertLimit),
         'document_pending_rows' => dashboard_build_document_pending_rows($veiculosAtivos, $today, $alertLimit),
+        'checklist_rows' => dashboard_build_checklist_rows($checklistsRecentes),
     ];
+}
+
+/**
+ * @param list<array<string, mixed>> $checklists
+ * @return list<array{
+ *     tipo:string,
+ *     placa:string,
+ *     secretaria:string,
+ *     status_badge:string,
+ *     status_badge_class:string,
+ *     resumo:string,
+ *     evidencias:string
+ * }>
+ */
+function dashboard_build_checklist_rows(array $checklists): array
+{
+    $rows = [];
+
+    foreach (array_slice($checklists, 0, 5) as $checklist) {
+        $status = (string) ($checklist['status_conformidade'] ?? 'pendente');
+        $evidenceCount = 0;
+        $decodedEvidence = json_decode((string) ($checklist['evidencias_json'] ?? '[]'), true);
+
+        if (is_array($decodedEvidence)) {
+            foreach ($decodedEvidence as $entry) {
+                if (trim((string) ($entry['referencia'] ?? '')) !== '') {
+                    $evidenceCount++;
+                }
+            }
+        } elseif (trim((string) ($checklist['evidencia_referencia'] ?? '')) !== '') {
+            $evidenceCount = 1;
+        }
+
+        $rows[] = [
+            'tipo' => ucfirst((string) ($checklist['tipo'] ?? '')),
+            'placa' => (string) ($checklist['placa'] ?? ''),
+            'secretaria' => (string) ($checklist['secretaria'] ?? 'Nao informada'),
+            'status_badge' => ucfirst(str_replace('_', ' ', $status)),
+            'status_badge_class' => match ($status) {
+                'conforme' => 'bg-emerald-100 text-emerald-800',
+                'nao_conforme' => 'bg-rose-100 text-rose-800',
+                default => 'bg-amber-100 text-amber-800',
+            },
+            'resumo' => (string) (($checklist['nao_conformidades'] ?? '') !== '' ? $checklist['nao_conformidades'] : 'Sem nao conformidade registrada.'),
+            'evidencias' => $evidenceCount . ' evidencia(s)',
+        ];
+    }
+
+    return $rows;
 }
 
 /**

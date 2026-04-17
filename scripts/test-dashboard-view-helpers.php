@@ -27,6 +27,16 @@ $pageData = dashboard_build_page_data(
         ['data_abastecimento' => '2026-04-01'],
     ],
     [
+        [
+            'tipo' => 'saida',
+            'placa' => 'ABC1D23',
+            'secretaria' => 'Saude',
+            'status_conformidade' => 'nao_conforme',
+            'nao_conformidades' => 'Pneu traseiro em alerta.',
+            'evidencias_json' => '[{"referencia":"foto_1.jpg"},{"referencia":"foto_2.jpg"}]',
+        ],
+    ],
+    [
         ['secretaria' => 'Saude', 'custo_total_periodo' => 1500.0],
     ],
     [
@@ -66,12 +76,20 @@ if (! in_array('1 documento(s) veicular(es) vencem nos proximos 30 dias.', $page
     throw new RuntimeException('Dashboard deveria sinalizar vencimentos documentais no pacote principal da tela.');
 }
 
+if (! in_array('1 checklist(s) registraram nao conformidade no periodo recente.', $pageData['alertas_operacionais'] ?? [], true)) {
+    throw new RuntimeException('Dashboard deveria sinalizar nao conformidades de checklist no pacote principal da tela.');
+}
+
 if (($pageData['document_pending_rows'][0]['placa'] ?? '') !== 'ABC1D23') {
     throw new RuntimeException('Dashboard deveria preparar as linhas de pendencia documental na camada de helper.');
 }
 
 if (($pageData['document_secretaria_rows'][0]['secretaria'] ?? '') !== 'Saude') {
     throw new RuntimeException('Dashboard deveria consolidar pendencias documentais por secretaria.');
+}
+
+if (($pageData['checklist_rows'][0]['evidencias'] ?? '') !== '2 evidencia(s)') {
+    throw new RuntimeException('Dashboard deveria resumir evidencias dos checklists recentes na camada de helper.');
 }
 
 echo "Helpers de view do dashboard validados com sucesso.\n";

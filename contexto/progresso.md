@@ -1513,3 +1513,16 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-17 - Fase 4, checklists operacionais com evidencias, etapa 4
+
+### Leitura gerencial de checklists no dashboard
+- Atualizados [dashboard.php](../frontend/views/dashboard.php) e [dashboard_view_helpers.php](../frontend/views/helpers/dashboard_view_helpers.php) para incluir resumo de checklists recentes, nao conformidades e volume de evidencias no painel principal
+- Ajustados [test-dashboard-view-helpers.php](../scripts/test-dashboard-view-helpers.php) e [test-dashboard-table-view-helpers.php](../scripts/test-dashboard-table-view-helpers.php) para validar os novos alertas e a lista resumida de checklists operacionais
+
+### Resultado tecnico
+- o modulo de checklist deixa de ficar isolado na tela propria e passa a alimentar a leitura gerencial do dashboard, aproximando a frente do valor institucional descrito nos `.md`
+- a equipe ganha visibilidade rapida de nao conformidades recentes e da quantidade de evidencias registradas sem precisar abrir o modulo detalhado
+
+### Validacao realizada
+- pendente executar nesta retomada

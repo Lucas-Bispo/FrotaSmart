@@ -13,6 +13,7 @@ if (! isset($_SESSION['user'])) {
 require_once __DIR__ . '/../../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../../backend/models/ManutencaoModel.php';
 require_once __DIR__ . '/../../backend/models/AbastecimentoModel.php';
+require_once __DIR__ . '/../../backend/models/ChecklistOperacionalModel.php';
 require_once __DIR__ . '/../../backend/models/RelatorioOperacionalModel.php';
 require_once __DIR__ . '/helpers/dashboard_view_helpers.php';
 
@@ -26,6 +27,7 @@ $veiculosAtivos = [];
 $motoristas = [];
 $manutencoesRecentes = [];
 $abastecimentosRecentes = [];
+$checklistsRecentes = [];
 $painelSecretarias = [];
 $painelVeiculos = [];
 $abastecimentoModel = null;
@@ -61,6 +63,7 @@ $executiveVehicleRows = [];
 $recentRefuelRows = [];
 $documentSecretariaRows = [];
 $documentPendingRows = [];
+$checklistRows = [];
 
 try {
     $veiculoDashboardService = new \FrotaSmart\Application\Services\VeiculoDashboardService(
@@ -71,6 +74,7 @@ try {
     $motoristaModel = new MotoristaModel();
     $manutencaoModel = new ManutencaoModel();
     $abastecimentoModel = new AbastecimentoModel();
+    $checklistModel = new ChecklistOperacionalModel();
     $relatorioModel = new RelatorioOperacionalModel(
         \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make()
     );
@@ -80,6 +84,7 @@ try {
     $motoristas = $motoristaModel->getAllMotoristas();
     $manutencoesRecentes = $manutencaoModel->getRecent(5);
     $abastecimentosRecentes = $abastecimentoModel->getRecent(5);
+    $checklistsRecentes = $checklistModel->listByFilters();
     $totalFrota = count($veiculosAtivos);
     $veiculosArquivados = $veiculoDashboardService->contarArquivados();
     $manutencoesAbertas = $manutencaoModel->countAbertas();
@@ -104,6 +109,7 @@ $pageData = dashboard_build_page_data(
     $veiculosAtivos,
     $motoristas,
     $abastecimentosRecentes,
+    $checklistsRecentes,
     $painelSecretarias,
     $painelVeiculos,
     $canManageUsers,
@@ -130,6 +136,7 @@ $executiveVehicleRows = $pageData['executive_vehicle_rows'];
 $recentRefuelRows = $pageData['recent_refuel_rows'];
 $documentSecretariaRows = $pageData['document_secretaria_rows'];
 $documentPendingRows = $pageData['document_pending_rows'];
+$checklistRows = $pageData['checklist_rows'];
 ?>
 <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-8">
     <div>
@@ -418,6 +425,35 @@ $documentPendingRows = $pageData['document_pending_rows'];
                                 </div>
                                 <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo htmlspecialchars($documentRow['status_badge_class'], ENT_QUOTES, 'UTF-8'); ?>">
                                     <?php echo htmlspecialchars($documentRow['status_badge'], ENT_QUOTES, 'UTF-8'); ?>
+                                </span>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-semibold mb-2 text-slate-700">Checklists operacionais</h2>
+            <p class="text-sm text-slate-500 mb-5">Leitura rapida das vistorias mais recentes com foco em conformidade e evidencias.</p>
+
+            <?php if ($checklistRows === []): ?>
+                <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-500 text-sm">
+                    Nenhum checklist operacional recente foi encontrado.
+                </div>
+            <?php else: ?>
+                <div class="space-y-3">
+                    <?php foreach ($checklistRows as $checklistRow): ?>
+                        <div class="rounded-2xl border border-slate-200 p-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-slate-800"><?php echo htmlspecialchars($checklistRow['tipo'] . ' - ' . $checklistRow['placa'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                    <p class="text-xs text-slate-500 mt-1"><?php echo htmlspecialchars($checklistRow['secretaria'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                    <p class="text-xs text-slate-500 mt-2"><?php echo htmlspecialchars($checklistRow['resumo'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                    <p class="text-xs text-cyan-700 mt-2"><?php echo htmlspecialchars($checklistRow['evidencias'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                </div>
+                                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <?php echo htmlspecialchars($checklistRow['status_badge_class'], ENT_QUOTES, 'UTF-8'); ?>">
+                                    <?php echo htmlspecialchars($checklistRow['status_badge'], ENT_QUOTES, 'UTF-8'); ?>
                                 </span>
                             </div>
                         </div>
