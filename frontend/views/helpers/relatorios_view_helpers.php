@@ -13,6 +13,7 @@ function relatorios_report_labels(): array
         'viagens' => 'Viagens',
         'disponibilidade' => 'Disponibilidade',
         'documentacao' => 'Documentacao',
+        'transparencia' => 'Transparencia',
         'auditoria' => 'Auditoria',
     ];
 }
@@ -28,6 +29,7 @@ function relatorios_status_options(string $report): array
         'viagens' => ['em_curso' => 'Em curso', 'concluida' => 'Concluida', 'cancelada' => 'Cancelada'],
         'disponibilidade' => ['ativo' => 'Ativo', 'manutencao' => 'Manutencao', 'em_viagem' => 'Em viagem', 'reservado' => 'Reservado', 'baixado' => 'Baixado'],
         'documentacao' => ['vencido' => 'Vencido', 'vencendo' => 'Vencendo', 'regular' => 'Regular'],
+        'transparencia' => ['ativo' => 'Ativo', 'manutencao' => 'Manutencao', 'em_viagem' => 'Em viagem', 'reservado' => 'Reservado', 'baixado' => 'Baixado'],
         'auditoria' => ['create' => 'Criacao', 'update' => 'Atualizacao', 'archive' => 'Arquivamento', 'restore' => 'Restauracao', 'delete' => 'Exclusao', 'blocked' => 'Bloqueio', 'export' => 'Exportacao', 'login' => 'Login', 'login_failed' => 'Falha login', 'logout' => 'Logout'],
         default => [],
     };
@@ -63,6 +65,15 @@ function relatorios_summary_cards(string $report, array $summary, array $auditSu
         ];
     }
 
+    if ($report === 'transparencia') {
+        return [
+            ['title' => 'Frota publicada', 'value' => (string) (int) ($summary['frota_publicada'] ?? 0), 'value_class' => 'text-slate-800'],
+            ['title' => 'Custo consolidado', 'value' => 'R$ ' . number_format((float) ($summary['custo_total_publicado'] ?? 0), 2, ',', '.'), 'value_class' => 'text-cyan-700'],
+            ['title' => 'Viagens publicadas', 'value' => (string) (int) ($summary['viagens_publicadas'] ?? 0), 'value_class' => 'text-emerald-700'],
+            ['title' => 'Pendencias documentais', 'value' => (string) (int) ($summary['veiculos_com_pendencia'] ?? 0), 'value_class' => 'text-amber-700'],
+        ];
+    }
+
     return [
         ['title' => 'Gasto abastecimento', 'value' => 'R$ ' . number_format((float) ($summary['gasto_abastecimento'] ?? 0), 2, ',', '.'), 'value_class' => 'text-emerald-600'],
         ['title' => 'Custo manutencao', 'value' => 'R$ ' . number_format((float) ($summary['custo_manutencao'] ?? 0), 2, ',', '.'), 'value_class' => 'text-amber-600'],
@@ -81,6 +92,7 @@ function relatorios_table_headers(string $report): array
         'manutencoes' => ['Veiculo', 'Secretaria', 'Tipo e periodo', 'Parceiro', 'Custos'],
         'viagens' => ['Veiculo', 'Secretaria', 'Motorista', 'Trajeto', 'KM e status'],
         'documentacao' => ['Veiculo', 'Secretaria', 'Situacao documental', 'Proximo vencimento', 'Pendencias e controle'],
+        'transparencia' => ['Veiculo', 'Secretaria', 'Cadastro publico', 'Uso no periodo', 'Custos e conformidade'],
         'auditoria' => ['Data e evento', 'Acao', 'Alvo', 'Ator e origem', 'Contexto'],
         default => ['Veiculo', 'Secretaria', 'Status', 'Uso', 'Historico'],
     };
@@ -240,7 +252,9 @@ function relatorios_build_page_data($model, string $report, array $filters, arra
     $rows = relatorios_rows_for_report($model, $report, $filters);
     $summary = $report === 'documentacao'
         ? relatorios_documentacao_summary($rows)
-        : $model->getResumo($filters);
+        : ($report === 'transparencia'
+            ? relatorios_transparencia_summary($rows)
+            : $model->getResumo($filters));
     $auditSummary = $model->getAuditSummary($filters);
     $auditTargetTypes = $model->getAuditTargetTypes();
     $statusOptions = relatorios_status_options($report);
@@ -282,6 +296,7 @@ function relatorios_rows_for_report($model, string $report, array $filters): arr
         'viagens' => $model->getViagemReport($filters),
         'disponibilidade' => $model->getDisponibilidadeReport($filters),
         'documentacao' => $model->getDocumentacaoReport($filters),
+        'transparencia' => $model->getTransparenciaReport($filters),
         'auditoria' => $model->getAuditReport($filters),
         default => $model->getAbastecimentoReport($filters),
     };
@@ -314,6 +329,7 @@ function relatorios_row_markup(string $report, array $row): string
         'manutencoes' => relatorios_manutencao_row($row),
         'viagens' => relatorios_viagem_row($row),
         'documentacao' => relatorios_documentacao_row($row),
+        'transparencia' => relatorios_transparencia_row($row),
         'auditoria' => relatorios_auditoria_row($row),
         default => relatorios_disponibilidade_row($row),
     };
@@ -458,6 +474,67 @@ function relatorios_documentacao_summary(array $rows): array
 
         $summary['documentos_vencidos'] += $vencidos;
         $summary['documentos_vencendo'] += $vencendo;
+    }
+
+    return $summary;
+}
+
+function relatorios_transparencia_row(array $row): string
+{
+    $situacao = (string) ($row['situacao_publicacao'] ?? 'regular');
+    $badgeClass = match ($situacao) {
+        'pendencia_documental' => 'bg-amber-100 text-amber-800',
+        'restricao_operacional' => 'bg-rose-100 text-rose-800',
+        default => 'bg-emerald-100 text-emerald-800',
+    };
+    $badgeLabel = match ($situacao) {
+        'pendencia_documental' => 'Pendencia documental',
+        'restricao_operacional' => 'Restricao operacional',
+        default => 'Regular para publicacao',
+    };
+
+    return sprintf(
+        '<td class="px-6 py-4"><div class="text-sm font-bold text-slate-900">%s</div><div class="text-xs text-slate-500">%s | %s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700">%s</td>
+        <td class="px-6 py-4 text-sm text-slate-700"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold %s">%s</span><div class="text-xs text-slate-500 mt-2">Status: %s</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>%d viagem(ns) | %s km</div><div class="text-xs text-slate-500">%d abastecimento(s) | %d manutencao(oes)</div></td>
+        <td class="px-6 py-4 text-sm text-slate-700"><div>Total: R$ %s</div><div class="text-xs text-slate-500">Docs pendentes: %d</div></td>',
+        htmlspecialchars((string) ($row['placa'] ?? ''), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['modelo'] ?? ''), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars(strtoupper((string) ($row['tipo'] ?? '')), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['secretaria_lotada'] ?? 'Nao informada'), ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($badgeClass, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($badgeLabel, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars((string) ($row['status'] ?? ''), ENT_QUOTES, 'UTF-8'),
+        (int) ($row['viagens_periodo'] ?? 0),
+        number_format((float) ($row['km_viagens_periodo'] ?? 0), 0, ',', '.'),
+        (int) ($row['abastecimentos_periodo'] ?? 0),
+        (int) ($row['manutencoes_periodo'] ?? 0),
+        number_format((float) (($row['gasto_abastecimento_periodo'] ?? 0) + ($row['custo_manutencao_periodo'] ?? 0)), 2, ',', '.'),
+        (int) ($row['documentos_pendentes'] ?? 0)
+    );
+}
+
+/**
+ * @param list<array<string, mixed>> $rows
+ * @return array<string, int|float>
+ */
+function relatorios_transparencia_summary(array $rows): array
+{
+    $summary = [
+        'frota_publicada' => count($rows),
+        'custo_total_publicado' => 0.0,
+        'viagens_publicadas' => 0,
+        'veiculos_com_pendencia' => 0,
+    ];
+
+    foreach ($rows as $row) {
+        $summary['custo_total_publicado'] += (float) ($row['gasto_abastecimento_periodo'] ?? 0) + (float) ($row['custo_manutencao_periodo'] ?? 0);
+        $summary['viagens_publicadas'] += (int) ($row['viagens_periodo'] ?? 0);
+
+        if ((int) ($row['documentos_pendentes'] ?? 0) > 0) {
+            $summary['veiculos_com_pendencia']++;
+        }
     }
 
     return $summary;

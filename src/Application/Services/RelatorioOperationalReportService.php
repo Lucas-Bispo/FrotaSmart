@@ -52,4 +52,15 @@ final class RelatorioOperationalReportService
             $filters
         );
     }
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public function transparenciaPublica(array $filters): array
+    {
+        return $this->rowTransformer->withTransparenciaClassificacao(
+            $this->readModel->fetchTransparenciaPublicaReport($filters)
+        );
+    }
 }

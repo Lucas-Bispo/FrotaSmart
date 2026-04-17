@@ -92,6 +92,25 @@ $fakeModel = new class {
     {
         return [];
     }
+
+    public function getTransparenciaReport(array $filters): array
+    {
+        return [[
+            'placa' => 'XYZ9K88',
+            'modelo' => 'Cronos',
+            'tipo' => 'passeio',
+            'secretaria_lotada' => 'Administracao',
+            'status' => 'ativo',
+            'situacao_publicacao' => 'regular',
+            'viagens_periodo' => 4,
+            'km_viagens_periodo' => 180,
+            'abastecimentos_periodo' => 2,
+            'manutencoes_periodo' => 1,
+            'gasto_abastecimento_periodo' => 320.5,
+            'custo_manutencao_periodo' => 90.0,
+            'documentos_pendentes' => 0,
+        ]];
+    }
 };
 
 $pageData = relatorios_build_page_data(
@@ -164,6 +183,34 @@ if (($documentPageData['reportTitle'] ?? '') !== 'Documentacao') {
 
 if (! str_contains((string) (($documentPageData['rowMarkupList'][0] ?? '')), 'Licenciamento vencido em 2026-04-10')) {
     throw new RuntimeException('Helper de view deveria renderizar o resumo de pendencias da aba documental.');
+}
+
+$transparencyPageData = relatorios_build_page_data(
+    $fakeModel,
+    'transparencia',
+    [
+        'data_inicio' => '',
+        'data_fim' => '',
+        'secretaria' => 'Administracao',
+        'veiculo_id' => '',
+        'status' => 'ativo',
+        'ator' => '',
+        'evento' => '',
+        'tipo_alvo' => '',
+    ],
+    relatorios_report_labels()
+);
+
+if (($transparencyPageData['summaryCards'][0]['value'] ?? '') !== '1') {
+    throw new RuntimeException('Helper de view deveria resumir a frota publicada na aba de transparencia.');
+}
+
+if (($transparencyPageData['reportTitle'] ?? '') !== 'Transparencia') {
+    throw new RuntimeException('Helper de view deveria expor o titulo da aba de transparencia.');
+}
+
+if (! str_contains((string) (($transparencyPageData['rowMarkupList'][0] ?? '')), 'Regular para publicacao')) {
+    throw new RuntimeException('Helper de view deveria renderizar a classificacao publica do dataset de transparencia.');
 }
 
 echo "Helpers de view de relatorios validados com sucesso.\n";

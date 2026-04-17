@@ -305,6 +305,117 @@ final class RelatorioOperacionalQueryService implements AuditReportReadModelInte
     }
 
     /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public function fetchTransparenciaPublicaReport(array $filters): array
+    {
+        $criteria = $this->criteria->forOperationalReport($filters);
+        $conditions = [];
+        $params = [];
+
+        if (($secretaria = $criteria['secretaria']) !== null) {
+            $conditions[] = 'v.secretaria_lotada = :secretaria';
+            $params[':secretaria'] = $secretaria;
+        }
+
+        if (($veiculoId = $criteria['veiculo_id']) !== null) {
+            $conditions[] = 'v.id = :veiculo_id';
+            $params[':veiculo_id'] = $veiculoId;
+        }
+
+        if (($status = $criteria['status']) !== null) {
+            $conditions[] = 'v.status = :status';
+            $params[':status'] = $status;
+        }
+
+        $dataInicio = $criteria['data_inicio'];
+        $dataFim = $criteria['data_fim'];
+        $abastecimentoConditions = [];
+        $manutencaoConditions = [];
+        $viagemConditions = [];
+
+        if ($dataInicio !== null) {
+            $abastecimentoConditions[] = 'a.data_abastecimento >= :data_inicio';
+            $manutencaoConditions[] = 'm.data_abertura >= :data_inicio';
+            $viagemConditions[] = 'DATE(vi.data_saida) >= :data_inicio';
+            $params[':data_inicio'] = $dataInicio;
+        }
+
+        if ($dataFim !== null) {
+            $abastecimentoConditions[] = 'a.data_abastecimento <= :data_fim';
+            $manutencaoConditions[] = 'm.data_abertura <= :data_fim';
+            $viagemConditions[] = 'DATE(vi.data_saida) <= :data_fim';
+            $params[':data_fim'] = $dataFim;
+        }
+
+        $abastecimentoSql = 'SELECT a.veiculo_id, COUNT(*) AS abastecimentos_periodo, COALESCE(SUM(a.valor_total), 0) AS gasto_abastecimento_periodo
+            FROM abastecimentos a';
+        if ($abastecimentoConditions !== []) {
+            $abastecimentoSql .= ' WHERE ' . implode(' AND ', $abastecimentoConditions);
+        }
+        $abastecimentoSql .= ' GROUP BY a.veiculo_id';
+
+        $manutencaoSql = 'SELECT m.veiculo_id, COUNT(*) AS manutencoes_periodo, COALESCE(SUM(CASE WHEN m.custo_final > 0 THEN m.custo_final ELSE m.custo_estimado END), 0) AS custo_manutencao_periodo
+            FROM manutencoes m';
+        if ($manutencaoConditions !== []) {
+            $manutencaoSql .= ' WHERE ' . implode(' AND ', $manutencaoConditions);
+        }
+        $manutencaoSql .= ' GROUP BY m.veiculo_id';
+
+        $viagemSql = "SELECT
+                vi.veiculo_id,
+                COUNT(*) AS viagens_periodo,
+                COALESCE(SUM(
+                    CASE
+                        WHEN vi.km_chegada IS NOT NULL AND vi.km_chegada >= vi.km_saida THEN vi.km_chegada - vi.km_saida
+                        ELSE 0
+                    END
+                ), 0) AS km_viagens_periodo
+            FROM viagens vi";
+        if ($viagemConditions !== []) {
+            $viagemSql .= ' WHERE ' . implode(' AND ', $viagemConditions);
+        }
+        $viagemSql .= ' GROUP BY vi.veiculo_id';
+
+        $sql = "SELECT
+                    v.id AS veiculo_id,
+                    v.placa,
+                    v.modelo,
+                    v.tipo,
+                    v.combustivel,
+                    COALESCE(NULLIF(v.secretaria_lotada, ''), 'Secretaria nao informada') AS secretaria_lotada,
+                    v.status,
+                    COALESCE(ab.abastecimentos_periodo, 0) AS abastecimentos_periodo,
+                    COALESCE(ab.gasto_abastecimento_periodo, 0) AS gasto_abastecimento_periodo,
+                    COALESCE(ma.manutencoes_periodo, 0) AS manutencoes_periodo,
+                    COALESCE(ma.custo_manutencao_periodo, 0) AS custo_manutencao_periodo,
+                    COALESCE(vi.viagens_periodo, 0) AS viagens_periodo,
+                    COALESCE(vi.km_viagens_periodo, 0) AS km_viagens_periodo,
+                    (
+                        CASE WHEN v.licenciamento_vencimento IS NOT NULL AND v.licenciamento_vencimento <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END
+                        + CASE WHEN v.seguro_vencimento IS NOT NULL AND v.seguro_vencimento <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END
+                        + CASE WHEN v.crlv_vencimento IS NOT NULL AND v.crlv_vencimento <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END
+                        + CASE WHEN v.contrato_vencimento IS NOT NULL AND v.contrato_vencimento <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END
+                    ) AS documentos_pendentes
+                FROM veiculos v
+                LEFT JOIN ({$abastecimentoSql}) ab ON ab.veiculo_id = v.id
+                LEFT JOIN ({$manutencaoSql}) ma ON ma.veiculo_id = v.id
+                LEFT JOIN ({$viagemSql}) vi ON vi.veiculo_id = v.id";
+
+        if ($conditions !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $sql .= ' ORDER BY secretaria_lotada ASC, v.placa ASC';
+
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function fetchFleetSummaryBySecretaria(): array

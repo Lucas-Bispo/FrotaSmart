@@ -29,4 +29,10 @@ interface RelatorioOperationalReadModelInterface
      * @return list<array<string, mixed>>
      */
     public function fetchDocumentacaoReport(array $filters): array;
+
+    /**
+     * @param array<string, mixed> $filters
+     * @return list<array<string, mixed>>
+     */
+    public function fetchTransparenciaPublicaReport(array $filters): array;
 }

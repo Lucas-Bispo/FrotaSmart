@@ -133,6 +133,34 @@ final class RelatorioRowTransformerService
      * @param list<array<string, mixed>> $rows
      * @return list<array<string, mixed>>
      */
+    public function withTransparenciaClassificacao(array $rows): array
+    {
+        foreach ($rows as &$row) {
+            $pendencias = (int) ($row['documentos_pendentes'] ?? 0);
+            $indisponivel = in_array((string) ($row['status'] ?? ''), ['manutencao', 'em_manutencao', 'baixado'], true);
+
+            $row['situacao_publicacao'] = $pendencias > 0
+                ? 'pendencia_documental'
+                : ($indisponivel ? 'restricao_operacional' : 'regular');
+        }
+        unset($row);
+
+        usort($rows, static function (array $left, array $right): int {
+            $priority = ['pendencia_documental' => 0, 'restricao_operacional' => 1, 'regular' => 2];
+            $leftPriority = $priority[(string) ($left['situacao_publicacao'] ?? 'regular')] ?? 9;
+            $rightPriority = $priority[(string) ($right['situacao_publicacao'] ?? 'regular')] ?? 9;
+
+            return [$leftPriority, (string) ($left['secretaria_lotada'] ?? ''), (string) ($left['placa'] ?? '')]
+                <=> [$rightPriority, (string) ($right['secretaria_lotada'] ?? ''), (string) ($right['placa'] ?? '')];
+        });
+
+        return $rows;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<array<string, mixed>>
+     */
     public function withAuditContextSummary(array $rows): array
     {
         foreach ($rows as &$row) {

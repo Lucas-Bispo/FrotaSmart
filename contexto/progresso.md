@@ -1457,3 +1457,17 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-17 - Fase 3, transparencia publica orientada a dados nao pessoais, etapa 1
+
+### Dataset publico inicial no modulo de relatorios
+- Evoluidos [RelatorioOperationalReadModelInterface.php](../src/Application/Contracts/RelatorioOperationalReadModelInterface.php), [RelatorioOperacionalQueryService.php](../src/Infrastructure/ReadModels/RelatorioOperacionalQueryService.php), [RelatorioOperationalReportService.php](../src/Application/Services/RelatorioOperationalReportService.php) e [RelatorioRowTransformerService.php](../src/Application/Services/RelatorioRowTransformerService.php) para expor um dataset de transparencia sem dados pessoais, consolidado por veiculo
+- Atualizados [RelatorioOperacionalModel.php](../backend/models/RelatorioOperacionalModel.php), [RelatorioExportService.php](../src/Application/Services/RelatorioExportService.php) e [relatorios_view_helpers.php](../frontend/views/helpers/relatorios_view_helpers.php) para adicionar a aba `transparencia`, com resumo de frota publicada, custos, viagens e pendencias documentais
+- Ajustados [test-relatorio-operational-report-service.php](../scripts/test-relatorio-operational-report-service.php), [test-relatorio-export-service.php](../scripts/test-relatorio-export-service.php) e [test-relatorio-view-helpers.php](../scripts/test-relatorio-view-helpers.php) para validar o recorte publico e garantir ausencia de dados pessoais no fluxo novo
+
+### Resultado tecnico
+- o projeto abre a frente de transparencia publica sugerida nos `.md` sem criar uma stack paralela nem duplicar a logica do modulo de relatorios
+- a camada de relatorios passa a diferenciar explicitamente um dataset interno e um dataset orientado a publicacao, com foco em lotacao, situacao da frota, uso, custos consolidados e conformidade documental
+
+### Validacao realizada
+- pendente executar nesta retomada

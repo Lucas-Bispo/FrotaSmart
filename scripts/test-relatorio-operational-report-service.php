@@ -63,6 +63,28 @@ $readModel = new class () implements \FrotaSmart\Application\Contracts\Relatorio
             ],
         ];
     }
+
+    public function fetchTransparenciaPublicaReport(array $filters): array
+    {
+        $this->lastFilters = $filters;
+
+        return [[
+            'veiculo_id' => 11,
+            'placa' => 'XYZ9K88',
+            'modelo' => 'Cronos',
+            'tipo' => 'passeio',
+            'combustivel' => 'flex',
+            'secretaria_lotada' => 'Administracao',
+            'status' => 'ativo',
+            'abastecimentos_periodo' => 2,
+            'gasto_abastecimento_periodo' => 320.5,
+            'manutencoes_periodo' => 1,
+            'custo_manutencao_periodo' => 90.0,
+            'viagens_periodo' => 4,
+            'km_viagens_periodo' => 180,
+            'documentos_pendentes' => 1,
+        ]];
+    }
 };
 
 $service = new \FrotaSmart\Application\Services\RelatorioOperationalReportService(
@@ -79,6 +101,7 @@ $manutencoes = $service->manutencoes($filters);
 $viagens = $service->viagens($filters);
 $disponibilidade = $service->disponibilidade($filters);
 $documentacao = $service->documentacao($filters);
+$transparencia = $service->transparenciaPublica($filters);
 
 if (($readModel->lastFilters['veiculo_id'] ?? null) !== '8') {
     throw new RuntimeException('Service operacional de relatorios deveria repassar os filtros ao read model.');
@@ -100,6 +123,11 @@ if (($disponibilidade[0]['situacao_disponibilidade'] ?? '') !== 'disponivel_oper
 if (($documentacao[0]['situacao_documental'] ?? '') !== 'vencido'
     || ($documentacao[0]['documentos_vencendo'] ?? null) !== 1) {
     throw new RuntimeException('Service operacional de relatorios deveria consolidar a documentacao por veiculo.');
+}
+
+if (($transparencia[0]['situacao_publicacao'] ?? '') !== 'pendencia_documental'
+    || array_key_exists('motorista_nome', $transparencia[0])) {
+    throw new RuntimeException('Service operacional de relatorios deveria classificar e preservar o dataset publico sem dados pessoais.');
 }
 
 echo "Service operacional de relatorios validado com sucesso.\n";

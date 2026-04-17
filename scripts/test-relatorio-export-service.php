@@ -42,6 +42,26 @@ $operationalReadModel = new class () implements \FrotaSmart\Application\Contract
             'situacao_documento' => 'vencendo',
         ]];
     }
+
+    public function fetchTransparenciaPublicaReport(array $filters): array
+    {
+        return [[
+            'veiculo_id' => 12,
+            'placa' => 'XYZ9K88',
+            'modelo' => 'Cronos',
+            'tipo' => 'passeio',
+            'combustivel' => 'flex',
+            'secretaria_lotada' => 'Administracao',
+            'status' => 'ativo',
+            'abastecimentos_periodo' => 1,
+            'gasto_abastecimento_periodo' => 120.0,
+            'manutencoes_periodo' => 0,
+            'custo_manutencao_periodo' => 0.0,
+            'viagens_periodo' => 3,
+            'km_viagens_periodo' => 88,
+            'documentos_pendentes' => 0,
+        ]];
+    }
 };
 
 $auditReadModel = new class () implements \FrotaSmart\Application\Contracts\AuditReportReadModelInterface {
@@ -84,6 +104,7 @@ $service = new \FrotaSmart\Application\Services\RelatorioExportService(
 $csvViagem = $service->export('viagens', ['status' => 'concluida']);
 $csvAbastecimento = $service->export('abastecimentos', ['status' => 'critico']);
 $csvDocumentacao = $service->export('documentacao', ['status' => 'vencendo']);
+$csvTransparencia = $service->export('transparencia', ['secretaria' => 'Administracao']);
 $csvUnknown = $service->export('inexistente', []);
 
 if (! str_contains($csvViagem, 'viagem')) {
@@ -96,6 +117,10 @@ if (! str_contains($csvAbastecimento, 'critico')) {
 
 if (! str_contains($csvDocumentacao, 'ABC1D23') || ! str_contains($csvDocumentacao, 'vencendo')) {
     throw new RuntimeException('Export service deveria serializar o dataset documental consolidado.');
+}
+
+if (! str_contains($csvTransparencia, 'XYZ9K88') || str_contains($csvTransparencia, 'motorista')) {
+    throw new RuntimeException('Export service deveria serializar o dataset de transparencia sem dados pessoais.');
 }
 
 if (! str_contains($csvUnknown, 'sem_dados')) {

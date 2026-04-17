@@ -65,6 +65,11 @@ final class RelatorioOperacionalModel
         return $this->operationalReports->documentacao($filters);
     }
 
+    public function getTransparenciaReport(array $filters): array
+    {
+        return $this->operationalReports->transparenciaPublica($filters);
+    }
+
     public function getResumo(array $filters): array
     {
         return $this->operationalSummaries->summarize(
