@@ -1053,6 +1053,22 @@
 - `php -l scripts/test-motorista-model.php`
 - `php scripts/test-motorista-model.php`
 
+## 2026-04-16 - Continuidade tecnica apos Task 24, etapa 7
+
+### UserModel com tipagem explicita e PDO injetavel
+- Refatorado [UserModel.php](../backend/models/UserModel.php) para adotar `strict_types`, tipagem nas assinaturas, classe final e `PDO` explicito com fallback controlado para o legado
+- Mantido o comportamento de autenticacao e normalizacao de perfil invalido para `gerente`, reduzindo dependencia implícita de estado global no modulo administrativo
+- Criado [test-user-model.php](../scripts/test-user-model.php) para validar cadastro, login valido, rejeicao de senha incorreta e fallback de perfil
+
+### Resultado tecnico
+- o modulo administrativo reduz mais um hotspot pequeno de persistencia legacy, deixando o model de usuarios mais previsivel e mais alinhado aos demais recortes recentes
+- a autenticacao e o cadastro administrativo agora possuem um teste integrado proprio do model, sem depender apenas dos controllers para exercitar o comportamento central
+
+### Validacao realizada
+- `php -l backend/models/UserModel.php`
+- `php -l scripts/test-user-model.php`
+- `php scripts/test-user-model.php`
+
 ## 2026-04-16 - Task 24, auditoria desacoplada da fachada legacy
 
 ### Fluxo de auditoria reunido em service dedicado
