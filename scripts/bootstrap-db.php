@@ -196,6 +196,14 @@ function bootstrap_viagens_schema(PDO $pdo): void
     ]);
 }
 
+function bootstrap_checklists_schema(PDO $pdo): void
+{
+    ensure_index($pdo, 'checklists_operacionais', 'idx_checklists_tipo', 'INDEX idx_checklists_tipo (tipo)');
+    ensure_index($pdo, 'checklists_operacionais', 'idx_checklists_status', 'INDEX idx_checklists_status (status_conformidade)');
+    ensure_index($pdo, 'checklists_operacionais', 'idx_checklists_secretaria', 'INDEX idx_checklists_secretaria (secretaria)');
+    ensure_index($pdo, 'checklists_operacionais', 'idx_checklists_realizado_em', 'INDEX idx_checklists_realizado_em (realizado_em)');
+}
+
 function bootstrap_audit_logs_schema(PDO $pdo): void
 {
     ensure_column($pdo, 'audit_logs', 'actor_role', 'VARCHAR(50) NULL AFTER actor');
@@ -378,6 +386,28 @@ $statements = [
         INDEX idx_audit_logs_actor (actor),
         INDEX idx_audit_logs_target (target_type, target_id)
     )",
+    "CREATE TABLE IF NOT EXISTS checklists_operacionais (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        tipo ENUM('saida', 'retorno') NOT NULL DEFAULT 'saida',
+        veiculo_id INT NOT NULL,
+        motorista_id INT NOT NULL,
+        secretaria VARCHAR(100) NOT NULL,
+        responsavel_operacao VARCHAR(120) NOT NULL,
+        status_conformidade ENUM('conforme', 'nao_conforme', 'pendente') NOT NULL DEFAULT 'conforme',
+        aceite_responsavel TINYINT(1) NOT NULL DEFAULT 0,
+        realizado_em DATETIME NOT NULL,
+        nao_conformidades TEXT DEFAULT NULL,
+        evidencia_referencia VARCHAR(255) DEFAULT NULL,
+        observacoes TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_checklists_tipo (tipo),
+        INDEX idx_checklists_status (status_conformidade),
+        INDEX idx_checklists_secretaria (secretaria),
+        INDEX idx_checklists_realizado_em (realizado_em),
+        FOREIGN KEY (veiculo_id) REFERENCES veiculos(id) ON DELETE CASCADE,
+        FOREIGN KEY (motorista_id) REFERENCES motoristas(id) ON DELETE CASCADE
+    )",
 ];
 
 try {
@@ -387,6 +417,7 @@ try {
     bootstrap_manutencoes_schema($pdo);
     bootstrap_abastecimentos_schema($pdo);
     bootstrap_viagens_schema($pdo);
+    bootstrap_checklists_schema($pdo);
     bootstrap_audit_logs_schema($pdo);
     ensure_admin_user($pdo, $adminUsername, $adminPassword);
 } catch (PDOException $e) {

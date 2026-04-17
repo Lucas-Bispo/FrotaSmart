@@ -28,6 +28,11 @@
             </a>
         <?php endif; ?>
         <?php if (user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_READ)): ?>
+            <a href="/checklists.php" class="block rounded-xl py-3 px-4 hover:bg-slate-800 <?php echo basename($_SERVER['PHP_SELF']) === 'checklists.php' ? 'bg-slate-800 border border-slate-700' : ''; ?>">
+                Checklists
+            </a>
+        <?php endif; ?>
+        <?php if (user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_READ)): ?>
             <a href="/parceiros.php" class="block rounded-xl py-3 px-4 hover:bg-slate-800 <?php echo basename($_SERVER['PHP_SELF']) === 'parceiros.php' ? 'bg-slate-800 border border-slate-700' : ''; ?>">
                 Parceiros
             </a>

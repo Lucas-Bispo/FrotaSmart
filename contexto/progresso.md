@@ -1471,3 +1471,17 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-17 - Fase 4, checklists operacionais com evidencias, etapa 1
+
+### Modulo inicial de checklists de saida e retorno
+- Criados [ChecklistOperacionalModel.php](../backend/models/ChecklistOperacionalModel.php), [ChecklistOperacionalController.php](../backend/controllers/ChecklistOperacionalController.php), [checklists.php](../frontend/views/checklists.php) e [public/checklists.php](../public/checklists.php) para registrar e consultar checklists operacionais de `saida` e `retorno`
+- Atualizados [bootstrap-db.php](../scripts/bootstrap-db.php) e [sidebar.php](../frontend/includes/sidebar.php) para criar a tabela `checklists_operacionais` e expor o modulo na navegacao principal
+- Criado [test-checklist-operacional-model.php](../scripts/test-checklist-operacional-model.php) para validar criacao, atualizacao e filtros nomeados do recorte inicial
+
+### Resultado tecnico
+- o projeto abre a frente de inspeção operacional sugerida nos `.md` com um slice vertical pequeno e funcional, cobrindo responsavel, conformidade, nao conformidades, aceite e referencia de evidencia
+- a base fica pronta para uma etapa posterior de aprofundamento com anexos reais, itens detalhados por checklist e possivel integracao com viagens
+
+### Validacao realizada
+- pendente executar nesta retomada
