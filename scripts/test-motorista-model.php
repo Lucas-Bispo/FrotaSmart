@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../backend/models/MotoristaModel.php';
 
-$model = new MotoristaModel();
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$model = new MotoristaModel($connection);
 $cpf = '99988877766';
 $cnh = 'TESTE12345';
 
-global $pdo;
-
-$pdo->prepare('DELETE FROM motoristas WHERE cpf = ? OR cnh_numero = ?')->execute([$cpf, $cnh]);
+$connection->prepare('DELETE FROM motoristas WHERE cpf = ? OR cnh_numero = ?')->execute([$cpf, $cnh]);
 
 $model->create([
     'nome' => 'Motorista Teste',
@@ -64,6 +63,6 @@ if ($vencendoAfastado !== 0) {
     throw new RuntimeException('Contagem de CNHs vencendo nao deveria considerar motorista fora do status ativo.');
 }
 
-$pdo->prepare('DELETE FROM motoristas WHERE id = ?')->execute([(int) $created['id']]);
+$connection->prepare('DELETE FROM motoristas WHERE id = ?')->execute([(int) $created['id']]);
 
 echo "MotoristaModel validado com sucesso.\n";

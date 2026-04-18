@@ -13,7 +13,8 @@ if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac
     exit;
 }
 
-$model = new ParceiroOperacionalModel();
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$model = new ParceiroOperacionalModel($connection);
 $filtroTipo = trim((string) ($_GET['tipo'] ?? ''));
 $filtroStatus = trim((string) ($_GET['status'] ?? ''));
 $parceiros = $model->listByFilters([

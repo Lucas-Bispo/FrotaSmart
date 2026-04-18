@@ -1566,3 +1566,16 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-18 - Continuidade tecnica apos Task 24, etapa 13
+
+### Views residuais e testes simples com conexao explicita
+- Atualizadas [motoristas.php](../frontend/views/motoristas.php) e [parceiros.php](../frontend/views/parceiros.php) para reutilizar `PDO` explicito na leitura principal das telas
+- Ajustados [test-motorista-model.php](../scripts/test-motorista-model.php), [test-parceiro-operacional-model.php](../scripts/test-parceiro-operacional-model.php), [test-user-model.php](../scripts/test-user-model.php), [test-manutencao-model.php](../scripts/test-manutencao-model.php) e [test-checklist-operacional-model.php](../scripts/test-checklist-operacional-model.php) para usar `PdoConnectionFactory::make()` em vez de depender de `global $pdo`
+
+### Resultado tecnico
+- o projeto reduz mais um bloco residual de dependencia implÃ­cita do bootstrap global, agora tambem nas telas menores e nos testes integrados mais simples do legado
+- os testes ficam mais coerentes com a direcao registrada nos `.md`, deixando mais explicito qual conexao e compartilhada em cada cenario
+
+### Validacao realizada
+- pendente executar nesta retomada

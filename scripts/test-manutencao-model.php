@@ -5,37 +5,36 @@ declare(strict_types=1);
 require_once __DIR__ . '/../backend/models/ManutencaoModel.php';
 require_once __DIR__ . '/../backend/models/VeiculoModel.php';
 
-$veiculoModel = new VeiculoModel();
-$manutencaoModel = new ManutencaoModel();
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$veiculoModel = new VeiculoModel($connection);
+$manutencaoModel = new ManutencaoModel($connection);
 
-global $pdo;
-
 try {
-    $pdo->exec("ALTER TABLE manutencoes ADD COLUMN km_referencia INT NULL AFTER data_conclusao");
+    $connection->exec("ALTER TABLE manutencoes ADD COLUMN km_referencia INT NULL AFTER data_conclusao");
 } catch (Throwable) {
 }
 try {
-    $pdo->exec("ALTER TABLE manutencoes ADD COLUMN km_proxima_preventiva INT NULL AFTER km_referencia");
+    $connection->exec("ALTER TABLE manutencoes ADD COLUMN km_proxima_preventiva INT NULL AFTER km_referencia");
 } catch (Throwable) {
 }
 try {
-    $pdo->exec("ALTER TABLE manutencoes ADD COLUMN data_proxima_preventiva DATE NULL AFTER km_proxima_preventiva");
+    $connection->exec("ALTER TABLE manutencoes ADD COLUMN data_proxima_preventiva DATE NULL AFTER km_proxima_preventiva");
 } catch (Throwable) {
 }
 try {
-    $pdo->exec("ALTER TABLE manutencoes ADD COLUMN recorrencia_dias INT NULL AFTER data_proxima_preventiva");
+    $connection->exec("ALTER TABLE manutencoes ADD COLUMN recorrencia_dias INT NULL AFTER data_proxima_preventiva");
 } catch (Throwable) {
 }
 try {
-    $pdo->exec("ALTER TABLE manutencoes ADD COLUMN recorrencia_km INT NULL AFTER recorrencia_dias");
+    $connection->exec("ALTER TABLE manutencoes ADD COLUMN recorrencia_km INT NULL AFTER recorrencia_dias");
 } catch (Throwable) {
 }
 
 $placa = 'MNT1A23';
 $modelo = 'Veiculo Teste Manutencao';
 
-$pdo->prepare('DELETE FROM manutencoes WHERE veiculo_id IN (SELECT id FROM veiculos WHERE placa = ?)')->execute([$placa]);
-$pdo->prepare('DELETE FROM veiculos WHERE placa = ?')->execute([$placa]);
+$connection->prepare('DELETE FROM manutencoes WHERE veiculo_id IN (SELECT id FROM veiculos WHERE placa = ?)')->execute([$placa]);
+$connection->prepare('DELETE FROM veiculos WHERE placa = ?')->execute([$placa]);
 
 $veiculoId = (int) $veiculoModel->addVeiculo($placa, $modelo, 'ativo');
 
@@ -62,7 +61,7 @@ if ($created === null || $created['status'] !== 'aberta') {
     throw new RuntimeException('Manutencao nao foi criada corretamente.');
 }
 
-$veiculoAtual = $pdo->prepare('SELECT status FROM veiculos WHERE id = ?');
+$veiculoAtual = $connection->prepare('SELECT status FROM veiculos WHERE id = ?');
 $veiculoAtual->execute([$veiculoId]);
 if ($veiculoAtual->fetchColumn() !== 'manutencao') {
     throw new RuntimeException('Veiculo deveria estar em manutencao com OS aberta.');
@@ -124,8 +123,8 @@ if (count($alertasPreventivos) < 1) {
     throw new RuntimeException('Modelo deveria retornar alertas preventivos.');
 }
 
-$pdo->prepare('DELETE FROM manutencoes WHERE id = ?')->execute([$manutencaoId]);
-$pdo->prepare('DELETE FROM manutencoes WHERE id = ?')->execute([$preventivaId]);
-$pdo->prepare('DELETE FROM veiculos WHERE id = ?')->execute([$veiculoId]);
+$connection->prepare('DELETE FROM manutencoes WHERE id = ?')->execute([$manutencaoId]);
+$connection->prepare('DELETE FROM manutencoes WHERE id = ?')->execute([$preventivaId]);
+$connection->prepare('DELETE FROM veiculos WHERE id = ?')->execute([$veiculoId]);
 
 echo "ManutencaoModel validado com sucesso.\n";

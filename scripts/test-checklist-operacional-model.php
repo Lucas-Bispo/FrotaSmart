@@ -5,10 +5,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/../backend/models/ChecklistOperacionalModel.php';
 require_once __DIR__ . '/../backend/models/ViagemModel.php';
 
-$model = new ChecklistOperacionalModel();
-$viagemModel = new ViagemModel();
-
-global $pdo;
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$model = new ChecklistOperacionalModel($connection);
+$viagemModel = new ViagemModel($connection);
 
 $secretaria = 'Secretaria Teste Checklist';
 $responsavel = 'Responsavel Teste Checklist';
@@ -16,15 +15,15 @@ $cleanupVeiculoId = null;
 $cleanupMotoristaId = null;
 $cleanupViagemId = null;
 
-$veiculo = $pdo->query('SELECT id FROM veiculos ORDER BY id ASC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
-$motorista = $pdo->query('SELECT id FROM motoristas ORDER BY id ASC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+$veiculo = $connection->query('SELECT id FROM veiculos ORDER BY id ASC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+$motorista = $connection->query('SELECT id FROM motoristas ORDER BY id ASC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
 
 if (! is_array($veiculo)) {
     $placa = 'TST' . random_int(1000, 9999);
     $renavam = (string) random_int(10000000000, 99999999999);
     $chassi = 'CHASSITESTE' . random_int(1000, 9999);
 
-    $stmt = $pdo->prepare(
+    $stmt = $connection->prepare(
         "INSERT INTO veiculos (
             placa,
             modelo,
@@ -51,7 +50,7 @@ if (! is_array($veiculo)) {
         'ativo',
     ]);
 
-    $cleanupVeiculoId = (int) $pdo->lastInsertId();
+    $cleanupVeiculoId = (int) $connection->lastInsertId();
     $veiculo = ['id' => $cleanupVeiculoId];
 }
 
@@ -59,7 +58,7 @@ if (! is_array($motorista)) {
     $cpf = (string) random_int(10000000000, 99999999999);
     $cnh = 'CNH' . random_int(100000, 999999);
 
-    $stmt = $pdo->prepare(
+    $stmt = $connection->prepare(
         "INSERT INTO motoristas (
             nome,
             cpf,
@@ -82,11 +81,11 @@ if (! is_array($motorista)) {
         'ativo',
     ]);
 
-    $cleanupMotoristaId = (int) $pdo->lastInsertId();
+    $cleanupMotoristaId = (int) $connection->lastInsertId();
     $motorista = ['id' => $cleanupMotoristaId];
 }
 
-$pdo->prepare('DELETE FROM checklists_operacionais WHERE secretaria = ?')->execute([$secretaria]);
+$connection->prepare('DELETE FROM checklists_operacionais WHERE secretaria = ?')->execute([$secretaria]);
 
 $cleanupViagemId = $viagemModel->create([
     'veiculo_id' => (int) $veiculo['id'],
@@ -181,18 +180,18 @@ if (count($filtrados) !== 1 || (int) ($filtrados[0]['id'] ?? 0) !== $checklistId
     throw new RuntimeException('Filtro nomeado de checklist nao retornou o registro esperado.');
 }
 
-$pdo->prepare('DELETE FROM checklists_operacionais WHERE id = ?')->execute([$checklistId]);
+$connection->prepare('DELETE FROM checklists_operacionais WHERE id = ?')->execute([$checklistId]);
 
 if ($cleanupViagemId !== null) {
-    $pdo->prepare('DELETE FROM viagens WHERE id = ?')->execute([$cleanupViagemId]);
+    $connection->prepare('DELETE FROM viagens WHERE id = ?')->execute([$cleanupViagemId]);
 }
 
 if ($cleanupMotoristaId !== null) {
-    $pdo->prepare('DELETE FROM motoristas WHERE id = ?')->execute([$cleanupMotoristaId]);
+    $connection->prepare('DELETE FROM motoristas WHERE id = ?')->execute([$cleanupMotoristaId]);
 }
 
 if ($cleanupVeiculoId !== null) {
-    $pdo->prepare('DELETE FROM veiculos WHERE id = ?')->execute([$cleanupVeiculoId]);
+    $connection->prepare('DELETE FROM veiculos WHERE id = ?')->execute([$cleanupVeiculoId]);
 }
 
 echo "ChecklistOperacionalModel validado com sucesso.\n";

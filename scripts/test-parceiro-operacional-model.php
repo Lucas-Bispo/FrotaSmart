@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../backend/models/ParceiroOperacionalModel.php';
 
-$model = new ParceiroOperacionalModel();
-
-global $pdo;
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$model = new ParceiroOperacionalModel($connection);
 
 $cnpj = '12345678000199';
 
-$pdo->prepare('DELETE FROM parceiros_operacionais WHERE cnpj = ?')->execute([$cnpj]);
+$connection->prepare('DELETE FROM parceiros_operacionais WHERE cnpj = ?')->execute([$cnpj]);
 
 $parceiroId = $model->create([
     'nome_fantasia' => 'Oficina Teste',
@@ -59,6 +58,6 @@ if (count($ativosPosto) !== 0) {
     throw new RuntimeException('Parceiros inativos nao deveriam aparecer no filtro ativo.');
 }
 
-$pdo->prepare('DELETE FROM parceiros_operacionais WHERE id = ?')->execute([$parceiroId]);
+$connection->prepare('DELETE FROM parceiros_operacionais WHERE id = ?')->execute([$parceiroId]);
 
 echo "ParceiroOperacionalModel validado com sucesso.\n";

@@ -5,18 +5,17 @@ declare(strict_types=1);
 require_once __DIR__ . '/../backend/config/security.php';
 require_once __DIR__ . '/../backend/models/UserModel.php';
 
-$model = new UserModel();
-
-global $pdo;
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$model = new UserModel($connection);
 
 $username = 'teste_user_model_' . date('YmdHis');
 $password = 'SenhaForte@2026';
 
-$pdo->prepare('DELETE FROM users WHERE username = ?')->execute([$username]);
+$connection->prepare('DELETE FROM users WHERE username = ?')->execute([$username]);
 
 $model->register($username, $password, 'perfil_invalido');
 
-$stmt = $pdo->prepare('SELECT id, username, role FROM users WHERE username = ? LIMIT 1');
+$stmt = $connection->prepare('SELECT id, username, role FROM users WHERE username = ? LIMIT 1');
 $stmt->execute([$username]);
 $created = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -42,6 +41,6 @@ if ($failed !== false) {
     throw new RuntimeException('UserModel nao deveria autenticar com senha incorreta.');
 }
 
-$pdo->prepare('DELETE FROM users WHERE username = ?')->execute([$username]);
+$connection->prepare('DELETE FROM users WHERE username = ?')->execute([$username]);
 
 echo "UserModel validado com sucesso.\n";

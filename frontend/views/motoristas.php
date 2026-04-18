@@ -13,7 +13,8 @@ if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac
     exit;
 }
 
-$model = new MotoristaModel();
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$model = new MotoristaModel($connection);
 $motoristas = $model->getAllMotoristas();
 $canManageMotoristas = user_can(\FrotaSmart\Application\Security\Rbac::PERMISSION_FLEET_MANAGE);
 $successMessage = pull_flash('success');
