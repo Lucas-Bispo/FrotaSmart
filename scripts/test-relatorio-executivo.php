@@ -9,14 +9,13 @@ require_once __DIR__ . '/../backend/models/MotoristaModel.php';
 require_once __DIR__ . '/../backend/models/VeiculoModel.php';
 require_once __DIR__ . '/../backend/models/ViagemModel.php';
 
-$relatorioModel = new RelatorioOperacionalModel(\FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make());
-$abastecimentoModel = new AbastecimentoModel();
-$manutencaoModel = new ManutencaoModel();
-$motoristaModel = new MotoristaModel();
-$veiculoModel = new VeiculoModel();
-$viagemModel = new ViagemModel();
-
-global $pdo;
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$relatorioModel = new RelatorioOperacionalModel($connection);
+$abastecimentoModel = new AbastecimentoModel($connection);
+$manutencaoModel = new ManutencaoModel($connection);
+$motoristaModel = new MotoristaModel($connection);
+$veiculoModel = new VeiculoModel($connection);
+$viagemModel = new ViagemModel($connection);
 
 $placaSaude = 'PEX1A22';
 $placaEducacao = 'PEX1B22';
@@ -25,11 +24,11 @@ $cpfEducacao = '90222222222';
 $cnhSaude = 'EXEC12345';
 $cnhEducacao = 'EXEC67890';
 
-$pdo->prepare('DELETE FROM abastecimentos WHERE veiculo_id IN (SELECT id FROM veiculos WHERE placa IN (?, ?))')->execute([$placaSaude, $placaEducacao]);
-$pdo->prepare('DELETE FROM manutencoes WHERE veiculo_id IN (SELECT id FROM veiculos WHERE placa IN (?, ?))')->execute([$placaSaude, $placaEducacao]);
-$pdo->prepare('DELETE FROM viagens WHERE veiculo_id IN (SELECT id FROM veiculos WHERE placa IN (?, ?))')->execute([$placaSaude, $placaEducacao]);
-$pdo->prepare('DELETE FROM motoristas WHERE cpf IN (?, ?) OR cnh_numero IN (?, ?)')->execute([$cpfSaude, $cpfEducacao, $cnhSaude, $cnhEducacao]);
-$pdo->prepare('DELETE FROM veiculos WHERE placa IN (?, ?)')->execute([$placaSaude, $placaEducacao]);
+$connection->prepare('DELETE FROM abastecimentos WHERE veiculo_id IN (SELECT id FROM veiculos WHERE placa IN (?, ?))')->execute([$placaSaude, $placaEducacao]);
+$connection->prepare('DELETE FROM manutencoes WHERE veiculo_id IN (SELECT id FROM veiculos WHERE placa IN (?, ?))')->execute([$placaSaude, $placaEducacao]);
+$connection->prepare('DELETE FROM viagens WHERE veiculo_id IN (SELECT id FROM veiculos WHERE placa IN (?, ?))')->execute([$placaSaude, $placaEducacao]);
+$connection->prepare('DELETE FROM motoristas WHERE cpf IN (?, ?) OR cnh_numero IN (?, ?)')->execute([$cpfSaude, $cpfEducacao, $cnhSaude, $cnhEducacao]);
+$connection->prepare('DELETE FROM veiculos WHERE placa IN (?, ?)')->execute([$placaSaude, $placaEducacao]);
 
 $veiculoSaudeId = (int) $veiculoModel->addVeiculo($placaSaude, 'Ambulancia Executiva', 'ativo', null, null, 2023, 'ambulancia', 'diesel_s10', 'Saude', 10000);
 $veiculoEducacaoId = (int) $veiculoModel->addVeiculo($placaEducacao, 'Onibus Escolar Executivo', 'ativo', null, null, 2022, 'onibus', 'diesel_s10', 'Educacao', 20000);
@@ -56,7 +55,7 @@ $motoristaModel->create([
     'status' => 'ativo',
 ]);
 
-$stmtMotorista = $pdo->prepare('SELECT id, cpf FROM motoristas WHERE cpf IN (?, ?)');
+$stmtMotorista = $connection->prepare('SELECT id, cpf FROM motoristas WHERE cpf IN (?, ?)');
 $stmtMotorista->execute([$cpfSaude, $cpfEducacao]);
 $motoristas = $stmtMotorista->fetchAll(PDO::FETCH_ASSOC);
 
@@ -239,10 +238,10 @@ if (! is_array($veiculoEducacaoResumo) || (int) ($veiculoEducacaoResumo['manuten
     throw new RuntimeException('Painel executivo por veiculo deveria consolidar manutencao aberta no onibus escolar.');
 }
 
-$pdo->prepare('DELETE FROM abastecimentos WHERE veiculo_id IN (?, ?)')->execute([$veiculoSaudeId, $veiculoEducacaoId]);
-$pdo->prepare('DELETE FROM manutencoes WHERE veiculo_id IN (?, ?)')->execute([$veiculoSaudeId, $veiculoEducacaoId]);
-$pdo->prepare('DELETE FROM viagens WHERE veiculo_id IN (?, ?)')->execute([$veiculoSaudeId, $veiculoEducacaoId]);
-$pdo->prepare('DELETE FROM motoristas WHERE id IN (?, ?)')->execute([$motoristaSaudeId, $motoristaEducacaoId]);
-$pdo->prepare('DELETE FROM veiculos WHERE id IN (?, ?)')->execute([$veiculoSaudeId, $veiculoEducacaoId]);
+$connection->prepare('DELETE FROM abastecimentos WHERE veiculo_id IN (?, ?)')->execute([$veiculoSaudeId, $veiculoEducacaoId]);
+$connection->prepare('DELETE FROM manutencoes WHERE veiculo_id IN (?, ?)')->execute([$veiculoSaudeId, $veiculoEducacaoId]);
+$connection->prepare('DELETE FROM viagens WHERE veiculo_id IN (?, ?)')->execute([$veiculoSaudeId, $veiculoEducacaoId]);
+$connection->prepare('DELETE FROM motoristas WHERE id IN (?, ?)')->execute([$motoristaSaudeId, $motoristaEducacaoId]);
+$connection->prepare('DELETE FROM veiculos WHERE id IN (?, ?)')->execute([$veiculoSaudeId, $veiculoEducacaoId]);
 
 echo "Relatorio executivo validado com sucesso.\n";

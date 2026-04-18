@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../backend/models/RelatorioOperacionalModel.php';
 
-$model = new RelatorioOperacionalModel();
-if (class_exists(\FrotaSmart\Infrastructure\Config\PdoConnectionFactory::class)) {
-    $model = new RelatorioOperacionalModel(\FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make());
-}
-
-global $pdo;
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$model = new RelatorioOperacionalModel($connection);
 
 $targetPrefix = 'AUDIT-TEST-23';
 
-$pdo->prepare('DELETE FROM audit_logs WHERE target_id LIKE ?')->execute([$targetPrefix . '%']);
+$connection->prepare('DELETE FROM audit_logs WHERE target_id LIKE ?')->execute([$targetPrefix . '%']);
 
 $entries = [
     [
@@ -51,7 +47,7 @@ $entries = [
     ],
 ];
 
-$statement = $pdo->prepare(
+$statement = $connection->prepare(
     'INSERT INTO audit_logs (
         event,
         action,
@@ -108,6 +104,6 @@ if (! str_contains($csv, 'relatorio.exported') || ! str_contains($csv, 'context_
     throw new RuntimeException('Exportacao CSV da auditoria deveria incluir evento e resumo de contexto.');
 }
 
-$pdo->prepare('DELETE FROM audit_logs WHERE target_id LIKE ?')->execute([$targetPrefix . '%']);
+$connection->prepare('DELETE FROM audit_logs WHERE target_id LIKE ?')->execute([$targetPrefix . '%']);
 
 echo "Relatorio de auditoria validado com sucesso.\n";
