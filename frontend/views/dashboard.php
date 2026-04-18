@@ -66,18 +66,17 @@ $documentPendingRows = [];
 $checklistRows = [];
 
 try {
+    $connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
     $veiculoDashboardService = new \FrotaSmart\Application\Services\VeiculoDashboardService(
         new \FrotaSmart\Infrastructure\Persistence\PdoVeiculoRepository(
-            \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make()
+            $connection
         )
     );
-    $motoristaModel = new MotoristaModel();
-    $manutencaoModel = new ManutencaoModel();
-    $abastecimentoModel = new AbastecimentoModel();
-    $checklistModel = new ChecklistOperacionalModel();
-    $relatorioModel = new RelatorioOperacionalModel(
-        \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make()
-    );
+    $motoristaModel = new MotoristaModel($connection);
+    $manutencaoModel = new ManutencaoModel($connection);
+    $abastecimentoModel = new AbastecimentoModel($connection);
+    $checklistModel = new ChecklistOperacionalModel($connection);
+    $relatorioModel = new RelatorioOperacionalModel($connection);
 
     $veiculosAtivos = $veiculoDashboardService->listarPorFiltro('ativos');
     $veiculos = $veiculoDashboardService->listarPorFiltro($filtroFrota);

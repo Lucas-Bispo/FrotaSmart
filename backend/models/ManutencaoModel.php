@@ -506,12 +506,6 @@ final class ManutencaoModel
 
     private function resolveLegacyConnection(): PDO
     {
-        global $pdo;
-
-        if ($pdo instanceof PDO) {
-            return $pdo;
-        }
-
-        throw new RuntimeException('Conexao PDO indisponivel para ManutencaoModel.');
+        return database_connection();
     }
 }

@@ -16,10 +16,11 @@ if (! isset($_SESSION['user']) || ! user_can(\FrotaSmart\Application\Security\Rb
     exit;
 }
 
-$checklistModel = new ChecklistOperacionalModel();
-$veiculoModel = new VeiculoModel();
-$motoristaModel = new MotoristaModel();
-$viagemModel = new ViagemModel();
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$checklistModel = new ChecklistOperacionalModel($connection);
+$veiculoModel = new VeiculoModel($connection);
+$motoristaModel = new MotoristaModel($connection);
+$viagemModel = new ViagemModel($connection);
 
 $filtroTipo = trim((string) ($_GET['tipo'] ?? ''));
 $filtroStatus = trim((string) ($_GET['status'] ?? ''));

@@ -10,11 +10,14 @@ final class ParceiroOperacionalController
     private ParceiroOperacionalModel $model;
     private \FrotaSmart\Application\Services\ParceiroOperacionalInputService $inputService;
 
-    public function __construct()
+    public function __construct(
+        ?ParceiroOperacionalModel $model = null,
+        ?\FrotaSmart\Application\Services\ParceiroOperacionalInputService $inputService = null
+    )
     {
         secure_session_start();
-        $this->model = new ParceiroOperacionalModel();
-        $this->inputService = new \FrotaSmart\Application\Services\ParceiroOperacionalInputService();
+        $this->model = $model ?? new ParceiroOperacionalModel();
+        $this->inputService = $inputService ?? new \FrotaSmart\Application\Services\ParceiroOperacionalInputService();
     }
 
     public function handle(): void

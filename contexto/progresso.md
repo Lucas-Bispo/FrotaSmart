@@ -1540,3 +1540,29 @@
 
 ### Validacao realizada
 - pendente executar nesta retomada
+
+## 2026-04-18 - Continuidade tecnica apos Task 24, etapa 11
+
+### Views operacionais com conexao explicita compartilhada
+- Atualizadas [dashboard.php](../frontend/views/dashboard.php), [checklists.php](../frontend/views/checklists.php), [abastecimentos.php](../frontend/views/abastecimentos.php), [viagens.php](../frontend/views/viagens.php) e [manutencoes.php](../frontend/views/manutencoes.php) para criar uma unica conexao `PDO` por entrypoint e repassa-la explicitamente aos models legados e ao repositorio de veiculos
+- Mantida a compatibilidade funcional das telas, mas reduzindo a dependencia do fallback implicito baseado no bootstrap global
+
+### Resultado tecnico
+- os entrypoints principais do fluxo operacional ficam mais coerentes com a direcao registrada nos `.md`, privilegiando dependencia explicita em vez de estado escondido
+- o dashboard passa a compartilhar a mesma conexao entre repositorio novo, models legados e fachada de relatorios, reduzindo variacao acidental de infraestrutura dentro da mesma requisicao
+
+### Validacao realizada
+- pendente executar nesta retomada
+
+## 2026-04-18 - Continuidade tecnica apos Task 24, etapa 12
+
+### Controllers legacy com dependencias injetaveis
+- Refatorados [AbastecimentoController.php](../backend/controllers/AbastecimentoController.php), [ViagemController.php](../backend/controllers/ViagemController.php), [ChecklistOperacionalController.php](../backend/controllers/ChecklistOperacionalController.php), [ManutencaoController.php](../backend/controllers/ManutencaoController.php), [MotoristaController.php](../backend/controllers/MotoristaController.php) e [ParceiroOperacionalController.php](../backend/controllers/ParceiroOperacionalController.php) para aceitar models, guards e input services por injecao opcional
+- Mantida a compatibilidade com os entrypoints atuais, preservando o uso sem argumentos enquanto o projeto ganha composicao mais previsivel para testes e bootstrap futuro
+
+### Resultado tecnico
+- os controllers operacionais e administrativos restantes perdem mais um residuo de acoplamento por instanciacao interna fixa, seguindo a mesma direcao ja registrada para autenticacao, usuarios e guard operacional
+- a camada HTTP fica mais consistente com o padrao de Clean Code do projeto, privilegiando construcao explicita de dependencias sem exigir reescrita do fluxo atual
+
+### Validacao realizada
+- pendente executar nesta retomada

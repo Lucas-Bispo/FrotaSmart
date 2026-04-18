@@ -180,12 +180,6 @@ final class ChecklistOperacionalModel
 
     private function resolveLegacyConnection(): PDO
     {
-        global $pdo;
-
-        if ($pdo instanceof PDO) {
-            return $pdo;
-        }
-
-        throw new RuntimeException('Conexao PDO indisponivel para ChecklistOperacionalModel.');
+        return database_connection();
     }
 }

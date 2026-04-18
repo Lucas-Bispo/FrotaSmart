@@ -171,12 +171,6 @@ final class ViagemModel
 
     private function resolveLegacyConnection(): PDO
     {
-        global $pdo;
-
-        if ($pdo instanceof PDO) {
-            return $pdo;
-        }
-
-        throw new RuntimeException('Conexao PDO indisponivel para ViagemModel.');
+        return database_connection();
     }
 }

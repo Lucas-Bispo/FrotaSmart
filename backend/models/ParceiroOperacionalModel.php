@@ -160,12 +160,6 @@ final class ParceiroOperacionalModel
 
     private function resolveLegacyConnection(): PDO
     {
-        global $pdo;
-
-        if ($pdo instanceof PDO) {
-            return $pdo;
-        }
-
-        throw new RuntimeException('Conexao PDO indisponivel para ParceiroOperacionalModel.');
+        return database_connection();
     }
 }

@@ -15,9 +15,10 @@ if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac
     exit;
 }
 
-$manutencaoModel = new ManutencaoModel();
-$parceiroModel = new ParceiroOperacionalModel();
-$veiculoModel = new VeiculoModel();
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$manutencaoModel = new ManutencaoModel($connection);
+$parceiroModel = new ParceiroOperacionalModel($connection);
+$veiculoModel = new VeiculoModel($connection);
 
 $manutencoes = $manutencaoModel->getAll();
 $alertasPreventivos = $manutencaoModel->getPreventiveAlerts();

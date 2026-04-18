@@ -190,12 +190,6 @@ final class VeiculoModel
 
     private function resolveLegacyConnection(): PDO
     {
-        global $pdo;
-
-        if ($pdo instanceof PDO) {
-            return $pdo;
-        }
-
-        throw new RuntimeException('Conexao PDO indisponivel para VeiculoModel.');
+        return database_connection();
     }
 }

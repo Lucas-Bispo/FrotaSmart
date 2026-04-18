@@ -10,11 +10,14 @@ final class MotoristaController
     private MotoristaModel $model;
     private \FrotaSmart\Application\Services\MotoristaInputService $inputService;
 
-    public function __construct()
+    public function __construct(
+        ?MotoristaModel $model = null,
+        ?\FrotaSmart\Application\Services\MotoristaInputService $inputService = null
+    )
     {
         secure_session_start();
-        $this->model = new MotoristaModel();
-        $this->inputService = new \FrotaSmart\Application\Services\MotoristaInputService();
+        $this->model = $model ?? new MotoristaModel();
+        $this->inputService = $inputService ?? new \FrotaSmart\Application\Services\MotoristaInputService();
     }
 
     public function handle(): void

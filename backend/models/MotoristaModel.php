@@ -120,12 +120,6 @@ final class MotoristaModel
 
     private function resolveLegacyConnection(): PDO
     {
-        global $pdo;
-
-        if ($pdo instanceof PDO) {
-            return $pdo;
-        }
-
-        throw new RuntimeException('Conexao PDO indisponivel para MotoristaModel.');
+        return database_connection();
     }
 }

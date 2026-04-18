@@ -16,10 +16,11 @@ if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac
     exit;
 }
 
-$abastecimentoModel = new AbastecimentoModel();
-$veiculoModel = new VeiculoModel();
-$motoristaModel = new MotoristaModel();
-$parceiroModel = new ParceiroOperacionalModel();
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$abastecimentoModel = new AbastecimentoModel($connection);
+$veiculoModel = new VeiculoModel($connection);
+$motoristaModel = new MotoristaModel($connection);
+$parceiroModel = new ParceiroOperacionalModel($connection);
 
 $filtroVeiculoId = isset($_GET['veiculo_id']) ? (int) $_GET['veiculo_id'] : null;
 $filtroInicio = trim((string) ($_GET['data_inicio'] ?? ''));

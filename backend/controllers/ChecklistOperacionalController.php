@@ -19,10 +19,10 @@ final class ChecklistOperacionalController
 
     private ChecklistOperacionalModel $model;
 
-    public function __construct()
+    public function __construct(?ChecklistOperacionalModel $model = null)
     {
         secure_session_start();
-        $this->model = new ChecklistOperacionalModel();
+        $this->model = $model ?? new ChecklistOperacionalModel();
     }
 
     public function handle(): void

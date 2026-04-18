@@ -15,9 +15,10 @@ if (!isset($_SESSION['user']) || !user_can(\FrotaSmart\Application\Security\Rbac
     exit;
 }
 
-$viagemModel = new ViagemModel();
-$veiculoModel = new VeiculoModel();
-$motoristaModel = new MotoristaModel();
+$connection = \FrotaSmart\Infrastructure\Config\PdoConnectionFactory::make();
+$viagemModel = new ViagemModel($connection);
+$veiculoModel = new VeiculoModel($connection);
+$motoristaModel = new MotoristaModel($connection);
 
 $filtroStatus = trim((string) ($_GET['status'] ?? ''));
 $filtroSecretaria = trim((string) ($_GET['secretaria'] ?? ''));

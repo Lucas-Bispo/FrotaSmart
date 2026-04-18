@@ -13,11 +13,14 @@ final class AbastecimentoController
     private AbastecimentoModel $model;
     private OperacaoFrotaGuard $guard;
 
-    public function __construct()
+    public function __construct(
+        ?AbastecimentoModel $model = null,
+        ?OperacaoFrotaGuard $guard = null
+    )
     {
         secure_session_start();
-        $this->model = new AbastecimentoModel();
-        $this->guard = new OperacaoFrotaGuard();
+        $this->model = $model ?? new AbastecimentoModel();
+        $this->guard = $guard ?? new OperacaoFrotaGuard();
     }
 
     public function handle(): void

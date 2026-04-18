@@ -13,11 +13,14 @@ final class ViagemController
     private ViagemModel $model;
     private OperacaoFrotaGuard $guard;
 
-    public function __construct()
+    public function __construct(
+        ?ViagemModel $model = null,
+        ?OperacaoFrotaGuard $guard = null
+    )
     {
         secure_session_start();
-        $this->model = new ViagemModel();
-        $this->guard = new OperacaoFrotaGuard();
+        $this->model = $model ?? new ViagemModel();
+        $this->guard = $guard ?? new OperacaoFrotaGuard();
     }
 
     public function handle(): void

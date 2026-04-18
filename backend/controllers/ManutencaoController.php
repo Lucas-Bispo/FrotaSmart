@@ -12,10 +12,10 @@ final class ManutencaoController
 
     private ManutencaoModel $model;
 
-    public function __construct()
+    public function __construct(?ManutencaoModel $model = null)
     {
         secure_session_start();
-        $this->model = new ManutencaoModel();
+        $this->model = $model ?? new ManutencaoModel();
     }
 
     public function handle(): void

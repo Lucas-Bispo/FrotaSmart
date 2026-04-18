@@ -55,3 +55,14 @@ try {
         die($message);
     }
 }
+
+function database_connection(): PDO
+{
+    global $pdo;
+
+    if ($pdo instanceof PDO) {
+        return $pdo;
+    }
+
+    throw new RuntimeException('Conexao PDO indisponivel.');
+}

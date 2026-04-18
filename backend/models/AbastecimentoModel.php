@@ -466,12 +466,6 @@ final class AbastecimentoModel
 
     private function resolveLegacyConnection(): PDO
     {
-        global $pdo;
-
-        if ($pdo instanceof PDO) {
-            return $pdo;
-        }
-
-        throw new RuntimeException('Conexao PDO indisponivel para AbastecimentoModel.');
+        return database_connection();
     }
 }
